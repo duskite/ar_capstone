@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     //화면 요소들 선언
     TextView textView;
-    Button button;
+    Button button, btnAr;
     EditText editText;
 
 
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         //화면 요소들 초기
         textView = (TextView) findViewById(R.id.tv1);
         button = (Button) findViewById(R.id.btn1);
+        btnAr = (Button) findViewById(R.id.btnAr);
         editText = (EditText) findViewById(R.id.edt1);
 
         //데이터베이스 연결
@@ -55,6 +57,15 @@ public class MainActivity extends AppCompatActivity {
                 mDatabase.child(String.valueOf(cnt)).setValue(tmp_val);
                 editText.setText("");
                 cnt++;
+            }
+        });
+
+        //버튼 클릭시 ar화면으로 전환
+        btnAr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), ArActivity.class);
+                startActivity(intent);
             }
         });
 
