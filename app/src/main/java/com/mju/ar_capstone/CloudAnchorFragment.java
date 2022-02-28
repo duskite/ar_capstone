@@ -30,6 +30,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.mju.ar_capstone.helpers.CameraPermissionHelper;
+import com.mju.ar_capstone.helpers.DisplayRotationHelper;
 import com.mju.ar_capstone.rendering.BackgroundRenderer;
 import com.mju.ar_capstone.rendering.ObjectRenderer;
 import com.mju.ar_capstone.rendering.PlaneRenderer;
@@ -48,6 +49,8 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
     private GLSurfaceView surfaceView;
     private Session session;
     private boolean installRequested;
+
+    private DisplayRotationHelper displayRotationHelper;
 
     private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
     private final ObjectRenderer virtualObject = new ObjectRenderer();
@@ -74,6 +77,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
         View rootView = inflater.inflate(R.layout.cloud_anchor_fragment, container, false);
         GLSurfaceView surfaceView = rootView.findViewById(R.id.surfaceView);
         this.surfaceView = surfaceView;
+        displayRotationHelper = new DisplayRotationHelper(requireContext());
 
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
@@ -161,6 +165,20 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
         }
 
         surfaceView.onResume();
+        displayRotationHelper.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (session != null) {
+            // Note that the order matters - GLSurfaceView is paused first so that it does not try
+            // to query the session. If Session is paused before GLSurfaceView, GLSurfaceView may
+            // still call session.update() and get a SessionPausedException.
+            displayRotationHelper.onPause();
+            surfaceView.onPause();
+            session.pause();
+        }
     }
 
     @Override
@@ -197,6 +215,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
         }
         // Notify ARCore session that the view size changed so that the perspective matrix and
         // the video background can be properly adjusted.
+        displayRotationHelper.updateSessionIfNeeded(session);
 
         try {
             session.setCameraTextureName(backgroundRenderer.getTextureId());
@@ -253,6 +272,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-
+        displayRotationHelper.onSurfaceChanged(width, height);
+        GLES20.glViewport(0, 0, width, height);
     }
 }
