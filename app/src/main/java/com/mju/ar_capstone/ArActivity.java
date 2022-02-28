@@ -10,12 +10,16 @@ import androidx.fragment.app.FragmentManager;
 
 public class ArActivity extends AppCompatActivity {
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_ar);
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment frag = fm.findFragmentById(R.id.fragment_container);
+        if (frag == null) {
+            frag = new CloudAnchorFragment();
+            fm.beginTransaction().add(R.id.fragment_container, frag).commit();
+        }
     }
 }
