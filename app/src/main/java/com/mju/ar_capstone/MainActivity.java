@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         //아래 기존 코드를 firebase manager로 대체중
         firebaseManager = new FirebaseManager();
-        firebaseManager.getText();
+        firebaseManager.getDB();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override

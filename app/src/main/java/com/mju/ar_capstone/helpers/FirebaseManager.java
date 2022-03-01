@@ -31,7 +31,7 @@ public class FirebaseManager {
         cnt++;
     }
 
-    public void getText(){
+    public void getDB(){
 
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

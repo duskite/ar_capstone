@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -19,9 +20,12 @@ import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Point;
 import com.google.ar.core.PointCloud;
 import com.google.ar.core.Session;
+import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
@@ -31,12 +35,15 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.mju.ar_capstone.helpers.CameraPermissionHelper;
 import com.mju.ar_capstone.helpers.DisplayRotationHelper;
+import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.helpers.TapHelper;
 import com.mju.ar_capstone.rendering.BackgroundRenderer;
 import com.mju.ar_capstone.rendering.ObjectRenderer;
 import com.mju.ar_capstone.rendering.PlaneRenderer;
 import com.mju.ar_capstone.rendering.PointCloudRenderer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -46,12 +53,12 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
 
     private static final String TAG = CloudAnchorFragment.class.getSimpleName();
 
+    // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView surfaceView;
     private Session session;
     private boolean installRequested;
 
-    private DisplayRotationHelper displayRotationHelper;
-
+    private FirebaseManager firebaseManager;
     private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
     private final ObjectRenderer virtualObject = new ObjectRenderer();
     private final ObjectRenderer virtualObjectShadow = new ObjectRenderer();
@@ -62,12 +69,18 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
     private final float[] anchorMatrix = new float[16];
     private final float[] andyColor = {139.0f, 195.0f, 74.0f, 255.0f};
 
+    private TapHelper tapHelper;
+    private DisplayRotationHelper displayRotationHelper;
+
     @Nullable
     private Anchor currentAnchor = null;
 
     @Override
     public void onAttach(@NonNull Context context) {
+
         super.onAttach(context);
+        tapHelper = new TapHelper(context);
+        firebaseManager = new FirebaseManager();
     }
 
     @Override
@@ -78,6 +91,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
         GLSurfaceView surfaceView = rootView.findViewById(R.id.surfaceView);
         this.surfaceView = surfaceView;
         displayRotationHelper = new DisplayRotationHelper(requireContext());
+        surfaceView.setOnTouchListener(tapHelper);
 
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
@@ -206,6 +220,12 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
     }
 
     @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        displayRotationHelper.onSurfaceChanged(width, height);
+        GLES20.glViewport(0, 0, width, height);
+    }
+
+    @Override
     public void onDrawFrame(GL10 gl) {
         // Clear screen to notify driver it should not load any pixels from previous frame.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -225,6 +245,9 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
             // camera framerate.
             Frame frame = session.update();
             Camera camera = frame.getCamera();
+
+            // Handle one tap per frame.
+            handleTap(frame, camera);
 
 
             // If frame is ready, render camera preview image to the GL surface.
@@ -270,9 +293,36 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
         }
     }
 
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        displayRotationHelper.onSurfaceChanged(width, height);
-        GLES20.glViewport(0, 0, width, height);
+    // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
+    private void handleTap(Frame frame, Camera camera){
+        if(currentAnchor != null){
+            return; // Do nothing if there was already an anchor.
+        }
+
+        MotionEvent tap = tapHelper.poll();
+        if(tap != null && camera.getTrackingState() == TrackingState.TRACKING){
+            for (HitResult hit : frame.hitTest(tap)){
+                // Check if any plane was hit, and if it was hit inside the plane polygon
+                Trackable trackable = hit.getTrackable();
+                // Creates an anchor if a plane or an oriented point was hit.
+                if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())
+                && (PlaneRenderer.calculateDistanceToPlane(hit.getHitPose(), camera.getPose()) > 0))
+                || (trackable instanceof Point && ((Point) trackable).getOrientationMode()
+                == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)){
+
+                    // Hits are sorted by depth. Consider only closest hit on a plane or oriented point.
+
+                    // Adding an Anchor tells ARCore that it should track this position in
+                    // space. This anchor is created on the Plane to place the 3D model
+                    // in the correct position relative both to the world and to the plane.
+                    currentAnchor = hit.createAnchor();
+
+                    break;
+                }
+            }
+        }
+
     }
+
+
 }
