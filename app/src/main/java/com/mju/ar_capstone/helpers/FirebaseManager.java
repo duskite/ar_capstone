@@ -43,6 +43,25 @@ public class FirebaseManager {
 
     }
 
+    public void setContent(String anchorId){
+
+        long now = System.currentTimeMillis();
+        Date date = new Date(now);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        String created = dateFormat.format(date);
+
+        mDatabase.child("anchor_list").child(anchorId).setValue("text");
+        DatabaseReference contentDB = mDatabase.child("contents").child(anchorId);
+
+        contentDB.child("lat_lng").setValue("1231313");
+        contentDB.child("userID").setValue("ysy5593");
+        contentDB.child("text").setValue("anchorid test....");
+        contentDB.child("image").setValue("image url");
+        contentDB.child("created").setValue(created);
+        contentDB.child("type").setValue("text");
+
+    }
+
     public void getContent(){
 
     }
