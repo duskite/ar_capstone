@@ -44,6 +44,7 @@ import com.mju.ar_capstone.rendering.PointCloudRenderer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -74,6 +75,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
 
     @Nullable
     private Anchor currentAnchor = null;
+    private final List<WrappedAnchor> wrappedAnchors = new ArrayList<>();
 
     @Override
     public void onAttach(@NonNull Context context) {
