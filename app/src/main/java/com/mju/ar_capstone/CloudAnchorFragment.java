@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,6 +35,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.mju.ar_capstone.helpers.CameraPermissionHelper;
+import com.mju.ar_capstone.helpers.CloudAnchorManager;
 import com.mju.ar_capstone.helpers.DisplayRotationHelper;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.TapHelper;
@@ -72,6 +74,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
 
     private TapHelper tapHelper;
     private DisplayRotationHelper displayRotationHelper;
+    private final CloudAnchorManager cloudAnchorManager = new CloudAnchorManager();
 
     @Nullable
     private Anchor currentAnchor = null;
@@ -260,6 +263,7 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
             // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
             // camera framerate.
             Frame frame = session.update();
+            cloudAnchorManager.onUpdate();
             Camera camera = frame.getCamera();
 
             // Handle one tap per frame.
@@ -341,12 +345,24 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
                     }
 
                     wrappedAnchors.add(new WrappedAnchor(hit.createAnchor(), trackable));
+                    //여기 아직 정확하지 않음
+                    cloudAnchorManager.hostCloudAnchor(session, wrappedAnchors.get(0).getAnchor(), /* ttl= */ 300, this::onHostedAnchorAvailable);
 
                     break;
                 }
             }
         }
 
+    }
+    private synchronized void onHostedAnchorAvailable(Anchor anchor) {
+        Anchor.CloudAnchorState cloudState = anchor.getCloudAnchorState();
+        if (cloudState == Anchor.CloudAnchorState.SUCCESS) {
+            String cloudAnchorId = anchor.getCloudAnchorId();
+            firebaseManager.setContent(cloudAnchorId);
+            Log.d("tttt", "성공");
+        }else {
+            Log.d("tttt","실패");
+        }
     }
 
 
