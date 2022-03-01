@@ -198,6 +198,20 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
     }
 
     @Override
+    public void onDestroy() {
+        if (session != null) {
+            // Explicitly close ARCore Session to release native resources.
+            // Review the API reference for important considerations before calling close() in apps with
+            // more complicated lifecycle requirements:
+            // https://developers.google.com/ar/reference/java/arcore/reference/com/google/ar/core/Session#close()
+            session.close();
+            session = null;
+        }
+
+        super.onDestroy();
+    }
+
+    @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
@@ -280,14 +294,19 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
             planeRenderer.drawPlanes(
                     session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
 
-            if (currentAnchor != null && currentAnchor.getTrackingState() == TrackingState.TRACKING) {
-                currentAnchor.getPose().toMatrix(anchorMatrix, 0);
-                // Update and draw the model and its shadow.
-                virtualObject.updateModelMatrix(anchorMatrix, 1f);
-                virtualObjectShadow.updateModelMatrix(anchorMatrix, 1f);
+            for(WrappedAnchor wrappedAnchor : wrappedAnchors){
+                Anchor anchor = wrappedAnchor.getAnchor();
+                Trackable trackable = wrappedAnchor.getTrackable();
 
-                virtualObject.draw(viewmtx, projmtx, colorCorrectionRgba, andyColor);
-                virtualObjectShadow.draw(viewmtx, projmtx, colorCorrectionRgba, andyColor);
+                if (anchor != null && anchor.getTrackingState() == TrackingState.TRACKING) {
+                    anchor.getPose().toMatrix(anchorMatrix, 0);
+                    // Update and draw the model and its shadow.
+                    virtualObject.updateModelMatrix(anchorMatrix, 1f);
+                    virtualObjectShadow.updateModelMatrix(anchorMatrix, 1f);
+
+                    virtualObject.draw(viewmtx, projmtx, colorCorrectionRgba, andyColor);
+                    virtualObjectShadow.draw(viewmtx, projmtx, colorCorrectionRgba, andyColor);
+                }
             }
         } catch (Throwable t) {
             // Avoid crashing the application due to unhandled exceptions.
@@ -297,27 +316,31 @@ public class CloudAnchorFragment extends Fragment implements GLSurfaceView.Rende
 
     // Handle only one tap per frame, as taps are usually low frequency compared to frame rate.
     private void handleTap(Frame frame, Camera camera){
-        if(currentAnchor != null){
-            return; // Do nothing if there was already an anchor.
-        }
+//        if(currentAnchor != null){
+//            return; // Do nothing if there was already an anchor.
+//        }
 
         MotionEvent tap = tapHelper.poll();
         if(tap != null && camera.getTrackingState() == TrackingState.TRACKING){
-            for (HitResult hit : frame.hitTest(tap)){
+            List<HitResult> hitResultList;
+            hitResultList = frame.hitTest(tap);
+
+            for (HitResult hit : hitResultList){
                 // Check if any plane was hit, and if it was hit inside the plane polygon
                 Trackable trackable = hit.getTrackable();
+
                 // Creates an anchor if a plane or an oriented point was hit.
                 if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())
                 && (PlaneRenderer.calculateDistanceToPlane(hit.getHitPose(), camera.getPose()) > 0))
                 || (trackable instanceof Point && ((Point) trackable).getOrientationMode()
                 == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)){
 
-                    // Hits are sorted by depth. Consider only closest hit on a plane or oriented point.
+                    if(wrappedAnchors.size() >= 20){
+                        wrappedAnchors.get(0).getAnchor().detach();
+                        wrappedAnchors.remove(0);
+                    }
 
-                    // Adding an Anchor tells ARCore that it should track this position in
-                    // space. This anchor is created on the Plane to place the 3D model
-                    // in the correct position relative both to the world and to the plane.
-                    currentAnchor = hit.createAnchor();
+                    wrappedAnchors.add(new WrappedAnchor(hit.createAnchor(), trackable));
 
                     break;
                 }
