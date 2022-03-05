@@ -23,11 +23,10 @@
         android:text="send"
         android:id="@+id/btn1"/>
 
-
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="camera"
-        android:id="@+id/btnAr"/>
+        android:text="씬 폼 테스트 액티비티"
+        android:id="@+id/btnArSf"/>
 
 </LinearLayout>

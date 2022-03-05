@@ -16,9 +16,14 @@
 
 package com.mju.ar_capstone.helpers;
 
+import android.os.SystemClock;
+
+import androidx.annotation.Nullable;
+
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Session;
+import com.google.ar.sceneform.utilities.Preconditions;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,52 +34,96 @@ import java.util.Map;
  * the existing ARCore API.
  */
 public class CloudAnchorManager {
-  /** Listener for the results of a host or resolve operation. */
-  public interface CloudAnchorListener {
+  private static final long DURATION_FOR_NO_RESOLVE_RESULT_MS = 10000;
+  private long deadlineForMessageMillis;
+
+  /** Listener for the results of a host operation. */
+  public interface CloudAnchorHostListener {
 
     /** This method is invoked when the results of a Cloud Anchor operation are available. */
     void onCloudTaskComplete(Anchor anchor);
   }
 
-  private final HashMap<Anchor, CloudAnchorListener> pendingAnchors = new HashMap<>();
+  /** Listener for the results of a resolve operation. */
+  public interface CloudAnchorResolveListener {
+
+    /** This method is invoked when the results of a Cloud Anchor operation are available. */
+    void onCloudTaskComplete(Anchor anchor);
+
+    /** This method show the toast message. */
+    void onShowResolveMessage();
+  }
+
+  @Nullable private Session session = null;
+  private final HashMap<Anchor, CloudAnchorHostListener> pendingHostAnchors = new HashMap<>();
+  private final HashMap<Anchor, CloudAnchorResolveListener> pendingResolveAnchors = new HashMap<>();
+
+  /**
+   * This method is used to set the session, since it might not be available when this object is
+   * created.
+   */
+  public synchronized void setSession(Session session) {
+    this.session = session;
+  }
 
   /**
    * This method hosts an anchor. The {@code listener} will be invoked when the results are
    * available.
    */
-  public synchronized void hostCloudAnchor(
-          Session session, Anchor anchor, int ttl, CloudAnchorListener listener) {
-    Anchor newAnchor = session.hostCloudAnchorWithTtl(anchor, ttl);
-    pendingAnchors.put(newAnchor, listener);
+  public synchronized void hostCloudAnchor(Anchor anchor, CloudAnchorHostListener listener) {
+    Preconditions.checkNotNull(session, "The session cannot be null.");
+    Anchor newAnchor = session.hostCloudAnchor(anchor);
+    pendingHostAnchors.put(newAnchor, listener);
   }
 
   /**
    * This method resolves an anchor. The {@code listener} will be invoked when the results are
    * available.
    */
-  public synchronized void resolveCloudAnchor(
-          Session session, String anchorId, CloudAnchorListener listener) {
+  synchronized void resolveCloudAnchor(
+          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) {
+    Preconditions.checkNotNull(session, "The session cannot be null.");
     Anchor newAnchor = session.resolveCloudAnchor(anchorId);
-    pendingAnchors.put(newAnchor, listener);
+    deadlineForMessageMillis = startTimeMillis + DURATION_FOR_NO_RESOLVE_RESULT_MS;
+    pendingResolveAnchors.put(newAnchor, listener);
   }
 
   /** Should be called after a {@link Session#update()} call. */
   public synchronized void onUpdate() {
-    Iterator<Map.Entry<Anchor, CloudAnchorListener>> iter = pendingAnchors.entrySet().iterator();
-    while (iter.hasNext()) {
-      Map.Entry<Anchor, CloudAnchorListener> entry = iter.next();
+    Preconditions.checkNotNull(session, "The session cannot be null.");
+    Iterator<Map.Entry<Anchor, CloudAnchorHostListener>> hostIter =
+            pendingHostAnchors.entrySet().iterator();
+    while (hostIter.hasNext()) {
+      Map.Entry<Anchor, CloudAnchorHostListener> entry = hostIter.next();
       Anchor anchor = entry.getKey();
       if (isReturnableState(anchor.getCloudAnchorState())) {
-        CloudAnchorListener listener = entry.getValue();
+        CloudAnchorHostListener listener = entry.getValue();
         listener.onCloudTaskComplete(anchor);
-        iter.remove();
+        hostIter.remove();
+      }
+    }
+
+    Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
+            pendingResolveAnchors.entrySet().iterator();
+    while (resolveIter.hasNext()) {
+      Map.Entry<Anchor, CloudAnchorResolveListener> entry = resolveIter.next();
+      Anchor anchor = entry.getKey();
+      CloudAnchorResolveListener listener = entry.getValue();
+      if (isReturnableState(anchor.getCloudAnchorState())) {
+        listener.onCloudTaskComplete(anchor);
+        resolveIter.remove();
+      }
+      if (deadlineForMessageMillis > 0 && SystemClock.uptimeMillis() > deadlineForMessageMillis) {
+        listener.onShowResolveMessage();
+        deadlineForMessageMillis = 0;
       }
     }
   }
 
-  /** Used to clear any currently registered listeners, so they wont be called again. */
-  public synchronized void clearListeners() {
-    pendingAnchors.clear();
+  /** Used to clear any currently registered listeners, so they won't be called again. */
+  synchronized void clearListeners() {
+    pendingHostAnchors.clear();
+    deadlineForMessageMillis = 0;
   }
 
   private static boolean isReturnableState(CloudAnchorState cloudState) {

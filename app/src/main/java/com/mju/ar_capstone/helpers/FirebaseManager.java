@@ -1,6 +1,8 @@
 package com.mju.ar_capstone.helpers;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -43,6 +45,8 @@ public class FirebaseManager {
 
     }
 
+
+    //앵커아이디만 주어졌을때
     public void setContent(String anchorId){
 
         long now = System.currentTimeMillis();

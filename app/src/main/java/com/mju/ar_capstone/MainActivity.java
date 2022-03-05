@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     //화면 요소들 선언
     TextView textView;
-    Button button, btnAr;
+    Button button, btnArSf;
     EditText editText;
 
 
@@ -40,8 +40,10 @@ public class MainActivity extends AppCompatActivity {
         //화면 요소들 초기
         textView = (TextView) findViewById(R.id.tv1);
         button = (Button) findViewById(R.id.btn1);
-        btnAr = (Button) findViewById(R.id.btnAr);
         editText = (EditText) findViewById(R.id.edt1);
+
+        // 씬 폼 데트스용
+        btnArSf = (Button) findViewById(R.id.btnArSf);
 
 
         //아래 기존 코드를 firebase manager로 대체중
@@ -59,11 +61,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //버튼 클릭시 ar화면으로 전환
-        btnAr.setOnClickListener(new View.OnClickListener() {
+
+        //버튼 클릭시 ar 씬폼 화면으로 전환
+        btnArSf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), ArActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
                 startActivity(intent);
             }
         });
