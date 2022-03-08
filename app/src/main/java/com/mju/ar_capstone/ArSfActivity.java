@@ -43,6 +43,7 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.List;
 
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
@@ -75,6 +76,8 @@ public class ArSfActivity extends AppCompatActivity implements
         }
 
         firebaseManager = new FirebaseManager();
+        firebaseManager.registerValueListner();
+
 
         // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
@@ -101,18 +104,24 @@ public class ArSfActivity extends AppCompatActivity implements
     // firebase에 저장된 앵커 불러오기
     public void loadCloudAnchors() throws CameraNotAvailableException {
 
-        arFragment.getArSceneView().getSession().update();
-        Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor("ua-7eb0d710fcbd8988677728fe58d075a7");
+        for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
+            String tmpAnchorId = wrappedAnchor.getAnchorId();
+            Log.d("순서", tmpAnchorId);
 
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
-        Log.d("순서", "onClick test");
 
-        // Create the transformable model and add it to the anchor.
-        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-        model.setParent(anchorNode);
-        model.setRenderable(this.viewRenderable);
-        model.select();
+            arFragment.getArSceneView().getSession().update();
+            Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor(tmpAnchorId);
+
+            AnchorNode anchorNode = new AnchorNode(anchor);
+            anchorNode.setParent(arFragment.getArSceneView().getScene());
+            Log.d("순서", "onClick test");
+
+            // Create the transformable model and add it to the anchor.
+            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+            model.setParent(anchorNode);
+            model.setRenderable(this.viewRenderable);
+            model.select();
+        }
 
     }
 
@@ -186,7 +195,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
         // Create the Anchor. and Listener
         Anchor anchor = hitResult.createAnchor();
-        RoomCodeAndCloudAnchorIdListener hostListener = new RoomCodeAndCloudAnchorIdListener();
+        FirebaseCloudAnchorIdListener hostListener = new FirebaseCloudAnchorIdListener();
 
         // 클라우드 앵커 동기화 관련해서 문제가 있는거 같음
         // 현재 앵커는 찍혀도 서버로 데이터가 바로 안올라가는 경우가 있음
@@ -209,7 +218,7 @@ public class ArSfActivity extends AppCompatActivity implements
      * Listens for both a new room code and an anchor ID, and shares the anchor ID in Firebase with
      * the room code when both are available.
      */
-    private final class RoomCodeAndCloudAnchorIdListener implements CloudAnchorManager.CloudAnchorHostListener {
+    private final class FirebaseCloudAnchorIdListener implements CloudAnchorManager.CloudAnchorHostListener {
 
         private String cloudAnchorId;
 
