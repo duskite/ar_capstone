@@ -6,7 +6,6 @@
     android:gravity="center"
     android:orientation="vertical"
     android:padding="6dp"
-    android:text="수정하려면 터치하세요"
+    android:text=""
     android:textAlignment="center"
-    android:id="@+id/tvTest"
-    />
+    android:id="@+id/tvTestText"/>

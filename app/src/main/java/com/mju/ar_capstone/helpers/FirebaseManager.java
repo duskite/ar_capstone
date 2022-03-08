@@ -64,6 +64,7 @@ public class FirebaseManager {
     public void registerValueListner() {
 
         mDatabaseListener =
+
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -77,12 +78,15 @@ public class FirebaseManager {
                             }
                         }
 
+                        Log.d("순서", "클라우드 앵커 데이터 로드 끝");
+
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
                     }
                 };
+
         mDatabase.addValueEventListener(mDatabaseListener);
     }
 

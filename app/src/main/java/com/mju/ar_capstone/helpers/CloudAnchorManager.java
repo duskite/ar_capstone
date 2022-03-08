@@ -78,20 +78,19 @@ public class CloudAnchorManager {
     pendingHostAnchors.put(newAnchor, listener);
   }
 
-  /**
-   * This method resolves an anchor. The {@code listener} will be invoked when the results are
-   * available.
-   */
-  public synchronized void resolveCloudAnchor(
-          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) throws CameraNotAvailableException {
-    Preconditions.checkNotNull(session, "The session cannot be null.");
-    Anchor newAnchor = session.resolveCloudAnchor(anchorId);
-    deadlineForMessageMillis = startTimeMillis + DURATION_FOR_NO_RESOLVE_RESULT_MS;
-
-    Log.d("순서", "resolveCloudAnchor pendinfResolveAnchors에 넣음");
-    pendingResolveAnchors.put(newAnchor, listener);
-  }
-
+//  /**
+//   * This method resolves an anchor. The {@code listener} will be invoked when the results are
+//   * available.
+//   */
+//  public synchronized void resolveCloudAnchor(
+//          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) throws CameraNotAvailableException {
+//    Preconditions.checkNotNull(session, "The session cannot be null.");
+//    Anchor newAnchor = session.resolveCloudAnchor(anchorId);
+//    deadlineForMessageMillis = startTimeMillis + DURATION_FOR_NO_RESOLVE_RESULT_MS;
+//
+//    Log.d("순서", "resolveCloudAnchor pendinfResolveAnchors에 넣음");
+//    pendingResolveAnchors.put(newAnchor, listener);
+//  }
 
   /** Should be called after a {@link Session#update()} call. */
   public synchronized void onUpdate() {
@@ -100,6 +99,7 @@ public class CloudAnchorManager {
     Iterator<Map.Entry<Anchor, CloudAnchorHostListener>> hostIter =
             pendingHostAnchors.entrySet().iterator();
     while (hostIter.hasNext()) {
+      Log.d("순서", "Cloud Manager onUpdate in");
       Map.Entry<Anchor, CloudAnchorHostListener> entry = hostIter.next();
       Anchor anchor = entry.getKey();
       if (isReturnableState(anchor.getCloudAnchorState())) {
@@ -110,22 +110,22 @@ public class CloudAnchorManager {
     }
 
 
-    Log.d("순서", "Cloud Manager onUpdate resolve");
-    Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
-            pendingResolveAnchors.entrySet().iterator();
-    while (resolveIter.hasNext()) {
-      Map.Entry<Anchor, CloudAnchorResolveListener> entry = resolveIter.next();
-      Anchor anchor = entry.getKey();
-      CloudAnchorResolveListener listener = entry.getValue();
-      if (isReturnableState(anchor.getCloudAnchorState())) {
-        listener.onCloudTaskComplete(anchor);
-        resolveIter.remove();
-      }
-      if (deadlineForMessageMillis > 0 && SystemClock.uptimeMillis() > deadlineForMessageMillis) {
-        listener.onShowResolveMessage();
-        deadlineForMessageMillis = 0;
-      }
-    }
+//    Log.d("순서", "Cloud Manager onUpdate resolve");
+//    Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
+//            pendingResolveAnchors.entrySet().iterator();
+//    while (resolveIter.hasNext()) {
+//      Map.Entry<Anchor, CloudAnchorResolveListener> entry = resolveIter.next();
+//      Anchor anchor = entry.getKey();
+//      CloudAnchorResolveListener listener = entry.getValue();
+//      if (isReturnableState(anchor.getCloudAnchorState())) {
+//        listener.onCloudTaskComplete(anchor);
+//        resolveIter.remove();
+//      }
+//      if (deadlineForMessageMillis > 0 && SystemClock.uptimeMillis() > deadlineForMessageMillis) {
+//        listener.onShowResolveMessage();
+//        deadlineForMessageMillis = 0;
+//      }
+//    }
   }
 
   /** Used to clear any currently registered listeners, so they won't be called again. */
@@ -135,6 +135,7 @@ public class CloudAnchorManager {
   }
 
   private static boolean isReturnableState(CloudAnchorState cloudState) {
+    Log.d("순서", "isReturnableState: " + cloudState.toString());
     switch (cloudState) {
       case NONE:
       case TASK_IN_PROGRESS:
