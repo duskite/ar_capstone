@@ -17,12 +17,14 @@
 package com.mju.ar_capstone.helpers;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Session;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
 
 import java.util.HashMap;
@@ -80,16 +82,20 @@ public class CloudAnchorManager {
    * This method resolves an anchor. The {@code listener} will be invoked when the results are
    * available.
    */
-  synchronized void resolveCloudAnchor(
-          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) {
+  public synchronized void resolveCloudAnchor(
+          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) throws CameraNotAvailableException {
     Preconditions.checkNotNull(session, "The session cannot be null.");
     Anchor newAnchor = session.resolveCloudAnchor(anchorId);
     deadlineForMessageMillis = startTimeMillis + DURATION_FOR_NO_RESOLVE_RESULT_MS;
+
+    Log.d("순서", "resolveCloudAnchor pendinfResolveAnchors에 넣음");
     pendingResolveAnchors.put(newAnchor, listener);
   }
 
+
   /** Should be called after a {@link Session#update()} call. */
   public synchronized void onUpdate() {
+    Log.d("순서", "Cloud Manager onUpdate host");
     Preconditions.checkNotNull(session, "The session cannot be null.");
     Iterator<Map.Entry<Anchor, CloudAnchorHostListener>> hostIter =
             pendingHostAnchors.entrySet().iterator();
@@ -103,6 +109,8 @@ public class CloudAnchorManager {
       }
     }
 
+
+    Log.d("순서", "Cloud Manager onUpdate resolve");
     Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
             pendingResolveAnchors.entrySet().iterator();
     while (resolveIter.hasNext()) {
