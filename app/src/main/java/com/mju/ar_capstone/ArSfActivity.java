@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -65,7 +66,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private Button btnAnchorLoad;
 
-    private Dialog dialog;
+    private CustomDialog customDialog;
 
 
     @Override
@@ -82,6 +83,8 @@ public class ArSfActivity extends AppCompatActivity implements
                         .commit();
             }
         }
+
+
 
         firebaseManager = new FirebaseManager();
         firebaseManager.registerValueListner();
@@ -210,7 +213,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 });
 
         model.setRenderable(this.tempRenderable);
-        tempRenderable = null;
+        this.tempRenderable = null;
     }
 
 
@@ -221,6 +224,7 @@ public class ArSfActivity extends AppCompatActivity implements
             Toast.makeText(this, "Loading...", Toast.LENGTH_SHORT).show();
             return;
         }
+
 
         Log.d("순서", "onTapPlane");
 
@@ -240,32 +244,58 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setRenderable(this.viewRenderable);
         model.select();
         Toast.makeText(getApplicationContext(), "앵커에 글을 남기고 싶으면 앵커를 클릭하세요.", Toast.LENGTH_LONG).show();
-        model.setOnTouchListener(new Node.OnTouchListener() {
+        Log.d("순서", "model 생성됨");
+        model.setOnTapListener(new Node.OnTapListener() {
             @Override
-            public boolean onTouch(HitTestResult hitTestResult, MotionEvent motionEvent) {
+            public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                Log.d("순서", "model onTapped");
 
-                final Dialog dialog = new Dialog(ArSfActivity.this);
+                Dialog dialog = new Dialog(ArSfActivity.this);
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.requestWindowFeature(WindowManager.LayoutParams.TYPE_PHONE);
+                dialog.requestWindowFeature(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                 dialog.setContentView(R.layout.dialog_arsf);
                 dialog.show();
 
-                Button btnDialog = dialog.findViewById(R.id.btnDialog);
+//                Button btnOk = dialog.findViewById(R.id.btnOk);
                 EditText edtDialog = dialog.findViewById(R.id.edtDialog);
-                btnDialog.setOnClickListener(new View.OnClickListener() {
+                TextView tvOk = dialog.findViewById(R.id.option_codetype_dialog_positive);
+                tvOk.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Log.d("순서", edtDialog.getText().toString());
                         String text = edtDialog.getText().toString();
                         makeModels(model, text);
+
+                        Log.d("순서", "눌림");
+
                         dialog.dismiss();
                     }
                 });
 
-                return true;
+//                customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
+//                    @Override
+//                    public void onPositiveClick() {
+//                        Log.d("순서", "버튼 눌림");
+//
+//                    }
+//
+//                    @Override
+//                    public void onNegativeClick() {
+//
+//                    }
+//                });
+//                customDialog.setCanceledOnTouchOutside(true);
+//                customDialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+//                customDialog.setCancelable(true);
+//                customDialog.show();
+
+                Log.d("순서", "customDialog 생성됨");
             }
         });
 
-        cloudManager.onUpdate();
+        Log.d("순서", "onTapPlane end");
+//        cloudManager.onUpdate();
 
     }
 
