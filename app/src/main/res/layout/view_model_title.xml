@@ -10,3 +10,4 @@
     android:textAlignment="center"
     android:id="@+id/tvTest"
     />
+
