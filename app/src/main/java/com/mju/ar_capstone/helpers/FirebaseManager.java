@@ -73,8 +73,10 @@ public class FirebaseManager {
                             Log.d("순서", postSnapshot.getKey().toString());
 
                             String anchorId = (String) postSnapshot.getKey();
+                            String anchorText = (String) dataSnapshot.child("contents").child(anchorId).child("text").getValue();
+                            Log.d("순서", "앵커에 담긴 텍스트 불러오기" + anchorText);
                             if (!anchorId.isEmpty()) {
-                                wrappedAnchorList.add(new WrappedAnchor(anchorId));
+                                wrappedAnchorList.add(new WrappedAnchor(anchorId, anchorText));
                             }
                         }
 

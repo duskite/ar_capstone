@@ -118,7 +118,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
             String tmpAnchorId = wrappedAnchor.getAnchorId();
+            String tmpAnchorText = wrappedAnchor.getAnchorText();
             Log.d("순서", tmpAnchorId);
+            Log.d("순서", tmpAnchorText);
 
             arFragment.getArSceneView().getSession().update();
             Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor(tmpAnchorId);
@@ -131,6 +133,10 @@ public class ArSfActivity extends AppCompatActivity implements
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
             model.setRenderable(this.viewRenderable);
+
+            TextView textView = (TextView) viewRenderable.getView();
+            textView.setText(tmpAnchorText);
+
             model.select();
         }
 
@@ -243,7 +249,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         // Create the transformable model and add it to the anchor.
-        final TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
         model.setParent(anchorNode);
         model.setRenderable(this.viewRenderable);
         model.select();
@@ -261,13 +267,11 @@ public class ArSfActivity extends AppCompatActivity implements
                 dialog.setContentView(R.layout.dialog_arsf);
                 dialog.show();
 
-//                Button btnOk = dialog.findViewById(R.id.btnOk);
                 EditText edtDialog = dialog.findViewById(R.id.edtDialog);
                 TextView tvOk = dialog.findViewById(R.id.option_codetype_dialog_positive);
                 tvOk.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-//                        Log.d("순서", edtDialog.getText().toString());
                         String text = edtDialog.getText().toString();
                         TextView textView = (TextView) viewRenderable.getView();
                         textView.setText(text);
@@ -300,7 +304,7 @@ public class ArSfActivity extends AppCompatActivity implements
         });
 
         Log.d("순서", "onTapPlane end");
-//        cloudManager.onUpdate();
+        cloudManager.onUpdate();
 
     }
 
