@@ -5,21 +5,16 @@ import com.google.ar.core.Trackable;
 
 public class WrappedAnchor {
 
-    private Anchor anchor;
     private String anchorId;
+    private String anchorText;
 
-    public WrappedAnchor(Anchor anchor){
-        this.anchor = anchor;
-    }
-
-    public WrappedAnchor(String anchorId){
+    public WrappedAnchor(String anchorId, String anchorText){
         this.anchorId = anchorId;
+        this.anchorText = anchorText;
     }
 
-    public Anchor getAnchor(){
-        return anchor;
-    }
     public String getAnchorId(){
         return anchorId;
     }
+    public String getAnchorText() {return anchorText;}
 }

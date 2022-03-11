@@ -51,6 +51,7 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
@@ -66,7 +67,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private Button btnAnchorLoad;
 
-    private CustomDialog customDialog;
+//    private CustomDialog customDialog;
 
 
     @Override
@@ -117,7 +118,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
             String tmpAnchorId = wrappedAnchor.getAnchorId();
+            String tmpAnchorText = wrappedAnchor.getAnchorText();
             Log.d("순서", tmpAnchorId);
+            Log.d("순서", tmpAnchorText);
 
             arFragment.getArSceneView().getSession().update();
             Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor(tmpAnchorId);
@@ -130,6 +133,40 @@ public class ArSfActivity extends AppCompatActivity implements
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
             model.setRenderable(this.viewRenderable);
+
+            TextView textView = (TextView) viewRenderable.getView();
+            textView.setText(tmpAnchorText);
+
+            //각각의 모델에 탭 리스너 부착
+            model.setOnTapListener(new Node.OnTapListener() {
+                @Override
+                public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                    Log.d("순서", "model onTapped");
+
+                    Dialog dialog = new Dialog(ArSfActivity.this);
+                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                    dialog.requestWindowFeature(WindowManager.LayoutParams.TYPE_PHONE);
+                    dialog.requestWindowFeature(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    dialog.setContentView(R.layout.dialog_arsf);
+                    dialog.show();
+
+                    EditText edtDialog = dialog.findViewById(R.id.edtDialog);
+                    TextView tvOk = dialog.findViewById(R.id.option_codetype_dialog_positive);
+                    tvOk.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String text = edtDialog.getText().toString();
+                            TextView textView = (TextView) viewRenderable.getView();
+                            textView.setText(text);
+
+                            Log.d("순서", "눌림");
+
+                            dialog.dismiss();
+                        }
+                    });
+                }
+            });
+
             model.select();
         }
 
@@ -178,10 +215,10 @@ public class ArSfActivity extends AppCompatActivity implements
         ViewRenderable.builder()
                 .setView(this, R.layout.view_model_title)
                 .build()
-                .thenAccept(viewRenderable -> {
+                .thenAccept(renderable -> {
                     ArSfActivity activity = weakActivity.get();
                     if (activity != null) {
-                        activity.viewRenderable = viewRenderable;
+                        activity.viewRenderable = renderable;
                     }
                 })
                 .exceptionally(throwable -> {
@@ -190,31 +227,34 @@ public class ArSfActivity extends AppCompatActivity implements
                 });
     }
 
-    // 텍스트 tempRederable 생성 메소드
-    public void makeModels(TransformableNode model, String text){
-
-        View view = getLayoutInflater().inflate(R.layout.view_model_text, null, false);
-        TextView textView = (TextView) view.findViewById(R.id.tvTestText);
-        textView.setText(text);
-
-        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
-        ViewRenderable.builder()
-                .setView(this, view)
-                .build()
-                .thenAccept(tempRenderable -> {
-                    ArSfActivity activity = weakActivity.get();
-                    if (activity != null) {
-                        activity.tempRenderable = tempRenderable;
-                    }
-                })
-                .exceptionally(throwable -> {
-                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                    return null;
-                });
-
-        model.setRenderable(this.tempRenderable);
-        this.tempRenderable = null;
-    }
+//    // 텍스트 tempRederable 생성 메소드
+//    public void makeModels(String text){
+//
+//        Log.d("순서", "makeModels");
+//
+//
+//        View view = getLayoutInflater().inflate(R.layout.view_model_text, null, false);
+//        TextView textView = (TextView) view.findViewById(R.id.tvTestText);
+//        textView.setText(text);
+//
+//        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
+//        ViewRenderable.builder()
+//                .setView(this, view)
+//                .build()
+//                .thenAccept(renderable -> {
+//                    ArSfActivity activity = weakActivity.get();
+//                    if (activity != null) {
+//                        Log.d("순서", "tempRenderable에 넣음");
+//                        activity.tempRenderable = renderable;
+//                    }
+//                })
+//                .exceptionally(throwable -> {
+//                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+//                    return null;
+//                });
+//
+//        Log.d("순서", "makeModels end");
+//    }
 
 
     @Override
@@ -257,15 +297,14 @@ public class ArSfActivity extends AppCompatActivity implements
                 dialog.setContentView(R.layout.dialog_arsf);
                 dialog.show();
 
-//                Button btnOk = dialog.findViewById(R.id.btnOk);
                 EditText edtDialog = dialog.findViewById(R.id.edtDialog);
                 TextView tvOk = dialog.findViewById(R.id.option_codetype_dialog_positive);
                 tvOk.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.d("순서", edtDialog.getText().toString());
                         String text = edtDialog.getText().toString();
-                        makeModels(model, text);
+                        TextView textView = (TextView) viewRenderable.getView();
+                        textView.setText(text);
 
                         Log.d("순서", "눌림");
 
@@ -295,7 +334,7 @@ public class ArSfActivity extends AppCompatActivity implements
         });
 
         Log.d("순서", "onTapPlane end");
-//        cloudManager.onUpdate();
+        cloudManager.onUpdate();
 
     }
 
