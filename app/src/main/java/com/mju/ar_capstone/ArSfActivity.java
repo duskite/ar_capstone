@@ -137,6 +137,36 @@ public class ArSfActivity extends AppCompatActivity implements
             TextView textView = (TextView) viewRenderable.getView();
             textView.setText(tmpAnchorText);
 
+            //각각의 모델에 탭 리스너 부착
+            model.setOnTapListener(new Node.OnTapListener() {
+                @Override
+                public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                    Log.d("순서", "model onTapped");
+
+                    Dialog dialog = new Dialog(ArSfActivity.this);
+                    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                    dialog.requestWindowFeature(WindowManager.LayoutParams.TYPE_PHONE);
+                    dialog.requestWindowFeature(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    dialog.setContentView(R.layout.dialog_arsf);
+                    dialog.show();
+
+                    EditText edtDialog = dialog.findViewById(R.id.edtDialog);
+                    TextView tvOk = dialog.findViewById(R.id.option_codetype_dialog_positive);
+                    tvOk.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String text = edtDialog.getText().toString();
+                            TextView textView = (TextView) viewRenderable.getView();
+                            textView.setText(text);
+
+                            Log.d("순서", "눌림");
+
+                            dialog.dismiss();
+                        }
+                    });
+                }
+            });
+
             model.select();
         }
 
