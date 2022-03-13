@@ -19,7 +19,8 @@
         android:usesCleartextTraffic="false">
         <activity
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:name=".MainActivity">
+            android:name=".MainActivity"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -35,5 +36,5 @@
             />
         <meta-data android:name="com.google.ar.core" android:value="required"/>
     </application>
-
+    //ㅎ
 </manifest>
