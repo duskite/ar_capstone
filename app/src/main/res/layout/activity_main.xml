@@ -13,4 +13,12 @@
         android:text="씬 폼 테스트 액티비티"
         android:id="@+id/btnArSf"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="지도"
+        android:id="@+id/btnMap"/>
+
+
+
 </LinearLayout>

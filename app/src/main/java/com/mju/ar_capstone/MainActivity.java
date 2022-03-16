@@ -22,7 +22,7 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseManager firebaseManager;
-
+    private Button btnMap;
     //화면 요소들 선언
     Button btnArSf;
 
@@ -45,6 +45,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
+                startActivity(intent);
+            }
+        });
+        // 지도로 이동
+        btnMap = findViewById(R.id.btnMap);
+
+        btnMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, MapActivity.class);
                 startActivity(intent);
             }
         });
