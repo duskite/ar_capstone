@@ -26,6 +26,7 @@ import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
+import com.mju.ar_capstone.CustomDialog;
 import com.mju.ar_capstone.WrappedAnchor;
 
 import java.util.ArrayList;
@@ -85,14 +86,15 @@ public class CloudAnchorManager {
 
 
   // 클라우드 앵커 발급
-  public synchronized void hostCloudAnchor(Anchor anchor, String text, String userId, double lat, double lng) {
+  public synchronized void hostCloudAnchor(Anchor anchor, String text_or_path, String userId, double lat, double lng, String anchorType) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
-    wrappedAnchorList.add(new WrappedAnchor(newAnchor, text, userId, lat, lng));
+    wrappedAnchorList.add(new WrappedAnchor(newAnchor, text_or_path, userId, lat, lng, anchorType));
   }
-  //여기가 굳이 필요없을꺼 같음
-  public synchronized void resolveCloudAnchor(String cloudAnchorID){
-    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
-  }
+
+//  //여기가 굳이 필요없을꺼 같음
+//  public synchronized void resolveCloudAnchor(String cloudAnchorID){
+//    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
+//  }
 
   public synchronized void onUpdate() {
     Iterator iterator = wrappedAnchorList.iterator();

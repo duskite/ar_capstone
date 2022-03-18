@@ -21,15 +21,48 @@ public class FireStorageManager {
 
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference;
+    private StorageReference tmpReferece;
+    private Uri tmpUri;
 
     public FireStorageManager(){
         firebaseStorage = FirebaseStorage.getInstance();
         storageReference = firebaseStorage.getReference();
+        tmpReferece = storageReference.child("image/1.png");
     }
+
+    public String getImagePath(){
+
+        return tmpReferece.getPath();
+//        return tmpReferece.getDownloadUrl().toString();
+    }
+
+    public Uri getUri(){
+        return tmpUri;
+    }
+
+    public void downloadImage(String path){
+        Log.d("순서 이미지 로드", "downloadImage");
+        Log.d("순서 이미지 로드", path);
+        Log.d("순서 이미지 로드", storageReference.child(path).toString());
+        Log.d("순서 이미지 로드", storageReference.child(path).getDownloadUrl().toString());
+
+        storageReference.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                tmpUri = uri;
+                Log.d("순서 이미지 다운", "다운 성공");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("순서 이미지 다운", "다운 실패");
+            }
+        });
+    }
+
 
     //액티비티에서 Uri 넘겨줘야함
     public void uploadImage(Uri file){
-        StorageReference tmpReferece = storageReference.child("image/1.png");
         UploadTask uploadTask = tmpReferece.putFile(file);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {

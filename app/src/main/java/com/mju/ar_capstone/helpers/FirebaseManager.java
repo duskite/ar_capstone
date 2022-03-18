@@ -46,9 +46,12 @@ public class FirebaseManager {
         return (String) dateFormat.format(date);
     }
 
-    // 컨텐츠 삭제
-    public void deleteContent(){
+    // 컨텐츠 삭제, 앵커아이디 기준으로 삭제
+    public void deleteContent(Anchor anchor){
+        String tmpId = anchor.getCloudAnchorId();
 
+        mDatabase.child("contents").child(tmpId).removeValue();
+        mDatabase.child("anchor_list").child(tmpId).removeValue();
     }
 
     // wrappedAnchor 자체를 받아서 여기서 처리
@@ -56,8 +59,9 @@ public class FirebaseManager {
     public void setContent(WrappedAnchor wrappedAnchor){
         String created = createdTimeOfContent();
         String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
-        String text = wrappedAnchor.getText();
+        String text_or_path = wrappedAnchor.getText();
         String userID = wrappedAnchor.getUserID();
+        String anchorType = wrappedAnchor.getAnchorType();
         double lat = wrappedAnchor.getlat();
         double lng = wrappedAnchor.getlng();
 
@@ -68,9 +72,9 @@ public class FirebaseManager {
         contentDB.child("lat").setValue(lat);
         contentDB.child("lng").setValue(lng);
         contentDB.child("userID").setValue(userID);
-        contentDB.child("text").setValue(text);
+        contentDB.child("text_or_path").setValue(text_or_path);
         contentDB.child("created").setValue(created);
-        contentDB.child("type").setValue("text");
+        contentDB.child("type").setValue(anchorType);
     }
 
 
@@ -88,13 +92,13 @@ public class FirebaseManager {
                             Log.d("순서 키들", postSnapshot.getKey());
 
                             String cloudAnchorID = (String) postSnapshot.getKey();
-                            String text = (String) postSnapshot.child("text").getValue();
+                            String text_or_path = (String) postSnapshot.child("text_or_path").getValue();
                             String userID = (String) postSnapshot.child("userID").getValue();
                             String anchorType = (String) postSnapshot.child("type").getValue();
 //                            double lat = (double) postSnapshot.child("lat").getValue();
 //                            double lng = (double) postSnapshot.child("lng").getValue();
 
-                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text, userID, anchorType));
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorType));
 
                         }
                     }

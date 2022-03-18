@@ -162,7 +162,7 @@ public class ArSfActivity extends AppCompatActivity implements
     public void loadCloudAnchors(){
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
-            String text = wrappedAnchor.getText();
+            String text_or_path = wrappedAnchor.getText();
             String userID = wrappedAnchor.getUserID();
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
@@ -170,6 +170,9 @@ public class ArSfActivity extends AppCompatActivity implements
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
             }else if(stringAnchorType.equals("image")){
+                //불러올때 여기서 이미지 한번 로드함
+                Log.d("순서 이미지 로드", "시작");
+                fireStorageManager.downloadImage(text_or_path);
                 anchorType = CustomDialog.AnchorType.image;
             }else if(stringAnchorType.equals("test")){
                 anchorType = CustomDialog.AnchorType.test;
@@ -186,11 +189,13 @@ public class ArSfActivity extends AppCompatActivity implements
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
 
-            changeAnchor(model, text, anchorType);
+            changeAnchor(model, text_or_path, anchorType);
             setTapListenerType(model, anchor, anchorType);
             model.select();
         }
     }
+
+
 
     public void setTapListenerType(TransformableNode model, Anchor anchor, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
@@ -200,21 +205,17 @@ public class ArSfActivity extends AppCompatActivity implements
                     CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                         @Override
                         public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                            Log.d("순서", "예스 클릭됨");
-                            changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor, tmpText, anchorType);
+                            tapPositive(anchor, model, tmpText, anchorType);
                         }
 
                         @Override
                         public void onNegativeClick() {
-                            Log.d("순서", "노 클릭됨");
-                            //앵커 삭제
-                            anchor.detach();
+                            tapNegative(anchor);
                         }
 
                         @Override
                         public void onImageClick(ImageView dialogImg) {
-
+                            tapImage(dialogImg);
                         }
                     });
                     customDialog.show();
@@ -225,7 +226,7 @@ public class ArSfActivity extends AppCompatActivity implements
             model.setOnTapListener(new Node.OnTapListener() {
                 @Override
                 public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-
+                    Log.d("순서", "모델이 잘 로드 되기는 함");
                 }
             });
 
@@ -288,6 +289,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.textRenderable = renderable;
                     }
+                    Log.d("순서 모델", "모델 생성 1");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -303,6 +305,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.selectRenderable = renderable;
                     }
+                    Log.d("순서 모델", "모델 생성 2");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -318,6 +321,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.imageRanderable = renderable;
                     }
+                    Log.d("순서 모델", "모델 생성 3");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -342,11 +346,29 @@ public class ArSfActivity extends AppCompatActivity implements
         return tmpRenderable;
     }
 
+    //2곳이 같은 코드라서 하나로 묶어버림
+    public void tapPositive(Anchor anchor, TransformableNode model, String tmpText, CustomDialog.AnchorType anchorType){
+        Log.d("순서", "예스 클릭됨");
+        changeAnchor(model, tmpText, anchorType);
+        saveAnchor(anchor, tmpText, anchorType);
+    }
+    public void tapNegative(Anchor anchor){
+        Log.d("순서", "노 클릭됨");
+        //앵커 삭제
+        firebaseManager.deleteContent(anchor);
+    }
+    public void tapImage(ImageView dialogImg){
+        tmpImageView = dialogImg;
+        loadAlbum();
+    }
+
     //화면상에 보여지는 앵커를 우선 바꿈
-    public void changeAnchor(TransformableNode model, String text, CustomDialog.AnchorType anchorType){
+    public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
-            model.setRenderable(makeTextModels(text));
+            model.setRenderable(makeTextModels(text_or_path));
         }else if(anchorType == CustomDialog.AnchorType.image){
+            tmpImage = fireStorageManager.getUri();
+            Log.d("순서 모델", "체인지 이미지 모델");
             model.setRenderable(makeImageModels());
         }
     }
@@ -357,8 +379,11 @@ public class ArSfActivity extends AppCompatActivity implements
         checkGPS();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng);
+            cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
+            Log.d("순서 패스",fireStorageManager.getImagePath());
+            String path = fireStorageManager.getImagePath();
+            cloudManager.hostCloudAnchor(anchor, path, userId, lat, lng, "image");
             fireStorageManager.uploadImage(tmpImage);
         }
         cloudManager.onUpdate();
@@ -384,22 +409,17 @@ public class ArSfActivity extends AppCompatActivity implements
                 CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                     @Override
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                        Log.d("순서", "예스 클릭됨");
-                        changeAnchor(model, tmpText, anchorType);
-                        saveAnchor(anchor, tmpText, anchorType);
+                        tapPositive(anchor, model, tmpText, anchorType);
 
                     }
                     @Override
                     public void onNegativeClick() {
-                        Log.d("순서", "노 클릭됨");
-                        //앵커 삭제
-                        anchor.detach();
+                        tapNegative(anchor);
                     }
 
                     @Override
                     public void onImageClick(ImageView dialogImg) {
-                        tmpImageView = dialogImg;
-                        loadAlbum();
+                        tapImage(dialogImg);
                     }
                 });
                 customDialog.show();
@@ -419,6 +439,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
 
+
     // 이미지 업로드 부분
     //사용자 갤러리 불러오기
     private void loadAlbum(){
@@ -434,40 +455,6 @@ public class ArSfActivity extends AppCompatActivity implements
             tmpImage = data.getData();
             tmpImageView.setImageURI(tmpImage);
         }
-
-        //실제 업로드 부분인데 잠시 보류
-//        if(requestCode == GALLERY_CODE){
-//            Uri file = data.getData();
-//            StorageReference storageReference = firebaseStorage.getReference();
-//            StorageReference riversReference = storageReference.child("image/1.png");
-//            UploadTask uploadTask = riversReference.putFile(file);
-//
-//            try {
-//                InputStream in = getContentResolver().openInputStream(data.getData());
-//                Bitmap img = BitmapFactory.decodeStream(in);
-//                in.close();
-//                tmpImageView.setImageBitmap(img);
-//
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            uploadTask.addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull Exception e) {
-//                    Toast.makeText(getApplicationContext(), "사진 실패", Toast.LENGTH_LONG).show();
-//                }
-//            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                @Override
-//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                    Toast.makeText(getApplicationContext(), "사진 정상 업로드 됨", Toast.LENGTH_LONG).show();
-//                }
-//            });
-
-//        }
-
     }
 }
 
