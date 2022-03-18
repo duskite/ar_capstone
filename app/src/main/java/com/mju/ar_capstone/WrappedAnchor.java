@@ -5,18 +5,35 @@ import com.google.ar.core.Trackable;
 
 public class WrappedAnchor {
 
-    private String anchorId;
+    private Anchor anchor;
+    private String cloudAnchorId;
     private String anchorText;
-    private String anchorGPS;
-    private String createdUser;
+    private double lat;
+    private double lng;
+    private String userID;
 
-    public WrappedAnchor(String anchorId, String anchorText){
-        this.anchorId = anchorId;
-        this.anchorText = anchorText;
+
+    public WrappedAnchor(Anchor anchor, String text, String userID, double lat, double lng){
+        this.anchor = anchor;
+        this.anchorText = text;
+        this.userID = userID;
+        this.lat = lat;
+        this.lng = lng;
     }
 
-    public String getAnchorId(){
-        return anchorId;
+    public Anchor getAnchor(){
+        return anchor;
     }
-    public String getAnchorText() {return anchorText;}
+    public String getCloudAnchorId(){
+        return cloudAnchorId;
+    }
+    public String getText() {return anchorText;}
+    public double getlat() {return lat;}
+    public double getlng() {return lng;}
+    public String getUserID() {return userID;}
+
+
+    public void setCloudAnchorID(String cloudAnchorID){
+        this.cloudAnchorId = cloudAnchorID;
+    }
 }

@@ -45,59 +45,85 @@ public class FirebaseManager {
         return (String) dateFormat.format(date);
     }
 
-    //앵커아이디만 주어졌을때
-    public void setContent(String anchorId){
 
-        long now = System.currentTimeMillis();
-        Date date = new Date(now);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        String created = dateFormat.format(date);
+    // wrappedAnchor 자체를 받아서 여기서 처리
+    public void setContent(WrappedAnchor wrappedAnchor){
+        String created = createdTimeOfContent();
+        String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
+        String text = wrappedAnchor.getText();
+        String userID = wrappedAnchor.getUserID();
+        double lat = wrappedAnchor.getlat();
+        double lng = wrappedAnchor.getlng();
 
-        mDatabase.child("anchor_list").child(anchorId).setValue("text");
-        DatabaseReference contentDB = mDatabase.child("contents").child(anchorId);
+        mDatabase.child("anchor_list").child(cloudAnchorID).child("lat").setValue(lat);
+        mDatabase.child("anchor_list").child(cloudAnchorID).child("lng").setValue(lng);
 
-        contentDB.child("lat_lng").setValue("1231313");
-        contentDB.child("userID").setValue("ysy5593");
-        contentDB.child("text").setValue("anchorid test....");
-        contentDB.child("image").setValue("image url");
+        DatabaseReference contentDB = mDatabase.child("contents").child(cloudAnchorID);
+        contentDB.child("lat").setValue(lat);
+        contentDB.child("lng").setValue(lng);
+        contentDB.child("userID").setValue(userID);
+        contentDB.child("text").setValue(text);
         contentDB.child("created").setValue(created);
         contentDB.child("type").setValue("text");
-
     }
 
-    /**
-     * Registers a new listener for the given room code. The listener is invoked whenever the data for
-     * the room code is changed.
-     */
-    public void registerValueListner() {
+//    //앵커아이디만 주어졌을때
+//    public void setContent(String anchorId){
+//
+//        long now = System.currentTimeMillis();
+//        Date date = new Date(now);
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+//        String created = dateFormat.format(date);
+//
+//        mDatabase.child("anchor_list").child(anchorId).setValue("text");
+//        DatabaseReference contentDB = mDatabase.child("contents").child(anchorId);
+//
+//        contentDB.child("lat_lng").setValue("1231313");
+//        contentDB.child("userID").setValue("ysy5593");
+//        contentDB.child("text").setValue("anchorid test....");
+//        contentDB.child("image").setValue("image url");
+//        contentDB.child("created").setValue(created);
+//        contentDB.child("type").setValue("text");
+//
+//    }
 
-        mDatabaseListener =
 
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        for(DataSnapshot postSnapshot: dataSnapshot.child("anchor_list").getChildren()){
-                            Log.d("순서", postSnapshot.getKey().toString());
 
-                            String anchorId = (String) postSnapshot.getKey();
-                            String anchorText = (String) dataSnapshot.child("contents").child(anchorId).child("text").getValue();
-                            Log.d("순서", "앵커에 담긴 텍스트 불러오기" + anchorText);
-                            if (!anchorId.isEmpty()) {
-                                wrappedAnchorList.add(new WrappedAnchor(anchorId, anchorText));
-                            }
-                        }
 
-                        Log.d("순서", "클라우드 앵커 데이터 로드 끝");
-
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                };
-
-        mDatabase.addValueEventListener(mDatabaseListener);
-    }
+//    /**
+//     * Registers a new listener for the given room code. The listener is invoked whenever the data for
+//     * the room code is changed.
+//     */
+//    public void registerValueListner() {
+//
+//        mDatabaseListener =
+//
+//                new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                        for(DataSnapshot postSnapshot: dataSnapshot.child("anchor_list").getChildren()){
+//                            Log.d("순서", postSnapshot.getKey().toString());
+//
+//                            String anchorId = (String) postSnapshot.getKey();
+//                            String anchorText = (String) dataSnapshot.child("contents").child(anchorId).child("text").getValue();
+//                            Log.d("순서", "앵커에 담긴 텍스트 불러오기" + anchorText);
+//                            if (!anchorId.isEmpty()) {
+//                                wrappedAnchorList.add(new WrappedAnchor(anchorId, anchorText));
+//                            }
+//                        }
+//
+//                        Log.d("순서", "클라우드 앵커 데이터 로드 끝");
+//
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(DatabaseError databaseError) {
+//                    }
+//                };
+//
+//        mDatabase.addValueEventListener(mDatabaseListener);
+//    }
 
 }
