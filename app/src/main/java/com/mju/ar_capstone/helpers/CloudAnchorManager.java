@@ -78,33 +78,23 @@ public class CloudAnchorManager {
   private final HashMap<Anchor, CloudAnchorResolveListener> pendingResolveAnchors = new HashMap<>();
 
 
-
-  /**
-   * This method is used to set the session, since it might not be available when this object is
-   * created.
-   */
   public synchronized void setSession(Session session) {
     this.session = session;
   }
   public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
-  /**
-   * This method hosts an anchor. The {@code listener} will be invoked when the results are
-   * available.
-   */
-  public synchronized void hostCloudAnchor(Anchor anchor, CloudAnchorHostListener listener) {
-    Preconditions.checkNotNull(session, "The session cannot be null.");
-    Anchor newAnchor = session.hostCloudAnchor(anchor);
-    pendingHostAnchors.put(newAnchor, listener);
-  }
 
-  // 테스트 중인 부분. 꼭 리스너가 필요한지??
+  // 클라우드 앵커 발급
   public synchronized void hostCloudAnchor(Anchor anchor, String text, String userId, double lat, double lng) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
     wrappedAnchorList.add(new WrappedAnchor(newAnchor, text, userId, lat, lng));
   }
+  //여기가 굳이 필요없을꺼 같음
+  public synchronized void resolveCloudAnchor(String cloudAnchorID){
+    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
+  }
 
-  public synchronized void onUpdateTest() {
+  public synchronized void onUpdate() {
     Iterator iterator = wrappedAnchorList.iterator();
     while (iterator.hasNext()) {
       WrappedAnchor wrappedAnchor = (WrappedAnchor) iterator.next();
@@ -115,6 +105,7 @@ public class CloudAnchorManager {
         Log.d("순서", "cloudAnchorId: " + cloudAnchorId.toString());
 
         firebaseManager.setContent(wrappedAnchor);
+        iterator.remove();
       }
     }
   }
@@ -146,25 +137,6 @@ public class CloudAnchorManager {
 //    pendingResolveAnchors.put(newAnchor, listener);
 //  }
 
-  /**
-   * Should be called after a {@link Session#update()} call.
-   */
-  public synchronized void onUpdate() {
-    Log.d("순서", "Cloud Manager onUpdate host");
-    Preconditions.checkNotNull(session, "The session cannot be null.");
-    Iterator<Map.Entry<Anchor, CloudAnchorHostListener>> hostIter =
-            pendingHostAnchors.entrySet().iterator();
-    while (hostIter.hasNext()) {
-      Log.d("순서", "Cloud Manager onUpdate in");
-      Map.Entry<Anchor, CloudAnchorHostListener> entry = hostIter.next();
-      Anchor anchor = entry.getKey();
-      if (isReturnableState(anchor.getCloudAnchorState())) {
-        CloudAnchorHostListener listener = entry.getValue();
-        listener.onCloudTaskComplete(anchor);
-        hostIter.remove();
-      }
-    }
-
 
 //    Log.d("순서", "Cloud Manager onUpdate resolve");
 //    Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
@@ -182,6 +154,6 @@ public class CloudAnchorManager {
 //        deadlineForMessageMillis = 0;
 //      }
 //    }
-  }
+
 }
 

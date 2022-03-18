@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.firebase.database.DataSnapshot;
@@ -45,8 +46,13 @@ public class FirebaseManager {
         return (String) dateFormat.format(date);
     }
 
+    // 컨텐츠 삭제
+    public void deleteContent(){
+
+    }
 
     // wrappedAnchor 자체를 받아서 여기서 처리
+    // 컨텐츠 업로드
     public void setContent(WrappedAnchor wrappedAnchor){
         String created = createdTimeOfContent();
         String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
@@ -67,63 +73,38 @@ public class FirebaseManager {
         contentDB.child("type").setValue("text");
     }
 
-//    //앵커아이디만 주어졌을때
-//    public void setContent(String anchorId){
-//
-//        long now = System.currentTimeMillis();
-//        Date date = new Date(now);
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-//        String created = dateFormat.format(date);
-//
-//        mDatabase.child("anchor_list").child(anchorId).setValue("text");
-//        DatabaseReference contentDB = mDatabase.child("contents").child(anchorId);
-//
-//        contentDB.child("lat_lng").setValue("1231313");
-//        contentDB.child("userID").setValue("ysy5593");
-//        contentDB.child("text").setValue("anchorid test....");
-//        contentDB.child("image").setValue("image url");
-//        contentDB.child("created").setValue(created);
-//        contentDB.child("type").setValue("text");
-//
-//    }
 
+    /**
+     * Registers a new listener for the given room code. The listener is invoked whenever the data for
+     * the room code is changed.
+     */
+    public void registerValueListner() {
 
+        mDatabaseListener =
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot postSnapshot: dataSnapshot.child("contents").getChildren()){
+                            Log.d("순서 키들", postSnapshot.getKey());
 
+                            String cloudAnchorID = (String) postSnapshot.getKey();
+                            String text = (String) postSnapshot.child("text").getValue();
+                            String userID = (String) postSnapshot.child("userID").getValue();
+                            String anchorType = (String) postSnapshot.child("type").getValue();
+//                            double lat = (double) postSnapshot.child("lat").getValue();
+//                            double lng = (double) postSnapshot.child("lng").getValue();
 
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text, userID, anchorType));
 
-//    /**
-//     * Registers a new listener for the given room code. The listener is invoked whenever the data for
-//     * the room code is changed.
-//     */
-//    public void registerValueListner() {
-//
-//        mDatabaseListener =
-//
-//                new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                        for(DataSnapshot postSnapshot: dataSnapshot.child("anchor_list").getChildren()){
-//                            Log.d("순서", postSnapshot.getKey().toString());
-//
-//                            String anchorId = (String) postSnapshot.getKey();
-//                            String anchorText = (String) dataSnapshot.child("contents").child(anchorId).child("text").getValue();
-//                            Log.d("순서", "앵커에 담긴 텍스트 불러오기" + anchorText);
-//                            if (!anchorId.isEmpty()) {
-//                                wrappedAnchorList.add(new WrappedAnchor(anchorId, anchorText));
-//                            }
-//                        }
-//
-//                        Log.d("순서", "클라우드 앵커 데이터 로드 끝");
-//
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(DatabaseError databaseError) {
-//                    }
-//                };
-//
-//        mDatabase.addValueEventListener(mDatabaseListener);
-//    }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                };
+
+        mDatabase.addValueEventListener(mDatabaseListener);
+    }
 
 }

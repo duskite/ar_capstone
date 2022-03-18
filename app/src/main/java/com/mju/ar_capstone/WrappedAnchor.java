@@ -11,6 +11,27 @@ public class WrappedAnchor {
     private double lat;
     private double lng;
     private String userID;
+    private String anchorType;
+
+    public WrappedAnchor(){
+
+    }
+
+    //불러올때 이런 구조
+    public WrappedAnchor(String cloudAnchorId, String text, String userID, String anchorType){
+        this.cloudAnchorId = cloudAnchorId;
+        this.anchorText = text;
+        this.userID = userID;
+        this.anchorType = anchorType;
+    }
+
+//    public WrappedAnchor(String cloudAnchorId, String text, String userID, double lat, double lng){
+//        this.cloudAnchorId = cloudAnchorId;
+//        this.anchorText = text;
+//        this.userID = userID;
+//        this.lat = lat;
+//        this.lng = lng;
+//    }
 
 
     public WrappedAnchor(Anchor anchor, String text, String userID, double lat, double lng){
@@ -31,6 +52,7 @@ public class WrappedAnchor {
     public double getlat() {return lat;}
     public double getlng() {return lng;}
     public String getUserID() {return userID;}
+    public String getAnchorType(){return anchorType;}
 
 
     public void setCloudAnchorID(String cloudAnchorID){
