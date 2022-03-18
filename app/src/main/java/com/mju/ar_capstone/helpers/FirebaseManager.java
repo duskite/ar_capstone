@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.firebase.database.DataSnapshot;
@@ -30,32 +31,48 @@ public class FirebaseManager {
     private ValueEventListener mDatabaseListener = null;
 
     public static List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
-
-
+    
     public FirebaseManager(){
         mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(KEY_ROOT_DIR);
         DatabaseReference.goOnline();
     }
 
-    //앵커아이디만 주어졌을때
-    public void setContent(String anchorId){
-
+    //컨텐츠 생성 시간
+    public String createdTimeOfContent(){
         long now = System.currentTimeMillis();
         Date date = new Date(now);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        String created = dateFormat.format(date);
 
-        mDatabase.child("anchor_list").child(anchorId).setValue("text");
-        DatabaseReference contentDB = mDatabase.child("contents").child(anchorId);
+        return (String) dateFormat.format(date);
+    }
 
-        contentDB.child("lat_lng").setValue("1231313");
-        contentDB.child("userID").setValue("ysy5593");
-        contentDB.child("text").setValue("anchorid test....");
-        contentDB.child("image").setValue("image url");
-        contentDB.child("created").setValue(created);
-        contentDB.child("type").setValue("text");
+    // 컨텐츠 삭제
+    public void deleteContent(){
 
     }
+
+    // wrappedAnchor 자체를 받아서 여기서 처리
+    // 컨텐츠 업로드
+    public void setContent(WrappedAnchor wrappedAnchor){
+        String created = createdTimeOfContent();
+        String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
+        String text = wrappedAnchor.getText();
+        String userID = wrappedAnchor.getUserID();
+        double lat = wrappedAnchor.getlat();
+        double lng = wrappedAnchor.getlng();
+
+        mDatabase.child("anchor_list").child(cloudAnchorID).child("lat").setValue(lat);
+        mDatabase.child("anchor_list").child(cloudAnchorID).child("lng").setValue(lng);
+
+        DatabaseReference contentDB = mDatabase.child("contents").child(cloudAnchorID);
+        contentDB.child("lat").setValue(lat);
+        contentDB.child("lng").setValue(lng);
+        contentDB.child("userID").setValue(userID);
+        contentDB.child("text").setValue(text);
+        contentDB.child("created").setValue(created);
+        contentDB.child("type").setValue("text");
+    }
+
 
     /**
      * Registers a new listener for the given room code. The listener is invoked whenever the data for
@@ -64,24 +81,22 @@ public class FirebaseManager {
     public void registerValueListner() {
 
         mDatabaseListener =
-
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot postSnapshot: dataSnapshot.child("contents").getChildren()){
+                            Log.d("순서 키들", postSnapshot.getKey());
 
-                        for(DataSnapshot postSnapshot: dataSnapshot.child("anchor_list").getChildren()){
-                            Log.d("순서", postSnapshot.getKey().toString());
+                            String cloudAnchorID = (String) postSnapshot.getKey();
+                            String text = (String) postSnapshot.child("text").getValue();
+                            String userID = (String) postSnapshot.child("userID").getValue();
+                            String anchorType = (String) postSnapshot.child("type").getValue();
+//                            double lat = (double) postSnapshot.child("lat").getValue();
+//                            double lng = (double) postSnapshot.child("lng").getValue();
 
-                            String anchorId = (String) postSnapshot.getKey();
-                            String anchorText = (String) dataSnapshot.child("contents").child(anchorId).child("text").getValue();
-                            Log.d("순서", "앵커에 담긴 텍스트 불러오기" + anchorText);
-                            if (!anchorId.isEmpty()) {
-                                wrappedAnchorList.add(new WrappedAnchor(anchorId, anchorText));
-                            }
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text, userID, anchorType));
+
                         }
-
-                        Log.d("순서", "클라우드 앵커 데이터 로드 끝");
-
                     }
 
                     @Override

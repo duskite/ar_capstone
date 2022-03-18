@@ -26,9 +26,12 @@ import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
+import com.mju.ar_capstone.WrappedAnchor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,44 +42,86 @@ public class CloudAnchorManager {
   private static final long DURATION_FOR_NO_RESOLVE_RESULT_MS = 10000;
   private long deadlineForMessageMillis;
 
-  /** Listener for the results of a host operation. */
+  /**
+   * Listener for the results of a host operation.
+   */
   public interface CloudAnchorHostListener {
 
-    /** This method is invoked when the results of a Cloud Anchor operation are available. */
+    /**
+     * This method is invoked when the results of a Cloud Anchor operation are available.
+     */
     void onCloudTaskComplete(Anchor anchor);
   }
 
-  /** Listener for the results of a resolve operation. */
+  /**
+   * Listener for the results of a resolve operation.
+   */
   public interface CloudAnchorResolveListener {
 
-    /** This method is invoked when the results of a Cloud Anchor operation are available. */
+    /**
+     * This method is invoked when the results of a Cloud Anchor operation are available.
+     */
     void onCloudTaskComplete(Anchor anchor);
 
-    /** This method show the toast message. */
+    /**
+     * This method show the toast message.
+     */
     void onShowResolveMessage();
   }
 
-  @Nullable private Session session = null;
+  @Nullable
+  private Session session = null;
+  private FirebaseManager firebaseManager;
+  private final List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
+
   private final HashMap<Anchor, CloudAnchorHostListener> pendingHostAnchors = new HashMap<>();
   private final HashMap<Anchor, CloudAnchorResolveListener> pendingResolveAnchors = new HashMap<>();
 
-  /**
-   * This method is used to set the session, since it might not be available when this object is
-   * created.
-   */
+
   public synchronized void setSession(Session session) {
     this.session = session;
   }
+  public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
-  /**
-   * This method hosts an anchor. The {@code listener} will be invoked when the results are
-   * available.
-   */
-  public synchronized void hostCloudAnchor(Anchor anchor, CloudAnchorHostListener listener) {
-    Preconditions.checkNotNull(session, "The session cannot be null.");
+
+  // 클라우드 앵커 발급
+  public synchronized void hostCloudAnchor(Anchor anchor, String text, String userId, double lat, double lng) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
-    pendingHostAnchors.put(newAnchor, listener);
+    wrappedAnchorList.add(new WrappedAnchor(newAnchor, text, userId, lat, lng));
   }
+  //여기가 굳이 필요없을꺼 같음
+  public synchronized void resolveCloudAnchor(String cloudAnchorID){
+    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
+  }
+
+  public synchronized void onUpdate() {
+    Iterator iterator = wrappedAnchorList.iterator();
+    while (iterator.hasNext()) {
+      WrappedAnchor wrappedAnchor = (WrappedAnchor) iterator.next();
+      Anchor anchor = wrappedAnchor.getAnchor();
+      if (isReturnableState(anchor.getCloudAnchorState())) {
+        String cloudAnchorId = anchor.getCloudAnchorId();
+        wrappedAnchor.setCloudAnchorID(cloudAnchorId);
+        Log.d("순서", "cloudAnchorId: " + cloudAnchorId.toString());
+
+        firebaseManager.setContent(wrappedAnchor);
+        iterator.remove();
+      }
+    }
+  }
+
+  // 클라우드 상태 체크
+  private static boolean isReturnableState(CloudAnchorState cloudState) {
+    Log.d("순서", "isReturnableState: " + cloudState.toString());
+    switch (cloudState) {
+      case NONE:
+      case TASK_IN_PROGRESS:
+        return false;
+      default:
+        return true;
+    }
+  }
+
 
 //  /**
 //   * This method resolves an anchor. The {@code listener} will be invoked when the results are
@@ -91,23 +136,6 @@ public class CloudAnchorManager {
 //    Log.d("순서", "resolveCloudAnchor pendinfResolveAnchors에 넣음");
 //    pendingResolveAnchors.put(newAnchor, listener);
 //  }
-
-  /** Should be called after a {@link Session#update()} call. */
-  public synchronized void onUpdate() {
-    Log.d("순서", "Cloud Manager onUpdate host");
-    Preconditions.checkNotNull(session, "The session cannot be null.");
-    Iterator<Map.Entry<Anchor, CloudAnchorHostListener>> hostIter =
-            pendingHostAnchors.entrySet().iterator();
-    while (hostIter.hasNext()) {
-      Log.d("순서", "Cloud Manager onUpdate in");
-      Map.Entry<Anchor, CloudAnchorHostListener> entry = hostIter.next();
-      Anchor anchor = entry.getKey();
-      if (isReturnableState(anchor.getCloudAnchorState())) {
-        CloudAnchorHostListener listener = entry.getValue();
-        listener.onCloudTaskComplete(anchor);
-        hostIter.remove();
-      }
-    }
 
 
 //    Log.d("순서", "Cloud Manager onUpdate resolve");
@@ -126,22 +154,6 @@ public class CloudAnchorManager {
 //        deadlineForMessageMillis = 0;
 //      }
 //    }
-  }
 
-  /** Used to clear any currently registered listeners, so they won't be called again. */
-  synchronized void clearListeners() {
-    pendingHostAnchors.clear();
-    deadlineForMessageMillis = 0;
-  }
-
-  private static boolean isReturnableState(CloudAnchorState cloudState) {
-    Log.d("순서", "isReturnableState: " + cloudState.toString());
-    switch (cloudState) {
-      case NONE:
-      case TASK_IN_PROGRESS:
-        return false;
-      default:
-        return true;
-    }
-  }
 }
+
