@@ -46,6 +46,7 @@ import com.google.ar.sceneform.ux.BaseArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 import com.google.firebase.database.DatabaseError;
 import com.mju.ar_capstone.helpers.CloudAnchorManager;
+import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 
 import java.lang.ref.WeakReference;
@@ -62,6 +63,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArFragment arFragment;
     private ViewRenderable viewRenderable, tempRenderable;
 
+    private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
@@ -86,9 +88,12 @@ public class ArSfActivity extends AppCompatActivity implements
         }
 
 
-
+        firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
         firebaseManager.registerValueListner();
+
+
+        Log.d("순서", firebaseAuthManager.getUID());
 
 
         // 기타 필요한 화면 요소들
@@ -267,6 +272,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         Log.d("순서", "onTapPlane");
+
 
         // Create the Anchor. and Listener
         Anchor anchor = hitResult.createAnchor();

@@ -30,11 +30,19 @@ public class FirebaseManager {
     private ValueEventListener mDatabaseListener = null;
 
     public static List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
-
-
+    
     public FirebaseManager(){
         mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(KEY_ROOT_DIR);
         DatabaseReference.goOnline();
+    }
+
+    //컨텐츠 생성 시간
+    public String createdTimeOfContent(){
+        long now = System.currentTimeMillis();
+        Date date = new Date(now);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+
+        return (String) dateFormat.format(date);
     }
 
     //앵커아이디만 주어졌을때

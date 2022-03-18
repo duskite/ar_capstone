@@ -7,6 +7,8 @@ public class WrappedAnchor {
 
     private String anchorId;
     private String anchorText;
+    private String anchorGPS;
+    private String createdUser;
 
     public WrappedAnchor(String anchorId, String anchorText){
         this.anchorId = anchorId;
