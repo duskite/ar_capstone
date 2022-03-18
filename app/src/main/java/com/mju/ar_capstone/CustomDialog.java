@@ -24,9 +24,16 @@ public class CustomDialog extends Dialog {
     private RadioGroup dialogRdGroup;
     private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnTest;
 
-    public EditText dialogEdt;
-    public ImageView imageView;
+    public enum AnchorType{
+        text,
+        image,
+        test
+    }
+    AnchorType anchorType;
 
+
+    public EditText dialogEdt;
+    public ImageView dialogImg;
     private TextView textView;
 
     public CustomDialog(@NonNull Context context, CustomDialogClickListener customDialogClickListener) {
@@ -40,6 +47,7 @@ public class CustomDialog extends Dialog {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_select);
 
+
         dialogBtnOk = (Button) findViewById(R.id.dialog_btn_ok);
         dialogBtnDelete = (Button) findViewById(R.id.dialog_btn_delete);
         dialogRdGroup = (RadioGroup) findViewById(R.id.dialog_rd_group);
@@ -47,6 +55,8 @@ public class CustomDialog extends Dialog {
         dialogRdBtnImg = (RadioButton) findViewById(R.id.dialog_rdbtn_img);
         dialogRdBtnTest = (RadioButton) findViewById(R.id.dialog_rdbtn_test);
         dialogEdt = (EditText) findViewById(R.id.dialog_edt);
+
+        dialogImg = (ImageView) findViewById(R.id.dialog_img);
 
         textView = (TextView) findViewById(R.id.dialog_tv_test);
 
@@ -56,11 +66,27 @@ public class CustomDialog extends Dialog {
                 if(checkedId == R.id.dialog_rdbtn_text){
                     textView.setText("텍스트 모드");
                     dialogEdt.setVisibility(View.VISIBLE);
+                    dialogImg.setVisibility(View.GONE);
+                    anchorType = anchorType.text;
+
+
                     Log.d("순서", "텍스트 모드 눌림");
+
                 }else if(checkedId == R.id.dialog_rdbtn_img){
                     textView.setText("이미지 모드");
+                    dialogImg.setVisibility(View.VISIBLE);
+                    dialogEdt.setVisibility(View.GONE);
+                    anchorType = anchorType.image;
+
                     Log.d("순서", "이미지 모드 눌림");
+
+
                 }else if(checkedId == R.id.dialog_rdbtn_test){
+
+                    dialogImg.setVisibility(View.GONE);
+                    dialogEdt.setVisibility(View.GONE);
+                    anchorType = anchorType.test;
+
                     textView.setText("테스트트트트  모드");
                 }
             }
@@ -70,19 +96,27 @@ public class CustomDialog extends Dialog {
         dialogBtnOk.setOnClickListener(v -> {
 
             String tmpText = dialogEdt.getText().toString();
+            this.customDialogClickListener.onPositiveClick(tmpText, anchorType);
 
-            this.customDialogClickListener.onPositiveClick(tmpText);
             dismiss();
         });
+
+
 
         dialogBtnDelete.setOnClickListener(v -> {
             this.customDialogClickListener.onNegativeClick();
             dismiss();
         });
+
+        dialogImg.setOnClickListener(v -> {
+            this.customDialogClickListener.onImageClick(dialogImg);
+        });
     }
 
     public interface CustomDialogClickListener{
-        void onPositiveClick(String tmpText);
+        void onPositiveClick(String tmpText, AnchorType anchorType);
         void onNegativeClick();
+
+        void onImageClick(ImageView dialogImg);
     }
 }
