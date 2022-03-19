@@ -26,6 +26,7 @@ import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
+import com.mju.ar_capstone.CustomDialog;
 import com.mju.ar_capstone.WrappedAnchor;
 
 import java.util.ArrayList;
@@ -39,43 +40,15 @@ import java.util.Map;
  * the existing ARCore API.
  */
 public class CloudAnchorManager {
-  private static final long DURATION_FOR_NO_RESOLVE_RESULT_MS = 10000;
-  private long deadlineForMessageMillis;
 
-  /**
-   * Listener for the results of a host operation.
-   */
-  public interface CloudAnchorHostListener {
-
-    /**
-     * This method is invoked when the results of a Cloud Anchor operation are available.
-     */
-    void onCloudTaskComplete(Anchor anchor);
-  }
-
-  /**
-   * Listener for the results of a resolve operation.
-   */
-  public interface CloudAnchorResolveListener {
-
-    /**
-     * This method is invoked when the results of a Cloud Anchor operation are available.
-     */
-    void onCloudTaskComplete(Anchor anchor);
-
-    /**
-     * This method show the toast message.
-     */
-    void onShowResolveMessage();
-  }
 
   @Nullable
   private Session session = null;
   private FirebaseManager firebaseManager;
   private final List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
-  private final HashMap<Anchor, CloudAnchorHostListener> pendingHostAnchors = new HashMap<>();
-  private final HashMap<Anchor, CloudAnchorResolveListener> pendingResolveAnchors = new HashMap<>();
+  //임시용
+  private String tmpCloudAnchorID = null;
 
 
   public synchronized void setSession(Session session) {
@@ -85,13 +58,14 @@ public class CloudAnchorManager {
 
 
   // 클라우드 앵커 발급
-  public synchronized void hostCloudAnchor(Anchor anchor, String text, String userId, double lat, double lng) {
+  public synchronized void hostCloudAnchor(Anchor anchor, String text_or_path, String userId, double lat, double lng, String anchorType) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
-    wrappedAnchorList.add(new WrappedAnchor(newAnchor, text, userId, lat, lng));
+    wrappedAnchorList.add(new WrappedAnchor(newAnchor, text_or_path, userId, lat, lng, anchorType));
+
   }
-  //여기가 굳이 필요없을꺼 같음
-  public synchronized void resolveCloudAnchor(String cloudAnchorID){
-    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
+
+  public String getTmpCloudAnchorID(){
+    return tmpCloudAnchorID;
   }
 
   public synchronized void onUpdate() {
@@ -101,8 +75,13 @@ public class CloudAnchorManager {
       Anchor anchor = wrappedAnchor.getAnchor();
       if (isReturnableState(anchor.getCloudAnchorState())) {
         String cloudAnchorId = anchor.getCloudAnchorId();
+
+        //여기서 임시 변수에 한번 넣고 다른곳에서 뽑아가야할듯
+        tmpCloudAnchorID = cloudAnchorId;
+
         wrappedAnchor.setCloudAnchorID(cloudAnchorId);
-        Log.d("순서", "cloudAnchorId: " + cloudAnchorId.toString());
+        Log.d("순서", "cloudAnchorId: " + cloudAnchorId);
+        Log.d("순서", "tmpcloudAnchorId: " + tmpCloudAnchorID);
 
         firebaseManager.setContent(wrappedAnchor);
         iterator.remove();
