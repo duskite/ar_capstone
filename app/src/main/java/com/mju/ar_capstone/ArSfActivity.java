@@ -181,7 +181,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         loadModels();
-        makePreModels();
+        makePreModels(0);
+        makePreModels(1);
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
@@ -343,7 +344,7 @@ public class ArSfActivity extends AppCompatActivity implements
             model.setRenderable(makeTextModels(text_or_path));
 
             //미리 모델 만들기
-            makePreModels();
+            makePreModels(0);
 
         }else if(anchorType == CustomDialog.AnchorType.image){
             if(!writeMode){
@@ -352,6 +353,8 @@ public class ArSfActivity extends AppCompatActivity implements
             }
             Log.d("순서 모델", "체인지 이미지 모델");
             model.setRenderable(makeImageModels());
+
+            makePreModels(1);
         }
     }
 
@@ -462,32 +465,50 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     //미리 렌더러블을 만들어 놓기
-    public void makePreModels(){
+    public void makePreModels(int type){
         WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
 
-        //텍스트 모델 생성
-        ViewRenderable.builder()
-                .setView(this, R.layout.view_model_text)
-                .build()
-                .thenAccept(renderable -> {
-                    ArSfActivity activity = weakActivity.get();
-                    if (activity != null) {
-                        activity.textRenderableList.add(renderable);
-                        cntTextRenderable += 1;
-                    }
-                    Log.d("순서 미리 모델 로드", "미리 모델 생성 ");
-                })
-                .exceptionally(throwable -> {
-                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                    return null;
-                });
+        if (type == 0){
+            //텍스트 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_text)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.textRenderableList.add(renderable);
+                            cntTextRenderable += 1;
+                        }
+                        Log.d("순서 미리 모델 로드", "미리 모델 생성 ");
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else if(type == 1){
+            // 이미지 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_image)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.imageRenderableList.add(renderable);
+                            cntImageRenderable += 1;
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }
+
     }
 
 
     // 한번 만들어 놓은 렌더러블은 수정가능함
     // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
     public ViewRenderable makeTextModels(String text){
-//        ViewRenderable tmpRenderable = textRenderable.makeCopy();
         ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
         TextView textView = (TextView) tmpRenderable.getView();
         textView.setText(text);
@@ -495,7 +516,7 @@ public class ArSfActivity extends AppCompatActivity implements
         return tmpRenderable;
     }
     public ViewRenderable makeImageModels(){
-        ViewRenderable tmpRenderable = imageRenderable.makeCopy();
+        ViewRenderable tmpRenderable = imageRenderableList.get(cntImageRenderable).makeCopy();
         ImageView imageView = (ImageView) tmpRenderable.getView();
 
         //이미지 다운 때문에 바로 처리가 안됨
