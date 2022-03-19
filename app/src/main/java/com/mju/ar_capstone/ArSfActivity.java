@@ -255,6 +255,8 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setRenderable(this.selectRenderable);
         model.setParent(anchorNode);
         model.select();
+        model.setName("temp"); //모델명을 변수로 임시 사용
+        Log.d("순서 모델 이름 임시", model.getName());
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
@@ -265,15 +267,22 @@ public class ArSfActivity extends AppCompatActivity implements
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
                         Log.d("순서", "예스 클릭됨");
                         changeAnchor(model, tmpText, anchorType);
-                        saveAnchor(anchor, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(anchor, tmpText, anchorType);
+                        if(tmpAnchorID != null){
+                            model.setName(tmpAnchorID);
+                        }else{
+                            model.setName("temp");
+                        }
+                        Log.d("순서 모델 이름 확정", model.getName());
 
                     }
                     @Override
                     public void onNegativeClick() {
-
-                        if(cloudManager.getTmpCloudAnchorID() != null){
-                            String tmpAnchorID = cloudManager.getTmpCloudAnchorID();
-                            firebaseManager.deleteContent(tmpAnchorID); //여기는 확정된 앵커일때
+                        Log.d("순서 모델 이름 확정 있는지", model.getName());
+                        if(!model.getName().equals("temp")){
+                            String tmpAnchorID = model.getName();
+                            Log.d("순서 모델 이름 문자변수에", tmpAnchorID);
+                            firebaseManager.deleteContent(tmpAnchorID);
                             anchor.detach();
                         }else{
                             anchor.detach(); //여기는 임시일때
@@ -306,7 +315,7 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public void saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
         String userId = firebaseAuthManager.getUID().toString();
         checkGPS();
 
@@ -319,6 +328,7 @@ public class ArSfActivity extends AppCompatActivity implements
             fireStorageManager.uploadImage(tmpImage);
         }
         cloudManager.onUpdate();
+        return cloudManager.getTmpCloudAnchorID();
     }
 
 
