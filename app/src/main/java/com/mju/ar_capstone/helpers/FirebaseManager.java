@@ -16,6 +16,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mju.ar_capstone.WrappedAnchor;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -95,16 +96,15 @@ public class FirebaseManager {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for(DataSnapshot postSnapshot: dataSnapshot.child("contents").getChildren()){
-                            Log.d("순서 키들", postSnapshot.getKey());
 
                             String cloudAnchorID = (String) postSnapshot.getKey();
                             String text_or_path = (String) postSnapshot.child("text_or_path").getValue();
                             String userID = (String) postSnapshot.child("userID").getValue();
                             String anchorType = (String) postSnapshot.child("type").getValue();
-//                            double lat = (double) postSnapshot.child("lat").getValue();
-//                            double lng = (double) postSnapshot.child("lng").getValue();
+                            double lat = (double) postSnapshot.child("lat").getValue();
+                            double lng = (double) postSnapshot.child("lng").getValue();
 
-                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorType));
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, lat, lng, anchorType));
 
                         }
                     }

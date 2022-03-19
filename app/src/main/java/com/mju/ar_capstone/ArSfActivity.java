@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -72,6 +73,7 @@ import org.w3c.dom.Text;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
@@ -91,13 +93,17 @@ public class ArSfActivity extends AppCompatActivity implements
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
-    private Button btnAnchorLoad;
+    private Button btnAnchorLoad, btnMapApp;
 
     //잠시 테스트 중인 애들
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
     private Uri tmpImage;
     private FireStorageManager fireStorageManager;
+
+    //내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
+    // 불러오는 상황인지 체크
+    private boolean writeMode = false;
 
     //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
@@ -155,11 +161,25 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         });
 
+        //여기서 MapActivity로 넘어가도록함
+        btnMapApp = findViewById(R.id.btnMapApp);
+        btnMapApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+
+                startActivity(intent);
+            }
+        });
+
+
         loadModels();
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
+        writeMode = false;
+
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getText();
@@ -167,19 +187,21 @@ public class ArSfActivity extends AppCompatActivity implements
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
 
+            //여기서는 좌표값이 당장은 필요없음
+//            double lat = wrappedAnchor.getlat();
+//            double lng = wrappedAnchor.getlng();
+//            Log.d("순서 다 불러와져서 lat", String.valueOf(lat));
+
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
             }else if(stringAnchorType.equals("image")){
                 //불러올때 여기서 이미지 한번 로드함
                 Log.d("순서 이미지 로드", "시작");
-                fireStorageManager.downloadImage(text_or_path);
+                fireStorageManager.downloadImage(text_or_path); //이미지 다운전에 모델 체인지가 이루어짐
                 anchorType = CustomDialog.AnchorType.image;
             }else if(stringAnchorType.equals("test")){
                 anchorType = CustomDialog.AnchorType.test;
             }
-
-//            double lat = wrappedAnchor.getlat();
-//            double lng = wrappedAnchor.getlng();
 
             Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor(cloudAnchorID);
 
@@ -204,6 +226,8 @@ public class ArSfActivity extends AppCompatActivity implements
                     CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                         @Override
                         public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                            writeMode = true;
+
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
                             saveAnchor(anchor, tmpText, anchorType);
@@ -220,6 +244,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         @Override
                         public void onImageClick(ImageView dialogImg) {
+                            writeMode = true;
 
                             tmpImageView = dialogImg;
                             loadAlbum();
@@ -260,11 +285,14 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+
                 Log.d("순서", "모델 클릭됨");
                 //여기서 앵커 종류를 설정해줘야 할 듯
                 CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                     @Override
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                        writeMode = true;
+
                         Log.d("순서", "예스 클릭됨");
                         changeAnchor(model, tmpText, anchorType);
                         String tmpAnchorID = saveAnchor(anchor, tmpText, anchorType);
@@ -293,6 +321,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     @Override
                     public void onImageClick(ImageView dialogImg) {
+                        writeMode = true;
+
                         tmpImageView = dialogImg;
                         loadAlbum();
                     }
@@ -304,11 +334,15 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     //화면상에 보여지는 앵커를 우선 바꿈
+    //여기가 너무 일찍 실행됨
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
             model.setRenderable(makeTextModels(text_or_path));
         }else if(anchorType == CustomDialog.AnchorType.image){
-            tmpImage = fireStorageManager.getUri();
+            if(!writeMode){
+                Log.d("순서 이미지 로드 상태", "readMode임");
+                tmpImage = fireStorageManager.getUri();
+            }
             Log.d("순서 모델", "체인지 이미지 모델");
             model.setRenderable(makeImageModels());
         }
@@ -325,9 +359,13 @@ public class ArSfActivity extends AppCompatActivity implements
             Log.d("순서 패스",fireStorageManager.getImagePath());
             String path = fireStorageManager.getImagePath();
             cloudManager.hostCloudAnchor(anchor, path, userId, lat, lng, "image");
-            fireStorageManager.uploadImage(tmpImage);
+
+            //자꾸 업로드 하는거 우선 막아놓음 테스트 다하고 풀 예정
+//            fireStorageManager.uploadImage(tmpImage);
         }
         cloudManager.onUpdate();
+
+        writeMode = false; // 모든 동작이 이 부분에서 read 모드라고 판단되기 시작함
         return cloudManager.getTmpCloudAnchorID();
     }
 
@@ -436,7 +474,14 @@ public class ArSfActivity extends AppCompatActivity implements
     public ViewRenderable makeImageModels(){
         ViewRenderable tmpRenderable = imageRanderable.makeCopy();
         ImageView imageView = (ImageView) tmpRenderable.getView();
-        imageView.setImageURI(tmpImage);
+
+        //이미지 다운 때문에 바로 처리가 안됨
+        if (tmpImage != null){
+            imageView.setImageURI(tmpImage);
+        }else{
+            imageView.setImageResource(R.drawable.ic_launcher);
+            Toast.makeText(this, "현재 이미지가 다운중임...", Toast.LENGTH_LONG).show();
+        }
 
         return tmpRenderable;
     }
@@ -470,6 +515,7 @@ public class ArSfActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == GALLERY_CODE) {
+            Log.d("순서 갤러리", "이미지 불러와서 이미지 뷰에 넣는 부분");
             tmpImage = data.getData();
             tmpImageView.setImageURI(tmpImage);
         }

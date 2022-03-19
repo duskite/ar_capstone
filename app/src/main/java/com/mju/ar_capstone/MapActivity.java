@@ -1,6 +1,7 @@
 package com.mju.ar_capstone;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
 
+import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
@@ -37,12 +39,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
 
+    //서버랑 연결
+    private FirebaseManager firebaseManager;
+
     // 마커를 찍을 데이터
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        //예시
+        //서버와 연결후 데이터 가져옴
+        firebaseManager = new FirebaseManager();
+        firebaseManager.registerValueListner();
+        for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
+            double lat = wrappedAnchor.getlat();
+            double lng = wrappedAnchor.getlng();
+            Log.d("순서 맵에서 랩앵커 객체 확인",
+                    "lat: " + String.valueOf(lat) + "lng :" + String.valueOf(lng));
+        }
 
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();
@@ -59,6 +75,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // 위치를 반환하는 구현체인 FusedLocationSource 생성
         mLocationSource =
                 new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
+
+
     }
 
     @Override

@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.google.ar.core.Anchor;
 
 
 public class CustomDialog extends Dialog {
