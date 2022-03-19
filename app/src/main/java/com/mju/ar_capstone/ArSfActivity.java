@@ -43,6 +43,7 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.Config;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
@@ -109,7 +110,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
-    private boolean writeMode = false;
+    private static boolean writeMode = false;
 
     //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
@@ -132,7 +133,6 @@ public class ArSfActivity extends AppCompatActivity implements
         lat = (double) currentLocation.getLatitude();
         lng = (double) currentLocation.getLongitude();
 
-        Log.d("순서 더블 문제", "checkGPS 실행완료");
     }
 
 
@@ -360,13 +360,6 @@ public class ArSfActivity extends AppCompatActivity implements
         checkGPS();
         String userId = firebaseAuthManager.getUID().toString();
 
-        if(lat == 0.0 || lat <= 0){
-            Log.d("순서 더블", "문제 있음");
-        }
-        Log.d("순서 더블", String.valueOf(lat));
-        Log.d("순서 더블", String.valueOf(lng));
-
-
         if(anchorType == CustomDialog.AnchorType.text){
             cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
@@ -387,7 +380,6 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     public void onAttachFragment(@NonNull FragmentManager fragmentManager, @NonNull Fragment fragment) {
 
-        Log.d("순서", "onAttachFragment");
         if (fragment.getId() == R.id.arFragment) {
             arFragment = (ArFragment) fragment;
             arFragment.setOnSessionConfigurationListener(this);
@@ -407,7 +399,6 @@ public class ArSfActivity extends AppCompatActivity implements
         cloudManager.setSession(session);
         cloudManager.setFirebaseManager(firebaseManager);
 
-        Log.d("순서", "onSessionConfiguratioin");
     }
 
     @Override
@@ -417,14 +408,11 @@ public class ArSfActivity extends AppCompatActivity implements
         // Fine adjust the maximum frame rate
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
 
-        Log.d("순서", "onViewCreated");
-
     }
 
 
     //시작시 모델들 로드 미리 해놓음
     public void loadModels() {
-        Log.d("순서", "loadModels");
         WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
 
         //텍스트 모델 생성
@@ -436,7 +424,6 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.textRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 1");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -452,7 +439,6 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.selectRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 2");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -468,7 +454,6 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.imageRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 3");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -525,20 +510,35 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-
-
-
-
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
+//
+//        float[] a = {(float) 0.4292885, (float) -0.1790904, (float) -0.53670293};
+//        float[] b = {0,0,0,0};
+//        Anchor anchor1 = arFragment.getArSceneView().getSession().createAnchor(new Pose(a,b));
+//        AnchorNode anchorNode1 = new AnchorNode(anchor1);
+//        anchorNode1.setParent(arFragment.getArSceneView().getScene());
+//        TransformableNode model1 = new TransformableNode(arFragment.getTransformationSystem());
+//        model1.setRenderable(this.selectRenderable);
+//        model1.setParent(anchorNode1);
+//        model1.select();
 
         createSelectAnchor(hitResult);
 
+
+        //참고용
+//        //Add an Anchor and a renderable in front of the camera
+//        Session session = arFragment.getArSceneView().getSession();
+//        float[] pos = { 0,0,-1 };
+//        float[] rotation = {0,0,0,1};
+//        Anchor anchor =  session.createAnchor(new Pose(pos, rotation));
+//        anchorNode = new AnchorNode(anchor);
+//        anchorNode.setRenderable(andyRenderable);
+//        anchorNode.setParent(arFragment.getArSceneView().getScene());
+
     }
-
-
 
 
     // 이미지 업로드 부분

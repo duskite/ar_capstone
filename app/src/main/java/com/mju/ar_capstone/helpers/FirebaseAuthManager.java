@@ -35,8 +35,6 @@ public class FirebaseAuthManager {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("순서", "signInAnonymously:success");
                             FirebaseUser user = firebaseAuth.getCurrentUser();
-                            Log.d("순서", user.toString());
-                            Log.d("순서", user.getUid().toString());
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("순서", "signInAnonymously:failure", task.getException());
