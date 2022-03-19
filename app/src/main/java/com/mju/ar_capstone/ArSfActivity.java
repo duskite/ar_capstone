@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -60,9 +61,11 @@ public class ArSfActivity extends AppCompatActivity implements
     private ViewRenderable selectRenderable;
     private List<ViewRenderable> textRenderableList = new ArrayList<>();
     private List<ViewRenderable> imageRenderableList = new ArrayList<>();
+    private List<ViewRenderable> mp3RenderableList = new ArrayList<>();
 
     private static int cntTextRenderable = -1;
     private static int cntImageRenderable = -1;
+    private static int cntMp3Renderable = -1;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -76,15 +79,17 @@ public class ArSfActivity extends AppCompatActivity implements
     private Uri tmpImage;
     private FireStorageManager fireStorageManager;
 
+    private MediaPlayer mediaPlayer;
+
     //내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
     private static boolean writeMode = false;
 
     //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
+    private Location currentLocation;
     private double lat = 0.0;
     private double lng = 0.0;
-
 
 
     @Override
@@ -101,6 +106,17 @@ public class ArSfActivity extends AppCompatActivity implements
         }
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
@@ -134,6 +150,7 @@ public class ArSfActivity extends AppCompatActivity implements
         makePreModels(-1);
         makePreModels(0);
         makePreModels(1);
+        makePreModels(2);
     }
 
 
@@ -151,7 +168,7 @@ public class ArSfActivity extends AppCompatActivity implements
             return;
         }
 
-        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if(currentLocation == null){
             Log.d("순서", "Location NETWORK 프로바이더로 변경");
 
@@ -191,8 +208,8 @@ public class ArSfActivity extends AppCompatActivity implements
             }else if(stringAnchorType.equals("image")){
                 fireStorageManager.downloadImage(text_or_path); //이미지 다운전에 모델 체인지가 이루어짐
                 anchorType = CustomDialog.AnchorType.image;
-            }else if(stringAnchorType.equals("test")){
-                anchorType = CustomDialog.AnchorType.test;
+            }else if(stringAnchorType.equals("mp3")){
+                anchorType = CustomDialog.AnchorType.mp3;
             }
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(pose);
@@ -249,7 +266,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 }
             });
 
-        }else if(anchorType == CustomDialog.AnchorType.test){
+        }else if(anchorType == CustomDialog.AnchorType.mp3){
 
         }
 
@@ -337,6 +354,10 @@ public class ArSfActivity extends AppCompatActivity implements
             model.setRenderable(makeImageModels());
 
             makePreModels(1);
+        }else if(anchorType == CustomDialog.AnchorType.mp3){
+            model.setRenderable(makeMp3Models());
+
+            makePreModels(2);
         }
     }
 
@@ -355,6 +376,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
             //자꾸 업로드 하는거 우선 막아놓음 테스트 다하고 풀 예정
 //            fireStorageManager.uploadImage(tmpImage);
+        }else if(anchorType == CustomDialog.AnchorType.mp3){
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -444,6 +467,22 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
+        }else if(type == 2){
+            //mp3 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_mp3)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.mp3RenderableList.add(renderable);
+                            cntMp3Renderable += 1;
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
         }
 
     }
@@ -469,6 +508,19 @@ public class ArSfActivity extends AppCompatActivity implements
             imageView.setImageResource(R.drawable.ic_launcher);
             Toast.makeText(this, "현재 이미지가 다운중임...", Toast.LENGTH_LONG).show();
         }
+
+        return tmpRenderable;
+    }
+    public ViewRenderable makeMp3Models(){
+        ViewRenderable tmpRenderable = mp3RenderableList.get(cntMp3Renderable).makeCopy();
+        Button button = (Button) tmpRenderable.getView().findViewById(R.id.mp3play);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.test);
+                mediaPlayer.start();
+            }
+        });
 
         return tmpRenderable;
     }
