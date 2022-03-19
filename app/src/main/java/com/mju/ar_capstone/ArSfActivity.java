@@ -105,9 +105,8 @@ public class ArSfActivity extends AppCompatActivity implements
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
-//        firebaseManager.registerValueListner();
+        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
-
 
         // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
@@ -149,9 +148,14 @@ public class ArSfActivity extends AppCompatActivity implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        lat = currentLocation.getLatitude();
-        lng = currentLocation.getLongitude();
+        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+        try{
+            lat = currentLocation.getLatitude();
+            lng = currentLocation.getLongitude();
+        }catch (Exception e){
+            Log.d("순서", "checkGPS null");
+        }
         Log.d("순서", "checkGPS end");
 
 
@@ -162,11 +166,12 @@ public class ArSfActivity extends AppCompatActivity implements
         writeMode = false;
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
+            CustomDialog.AnchorType anchorType = null;
+
+            Pose pose = wrappedAnchor.getPose();
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getTextOrPath();
             String stringAnchorType = wrappedAnchor.getAnchorType();
-            CustomDialog.AnchorType anchorType = null;
-            Pose pose = wrappedAnchor.getPose();
 
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
@@ -209,7 +214,6 @@ public class ArSfActivity extends AppCompatActivity implements
                         public void onNegativeClick() {
                             firebaseManager.deleteContent(cloudAnchorID);
                             anchor.detach();
-
                         }
 
                         @Override
@@ -326,7 +330,7 @@ public class ArSfActivity extends AppCompatActivity implements
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
         Log.d("순서", "saveAnchor");
-//        checkGPS();
+        checkGPS();
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
@@ -462,29 +466,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         createSelectAnchor(hitResult);
-//
-//        float[] a = {(float) 0.4292885, (float) -0.1790904, (float) -0.53670293};
-//        float[] b = {0,0,0,0};
-//        Anchor anchor1 = arFragment.getArSceneView().getSession().createAnchor(new Pose(a,b));
-//        AnchorNode anchorNode1 = new AnchorNode(anchor1);
-//        anchorNode1.setParent(arFragment.getArSceneView().getScene());
-//        TransformableNode model1 = new TransformableNode(arFragment.getTransformationSystem());
-//        model1.setRenderable(this.selectRenderable);
-//        model1.setParent(anchorNode1);
-//        model1.select();
-
-
-
-
-        //참고용
-//        //Add an Anchor and a renderable in front of the camera
-//        Session session = arFragment.getArSceneView().getSession();
-//        float[] pos = { 0,0,-1 };
-//        float[] rotation = {0,0,0,1};
-//        Anchor anchor =  session.createAnchor(new Pose(pos, rotation));
-//        anchorNode = new AnchorNode(anchor);
-//        anchorNode.setRenderable(andyRenderable);
-//        anchorNode.setParent(arFragment.getArSceneView().getScene());
 
     }
 

@@ -32,7 +32,7 @@ public class WrappedAnchor {
     }
 
 
-    //클라우드 앵커 없이 테스트 중
+    //클라우드 앵커 없이 테스트 중, 올릴때
     public WrappedAnchor(Pose pose, String text, String userID, double lat, double lng, String anchorType){
         this.textOrPath = text;
         this.userID = userID;
@@ -42,7 +42,7 @@ public class WrappedAnchor {
         this.pose = pose;
 
     }
-    //클라우드 앵커 없이 테스트 중
+    //클라우드 앵커 없이 테스트 중, 불러올때
     public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, String anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
