@@ -7,6 +7,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.ar.core.Anchor;
+import com.google.ar.core.Pose;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.firebase.database.DataSnapshot;
@@ -26,7 +27,7 @@ public class FirebaseManager {
 
     private DatabaseReference mDatabase;
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
-    private static final String KEY_ROOT_DIR = "base_channel";
+    private static final String KEY_ROOT_DIR = "test_channel";
 
     //값 불러오는 리스너
     private ValueEventListener mDatabaseListener = null;
@@ -52,7 +53,6 @@ public class FirebaseManager {
     public void deleteContent(String anchorID){
 
         if(anchorID != null){
-            Log.d("순서", anchorID);
             mDatabase.child("contents").child(anchorID).removeValue();
             mDatabase.child("anchor_list").child(anchorID).removeValue();
         }else {
@@ -71,6 +71,21 @@ public class FirebaseManager {
         String anchorType = wrappedAnchor.getAnchorType();
         double lat = (double) wrappedAnchor.getlat();
         double lng = (double) wrappedAnchor.getlng();
+        Pose pose =  wrappedAnchor.getPose();
+
+        //테스트 용도니까 우선 다 분해해보기
+        float[] pose_a = pose.getTranslation();
+        float[] pose_b = pose.getRotationQuaternion();
+
+        String pose_a_0 = String.valueOf(pose_a[0]);
+        String pose_a_1 = String.valueOf(pose_a[1]);
+        String pose_a_2 = String.valueOf(pose_a[2]);
+
+        String pose_b_0 = String.valueOf(pose_b[0]);
+        String pose_b_1 = String.valueOf(pose_b[1]);
+        String pose_b_2 = String.valueOf(pose_b[2]);
+        String pose_b_3 = String.valueOf(pose_b[3]);
+
 
         mDatabase.child("anchor_list").child(cloudAnchorID).child("lat").setValue(lat);
         mDatabase.child("anchor_list").child(cloudAnchorID).child("lng").setValue(lng);
@@ -82,6 +97,16 @@ public class FirebaseManager {
         contentDB.child("text_or_path").setValue(text_or_path);
         contentDB.child("created").setValue(created);
         contentDB.child("type").setValue(anchorType);
+
+        contentDB.child("pose").child("pose_a_0").setValue(pose_a_0);
+        contentDB.child("pose").child("pose_a_1").setValue(pose_a_1);
+        contentDB.child("pose").child("pose_a_2").setValue(pose_a_2);
+
+        contentDB.child("pose").child("pose_b_0").setValue(pose_b_0);
+        contentDB.child("pose").child("pose_b_1").setValue(pose_b_1);
+        contentDB.child("pose").child("pose_b_2").setValue(pose_b_2);
+        contentDB.child("pose").child("pose_b_3").setValue(pose_b_3);
+
     }
 
 
@@ -102,7 +127,23 @@ public class FirebaseManager {
                             String userID = (String) postSnapshot.child("userID").getValue();
                             String anchorType = (String) postSnapshot.child("type").getValue();
 
-                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorType));
+                            String pose_a_0 = (String) postSnapshot.child("pose").child("pose_a_0").getValue();
+                            String pose_a_1 = (String) postSnapshot.child("pose").child("pose_a_1").getValue();
+                            String pose_a_2 = (String) postSnapshot.child("pose").child("pose_a_2").getValue();
+
+                            String pose_b_0 = (String) postSnapshot.child("pose").child("pose_b_0").getValue();
+                            String pose_b_1 = (String) postSnapshot.child("pose").child("pose_b_1").getValue();
+                            String pose_b_2 = (String) postSnapshot.child("pose").child("pose_b_2").getValue();
+                            String pose_b_3 = (String) postSnapshot.child("pose").child("pose_b_3").getValue();
+
+                            float[] pose_a = {Float.parseFloat(pose_a_0), Float.parseFloat(pose_a_1),
+                                    Float.parseFloat(pose_a_2)};
+                            float[] pose_b = {Float.parseFloat(pose_b_0), Float.parseFloat(pose_b_1),
+                                    Float.parseFloat(pose_b_2), Float.parseFloat(pose_b_3)};
+
+                            Pose pose = new Pose(pose_a, pose_b);
+
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, pose, text_or_path, userID, anchorType));
 
                         }
                     }
