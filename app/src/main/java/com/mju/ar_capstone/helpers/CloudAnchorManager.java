@@ -50,7 +50,6 @@ public class CloudAnchorManager {
   //임시용
   private String tmpCloudAnchorID = null;
 
-
   public synchronized void setSession(Session session) {
     this.session = session;
   }
@@ -60,6 +59,7 @@ public class CloudAnchorManager {
   // 클라우드 앵커 발급
   public synchronized void hostCloudAnchor(Anchor anchor, String text_or_path, String userId, double lat, double lng, String anchorType) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
+    Log.d("순서!!! hostcloud 앵커 아이디", newAnchor.getCloudAnchorId().toString());
     wrappedAnchorList.add(new WrappedAnchor(newAnchor, text_or_path, userId, lat, lng, anchorType));
 
   }
@@ -68,11 +68,14 @@ public class CloudAnchorManager {
     return tmpCloudAnchorID;
   }
 
+
   public synchronized void onUpdate() {
+
     Iterator iterator = wrappedAnchorList.iterator();
     while (iterator.hasNext()) {
       WrappedAnchor wrappedAnchor = (WrappedAnchor) iterator.next();
       Anchor anchor = wrappedAnchor.getAnchor();
+      Log.d("순서 뉴앵커 뽑은거", anchor.getCloudAnchorState().toString());
       if (isReturnableState(anchor.getCloudAnchorState())) {
         String cloudAnchorId = anchor.getCloudAnchorId();
 
@@ -85,6 +88,10 @@ public class CloudAnchorManager {
 
         firebaseManager.setContent(wrappedAnchor);
         iterator.remove();
+      }else{
+        Log.d("순서 뉴앵커 클라우드 스테이트", "실패");
+        String cloudAnchorId = anchor.getCloudAnchorId();
+        Log.d("순서 뉴앵커 클라우드 스테이트 실패", cloudAnchorId);
       }
     }
   }
@@ -101,38 +108,6 @@ public class CloudAnchorManager {
     }
   }
 
-
-//  /**
-//   * This method resolves an anchor. The {@code listener} will be invoked when the results are
-//   * available.
-//   */
-//  public synchronized void resolveCloudAnchor(
-//          String anchorId, CloudAnchorResolveListener listener, long startTimeMillis) throws CameraNotAvailableException {
-//    Preconditions.checkNotNull(session, "The session cannot be null.");
-//    Anchor newAnchor = session.resolveCloudAnchor(anchorId);
-//    deadlineForMessageMillis = startTimeMillis + DURATION_FOR_NO_RESOLVE_RESULT_MS;
-//
-//    Log.d("순서", "resolveCloudAnchor pendinfResolveAnchors에 넣음");
-//    pendingResolveAnchors.put(newAnchor, listener);
-//  }
-
-
-//    Log.d("순서", "Cloud Manager onUpdate resolve");
-//    Iterator<Map.Entry<Anchor, CloudAnchorResolveListener>> resolveIter =
-//            pendingResolveAnchors.entrySet().iterator();
-//    while (resolveIter.hasNext()) {
-//      Map.Entry<Anchor, CloudAnchorResolveListener> entry = resolveIter.next();
-//      Anchor anchor = entry.getKey();
-//      CloudAnchorResolveListener listener = entry.getValue();
-//      if (isReturnableState(anchor.getCloudAnchorState())) {
-//        listener.onCloudTaskComplete(anchor);
-//        resolveIter.remove();
-//      }
-//      if (deadlineForMessageMillis > 0 && SystemClock.uptimeMillis() > deadlineForMessageMillis) {
-//        listener.onShowResolveMessage();
-//        deadlineForMessageMillis = 0;
-//      }
-//    }
 
 }
 

@@ -43,6 +43,7 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.Config;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
@@ -75,6 +76,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -86,7 +88,12 @@ public class ArSfActivity extends AppCompatActivity implements
         ArFragment.OnViewCreatedListener {
 
     private ArFragment arFragment;
-    private ViewRenderable textRenderable, selectRenderable, imageRanderable;
+    private ViewRenderable textRenderable, selectRenderable, imageRenderable;
+    private List<ViewRenderable> textRenderableList = new ArrayList<>();
+    private List<ViewRenderable> imageRenderableList = new ArrayList<>();
+
+    private static int cntTextRenderable = -1;
+    private static int cntImageRenderable = -1;
 
 
     private FirebaseAuthManager firebaseAuthManager;
@@ -103,12 +110,12 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
-    private boolean writeMode = false;
+    private static boolean writeMode = false;
 
     //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
-    private double lat;
-    private double lng;
+    private double lat = 0.0;
+    private double lng = 0.0;
 
     //현재 위치 가져오기
     public void checkGPS() {
@@ -123,8 +130,9 @@ public class ArSfActivity extends AppCompatActivity implements
             return;
         }
         Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        lat = currentLocation.getLatitude();
-        lng = currentLocation.getLongitude();
+        lat = (double) currentLocation.getLatitude();
+        lng = (double) currentLocation.getLongitude();
+
     }
 
 
@@ -167,13 +175,14 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-
                 startActivity(intent);
             }
         });
 
 
         loadModels();
+        makePreModels(0);
+        makePreModels(1);
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
@@ -186,11 +195,6 @@ public class ArSfActivity extends AppCompatActivity implements
             String userID = wrappedAnchor.getUserID();
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
-
-            //여기서는 좌표값이 당장은 필요없음
-//            double lat = wrappedAnchor.getlat();
-//            double lng = wrappedAnchor.getlng();
-//            Log.d("순서 다 불러와져서 lat", String.valueOf(lat));
 
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
@@ -338,6 +342,10 @@ public class ArSfActivity extends AppCompatActivity implements
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
             model.setRenderable(makeTextModels(text_or_path));
+
+            //미리 모델 만들기
+            makePreModels(0);
+
         }else if(anchorType == CustomDialog.AnchorType.image){
             if(!writeMode){
                 Log.d("순서 이미지 로드 상태", "readMode임");
@@ -345,13 +353,15 @@ public class ArSfActivity extends AppCompatActivity implements
             }
             Log.d("순서 모델", "체인지 이미지 모델");
             model.setRenderable(makeImageModels());
+
+            makePreModels(1);
         }
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public String saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
-        String userId = firebaseAuthManager.getUID().toString();
         checkGPS();
+        String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
             cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
@@ -373,7 +383,6 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     public void onAttachFragment(@NonNull FragmentManager fragmentManager, @NonNull Fragment fragment) {
 
-        Log.d("순서", "onAttachFragment");
         if (fragment.getId() == R.id.arFragment) {
             arFragment = (ArFragment) fragment;
             arFragment.setOnSessionConfigurationListener(this);
@@ -393,7 +402,6 @@ public class ArSfActivity extends AppCompatActivity implements
         cloudManager.setSession(session);
         cloudManager.setFirebaseManager(firebaseManager);
 
-        Log.d("순서", "onSessionConfiguratioin");
     }
 
     @Override
@@ -403,14 +411,11 @@ public class ArSfActivity extends AppCompatActivity implements
         // Fine adjust the maximum frame rate
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
 
-        Log.d("순서", "onViewCreated");
-
     }
 
 
     //시작시 모델들 로드 미리 해놓음
     public void loadModels() {
-        Log.d("순서", "loadModels");
         WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
 
         //텍스트 모델 생성
@@ -422,7 +427,6 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.textRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 1");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -438,7 +442,6 @@ public class ArSfActivity extends AppCompatActivity implements
                     if (activity != null) {
                         activity.selectRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 2");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -452,9 +455,8 @@ public class ArSfActivity extends AppCompatActivity implements
                 .thenAccept(renderable -> {
                     ArSfActivity activity = weakActivity.get();
                     if (activity != null) {
-                        activity.imageRanderable = renderable;
+                        activity.imageRenderable = renderable;
                     }
-                    Log.d("순서 모델", "모델 생성 3");
                 })
                 .exceptionally(throwable -> {
                     Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -462,17 +464,59 @@ public class ArSfActivity extends AppCompatActivity implements
                 });
     }
 
+    //미리 렌더러블을 만들어 놓기
+    public void makePreModels(int type){
+        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
+
+        if (type == 0){
+            //텍스트 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_text)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.textRenderableList.add(renderable);
+                            cntTextRenderable += 1;
+                        }
+                        Log.d("순서 미리 모델 로드", "미리 모델 생성 ");
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else if(type == 1){
+            // 이미지 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_image)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.imageRenderableList.add(renderable);
+                            cntImageRenderable += 1;
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }
+
+    }
+
+
     // 한번 만들어 놓은 렌더러블은 수정가능함
     // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
     public ViewRenderable makeTextModels(String text){
-        ViewRenderable tmpRenderable = textRenderable.makeCopy();
+        ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
         TextView textView = (TextView) tmpRenderable.getView();
         textView.setText(text);
 
         return tmpRenderable;
     }
     public ViewRenderable makeImageModels(){
-        ViewRenderable tmpRenderable = imageRanderable.makeCopy();
+        ViewRenderable tmpRenderable = imageRenderableList.get(cntImageRenderable).makeCopy();
         ImageView imageView = (ImageView) tmpRenderable.getView();
 
         //이미지 다운 때문에 바로 처리가 안됨
@@ -487,20 +531,35 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-
-
-
-
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
+//
+//        float[] a = {(float) 0.4292885, (float) -0.1790904, (float) -0.53670293};
+//        float[] b = {0,0,0,0};
+//        Anchor anchor1 = arFragment.getArSceneView().getSession().createAnchor(new Pose(a,b));
+//        AnchorNode anchorNode1 = new AnchorNode(anchor1);
+//        anchorNode1.setParent(arFragment.getArSceneView().getScene());
+//        TransformableNode model1 = new TransformableNode(arFragment.getTransformationSystem());
+//        model1.setRenderable(this.selectRenderable);
+//        model1.setParent(anchorNode1);
+//        model1.select();
 
         createSelectAnchor(hitResult);
 
+
+        //참고용
+//        //Add an Anchor and a renderable in front of the camera
+//        Session session = arFragment.getArSceneView().getSession();
+//        float[] pos = { 0,0,-1 };
+//        float[] rotation = {0,0,0,1};
+//        Anchor anchor =  session.createAnchor(new Pose(pos, rotation));
+//        anchorNode = new AnchorNode(anchor);
+//        anchorNode.setRenderable(andyRenderable);
+//        anchorNode.setParent(arFragment.getArSceneView().getScene());
+
     }
-
-
 
 
     // 이미지 업로드 부분

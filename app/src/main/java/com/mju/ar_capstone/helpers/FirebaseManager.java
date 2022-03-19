@@ -69,8 +69,8 @@ public class FirebaseManager {
         String text_or_path = wrappedAnchor.getText();
         String userID = wrappedAnchor.getUserID();
         String anchorType = wrappedAnchor.getAnchorType();
-        double lat = wrappedAnchor.getlat();
-        double lng = wrappedAnchor.getlng();
+        double lat = (double) wrappedAnchor.getlat();
+        double lng = (double) wrappedAnchor.getlng();
 
         mDatabase.child("anchor_list").child(cloudAnchorID).child("lat").setValue(lat);
         mDatabase.child("anchor_list").child(cloudAnchorID).child("lng").setValue(lng);
@@ -101,10 +101,39 @@ public class FirebaseManager {
                             String text_or_path = (String) postSnapshot.child("text_or_path").getValue();
                             String userID = (String) postSnapshot.child("userID").getValue();
                             String anchorType = (String) postSnapshot.child("type").getValue();
-                            double lat = (double) postSnapshot.child("lat").getValue();
-                            double lng = (double) postSnapshot.child("lng").getValue();
 
-                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, lat, lng, anchorType));
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorType));
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                };
+
+        mDatabase.addValueEventListener(mDatabaseListener);
+    }
+
+    public void registerValueListnerForMap() {
+
+        mDatabaseListener =
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot postSnapshot: dataSnapshot.child("contents").getChildren()){
+
+                            Log.d("순서 더블 문제", "onDataChange");
+                            Log.d("순서 더블 문제", postSnapshot.child("lat").getValue().toString());
+                            String cloudAnchorID = (String) postSnapshot.getKey();
+                            String text_or_path = (String) postSnapshot.child("text_or_path").getValue();
+                            String userID = (String) postSnapshot.child("userID").getValue();
+                            String anchorType = (String) postSnapshot.child("type").getValue();
+                            double anchorLat = postSnapshot.child("lat").getValue(double.class);
+                            double anchorLng = postSnapshot.child("lng").getValue(double.class);
+
+
+                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorLat, anchorLng, anchorType));
 
                         }
                     }
