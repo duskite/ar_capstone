@@ -54,7 +54,6 @@ public class FirebaseManager {
             Log.d("순서", anchorID);
             mDatabase.child("contents").child(anchorID).removeValue();
             mDatabase.child("anchor_list").child(anchorID).removeValue();
-
         }else {
             // null 이면 데이터가 전부 날아가버림
         }

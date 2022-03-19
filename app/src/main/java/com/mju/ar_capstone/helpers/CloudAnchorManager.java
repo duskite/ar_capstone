@@ -40,43 +40,15 @@ import java.util.Map;
  * the existing ARCore API.
  */
 public class CloudAnchorManager {
-  private static final long DURATION_FOR_NO_RESOLVE_RESULT_MS = 10000;
-  private long deadlineForMessageMillis;
 
-  /**
-   * Listener for the results of a host operation.
-   */
-  public interface CloudAnchorHostListener {
-
-    /**
-     * This method is invoked when the results of a Cloud Anchor operation are available.
-     */
-    void onCloudTaskComplete(Anchor anchor);
-  }
-
-  /**
-   * Listener for the results of a resolve operation.
-   */
-  public interface CloudAnchorResolveListener {
-
-    /**
-     * This method is invoked when the results of a Cloud Anchor operation are available.
-     */
-    void onCloudTaskComplete(Anchor anchor);
-
-    /**
-     * This method show the toast message.
-     */
-    void onShowResolveMessage();
-  }
 
   @Nullable
   private Session session = null;
   private FirebaseManager firebaseManager;
   private final List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
-  private final HashMap<Anchor, CloudAnchorHostListener> pendingHostAnchors = new HashMap<>();
-  private final HashMap<Anchor, CloudAnchorResolveListener> pendingResolveAnchors = new HashMap<>();
+  //임시용
+  private String tmpCloudAnchorID = null;
 
 
   public synchronized void setSession(Session session) {
@@ -92,10 +64,9 @@ public class CloudAnchorManager {
 
   }
 
-//  //여기가 굳이 필요없을꺼 같음
-//  public synchronized void resolveCloudAnchor(String cloudAnchorID){
-//    Anchor newAnchor = session.resolveCloudAnchor(cloudAnchorID);
-//  }
+  public String getTmpCloudAnchorID(){
+    return tmpCloudAnchorID;
+  }
 
   public synchronized void onUpdate() {
     Iterator iterator = wrappedAnchorList.iterator();
@@ -104,8 +75,13 @@ public class CloudAnchorManager {
       Anchor anchor = wrappedAnchor.getAnchor();
       if (isReturnableState(anchor.getCloudAnchorState())) {
         String cloudAnchorId = anchor.getCloudAnchorId();
+
+        //여기서 임시 변수에 한번 넣고 다른곳에서 뽑아가야할듯
+        tmpCloudAnchorID = cloudAnchorId;
+
         wrappedAnchor.setCloudAnchorID(cloudAnchorId);
-        Log.d("순서", "cloudAnchorId: " + cloudAnchorId.toString());
+        Log.d("순서", "cloudAnchorId: " + cloudAnchorId);
+        Log.d("순서", "tmpcloudAnchorId: " + tmpCloudAnchorID);
 
         firebaseManager.setContent(wrappedAnchor);
         iterator.remove();

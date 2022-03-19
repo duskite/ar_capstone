@@ -86,7 +86,6 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArFragment arFragment;
     private ViewRenderable textRenderable, selectRenderable, imageRanderable;
 
-    private final int GALLERY_CODE = 10;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -95,6 +94,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private Button btnAnchorLoad;
 
     //잠시 테스트 중인 애들
+    private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
     private Uri tmpImage;
     private FireStorageManager fireStorageManager;
@@ -195,8 +195,7 @@ public class ArSfActivity extends AppCompatActivity implements
         }
     }
 
-
-
+    // 서버에 생성되어있는 앵커 불러와서 리스너 달아주는 거임
     public void setTapListenerType(TransformableNode model, Anchor anchor, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
             model.setOnTapListener(new Node.OnTapListener() {
@@ -213,9 +212,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         @Override
                         public void onNegativeClick() {
-                            anchor.detach();
                             Log.d("순서 불러온 앵커 아이디", anchor.getCloudAnchorId());
                             firebaseManager.deleteContent(anchor.getCloudAnchorId());
+                            anchor.detach();
 
                         }
 
@@ -245,7 +244,7 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-    //임시 앵커 생성
+    //임시 앵커 생성 후 실제 앵커까지
     public void createSelectAnchor(HitResult hitResult){
 
         Anchor anchor = hitResult.createAnchor();
@@ -271,7 +270,16 @@ public class ArSfActivity extends AppCompatActivity implements
                     }
                     @Override
                     public void onNegativeClick() {
-                        anchor.detach();
+
+                        if(cloudManager.getTmpCloudAnchorID() != null){
+                            String tmpAnchorID = cloudManager.getTmpCloudAnchorID();
+                            firebaseManager.deleteContent(tmpAnchorID); //여기는 확정된 앵커일때
+                            anchor.detach();
+                        }else{
+                            anchor.detach(); //여기는 임시일때
+                        }
+
+
                     }
 
                     @Override
@@ -283,6 +291,34 @@ public class ArSfActivity extends AppCompatActivity implements
                 customDialog.show();
             }
         });
+    }
+
+
+    //화면상에 보여지는 앵커를 우선 바꿈
+    public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
+        if(anchorType == CustomDialog.AnchorType.text){
+            model.setRenderable(makeTextModels(text_or_path));
+        }else if(anchorType == CustomDialog.AnchorType.image){
+            tmpImage = fireStorageManager.getUri();
+            Log.d("순서 모델", "체인지 이미지 모델");
+            model.setRenderable(makeImageModels());
+        }
+    }
+
+    // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
+    public void saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
+        String userId = firebaseAuthManager.getUID().toString();
+        checkGPS();
+
+        if(anchorType == CustomDialog.AnchorType.text){
+            cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
+        }else if(anchorType == CustomDialog.AnchorType.image){
+            Log.d("순서 패스",fireStorageManager.getImagePath());
+            String path = fireStorageManager.getImagePath();
+            cloudManager.hostCloudAnchor(anchor, path, userId, lat, lng, "image");
+            fireStorageManager.uploadImage(tmpImage);
+        }
+        cloudManager.onUpdate();
     }
 
 
@@ -396,32 +432,6 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-    //화면상에 보여지는 앵커를 우선 바꿈
-    public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
-        if(anchorType == CustomDialog.AnchorType.text){
-            model.setRenderable(makeTextModels(text_or_path));
-        }else if(anchorType == CustomDialog.AnchorType.image){
-            tmpImage = fireStorageManager.getUri();
-            Log.d("순서 모델", "체인지 이미지 모델");
-            model.setRenderable(makeImageModels());
-        }
-    }
-
-    // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public void saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
-        String userId = firebaseAuthManager.getUID().toString();
-        checkGPS();
-
-        if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
-        }else if(anchorType == CustomDialog.AnchorType.image){
-            Log.d("순서 패스",fireStorageManager.getImagePath());
-            String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(anchor, path, userId, lat, lng, "image");
-            fireStorageManager.uploadImage(tmpImage);
-        }
-        cloudManager.onUpdate();
-    }
 
 
 
