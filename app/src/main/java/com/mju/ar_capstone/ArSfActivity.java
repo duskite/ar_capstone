@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -72,6 +73,7 @@ import org.w3c.dom.Text;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
@@ -91,7 +93,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
-    private Button btnAnchorLoad;
+    private Button btnAnchorLoad, btnMapApp;
 
     //잠시 테스트 중인 애들
     private final int GALLERY_CODE = 10;
@@ -159,6 +161,18 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         });
 
+        //여기서 MapActivity로 넘어가도록함
+        btnMapApp = findViewById(R.id.btnMapApp);
+        btnMapApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MapActivity.class);
+
+                startActivity(intent);
+            }
+        });
+
+
         loadModels();
     }
 
@@ -173,6 +187,11 @@ public class ArSfActivity extends AppCompatActivity implements
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
 
+            //여기서는 좌표값이 당장은 필요없음
+//            double lat = wrappedAnchor.getlat();
+//            double lng = wrappedAnchor.getlng();
+//            Log.d("순서 다 불러와져서 lat", String.valueOf(lat));
+
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
             }else if(stringAnchorType.equals("image")){
@@ -183,9 +202,6 @@ public class ArSfActivity extends AppCompatActivity implements
             }else if(stringAnchorType.equals("test")){
                 anchorType = CustomDialog.AnchorType.test;
             }
-
-//            double lat = wrappedAnchor.getlat();
-//            double lng = wrappedAnchor.getlng();
 
             Anchor anchor = arFragment.getArSceneView().getSession().resolveCloudAnchor(cloudAnchorID);
 
