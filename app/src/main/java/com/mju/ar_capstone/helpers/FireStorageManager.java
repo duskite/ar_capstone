@@ -33,7 +33,6 @@ public class FireStorageManager {
     public String getImagePath(){
 
         return tmpReferece.getPath();
-//        return tmpReferece.getDownloadUrl().toString();
     }
 
     public Uri getUri(){
@@ -41,8 +40,6 @@ public class FireStorageManager {
     }
 
     public void downloadImage(String path){
-        Log.d("순서 이미지 로드", "downloadImage");
-        Log.d("순서 이미지 로드", path);
         Log.d("순서 이미지 로드", storageReference.child(path).toString());
         Log.d("순서 이미지 로드", storageReference.child(path).getDownloadUrl().toString());
 
