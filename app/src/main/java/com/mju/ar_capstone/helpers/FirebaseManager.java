@@ -47,11 +47,18 @@ public class FirebaseManager {
     }
 
     // 컨텐츠 삭제, 앵커아이디 기준으로 삭제
-    public void deleteContent(Anchor anchor){
-        String tmpId = anchor.getCloudAnchorId();
+    // 클라우드 앵커를 발급 못받으면 안지워짐?
+    public void deleteContent(String anchorID){
 
-        mDatabase.child("contents").child(tmpId).removeValue();
-        mDatabase.child("anchor_list").child(tmpId).removeValue();
+        if(anchorID != null){
+            Log.d("순서", anchorID);
+            mDatabase.child("contents").child(anchorID).removeValue();
+            mDatabase.child("anchor_list").child(anchorID).removeValue();
+
+        }else {
+            // null 이면 데이터가 전부 날아가버림
+        }
+
     }
 
     // wrappedAnchor 자체를 받아서 여기서 처리

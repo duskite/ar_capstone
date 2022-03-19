@@ -89,6 +89,7 @@ public class CloudAnchorManager {
   public synchronized void hostCloudAnchor(Anchor anchor, String text_or_path, String userId, double lat, double lng, String anchorType) {
     Anchor newAnchor = session.hostCloudAnchor(anchor);
     wrappedAnchorList.add(new WrappedAnchor(newAnchor, text_or_path, userId, lat, lng, anchorType));
+
   }
 
 //  //여기가 굳이 필요없을꺼 같음

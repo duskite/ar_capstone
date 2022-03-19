@@ -205,17 +205,25 @@ public class ArSfActivity extends AppCompatActivity implements
                     CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                         @Override
                         public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                            tapPositive(anchor, model, tmpText, anchorType);
+                            Log.d("순서", "예스 클릭됨");
+                            changeAnchor(model, tmpText, anchorType);
+                            saveAnchor(anchor, tmpText, anchorType);
+
                         }
 
                         @Override
                         public void onNegativeClick() {
-                            tapNegative(anchor);
+                            anchor.detach();
+                            Log.d("순서 불러온 앵커 아이디", anchor.getCloudAnchorId());
+                            firebaseManager.deleteContent(anchor.getCloudAnchorId());
+
                         }
 
                         @Override
                         public void onImageClick(ImageView dialogImg) {
-                            tapImage(dialogImg);
+
+                            tmpImageView = dialogImg;
+                            loadAlbum();
                         }
                     });
                     customDialog.show();
@@ -234,6 +242,47 @@ public class ArSfActivity extends AppCompatActivity implements
 
         }
 
+    }
+
+
+    //임시 앵커 생성
+    public void createSelectAnchor(HitResult hitResult){
+
+        Anchor anchor = hitResult.createAnchor();
+        AnchorNode anchorNode = new AnchorNode(anchor);
+        anchorNode.setParent(arFragment.getArSceneView().getScene());
+
+        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+        model.setRenderable(this.selectRenderable);
+        model.setParent(anchorNode);
+        model.select();
+        model.setOnTapListener(new Node.OnTapListener() {
+            @Override
+            public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                Log.d("순서", "모델 클릭됨");
+                //여기서 앵커 종류를 설정해줘야 할 듯
+                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
+                    @Override
+                    public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                        Log.d("순서", "예스 클릭됨");
+                        changeAnchor(model, tmpText, anchorType);
+                        saveAnchor(anchor, tmpText, anchorType);
+
+                    }
+                    @Override
+                    public void onNegativeClick() {
+                        anchor.detach();
+                    }
+
+                    @Override
+                    public void onImageClick(ImageView dialogImg) {
+                        tmpImageView = dialogImg;
+                        loadAlbum();
+                    }
+                });
+                customDialog.show();
+            }
+        });
     }
 
 
@@ -346,21 +395,6 @@ public class ArSfActivity extends AppCompatActivity implements
         return tmpRenderable;
     }
 
-    //2곳이 같은 코드라서 하나로 묶어버림
-    public void tapPositive(Anchor anchor, TransformableNode model, String tmpText, CustomDialog.AnchorType anchorType){
-        Log.d("순서", "예스 클릭됨");
-        changeAnchor(model, tmpText, anchorType);
-        saveAnchor(anchor, tmpText, anchorType);
-    }
-    public void tapNegative(Anchor anchor){
-        Log.d("순서", "노 클릭됨");
-        //앵커 삭제
-        firebaseManager.deleteContent(anchor);
-    }
-    public void tapImage(ImageView dialogImg){
-        tmpImageView = dialogImg;
-        loadAlbum();
-    }
 
     //화면상에 보여지는 앵커를 우선 바꿈
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
@@ -373,7 +407,7 @@ public class ArSfActivity extends AppCompatActivity implements
         }
     }
 
-    // 종류에 맞게 앵커 저장
+    // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public void saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
         String userId = firebaseAuthManager.getUID().toString();
         checkGPS();
@@ -390,42 +424,6 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-
-    //임시 앵커 생성
-    public void createSelectAnchor(HitResult hitResult){
-        Anchor anchor = hitResult.createAnchor();
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
-
-        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-        model.setRenderable(this.selectRenderable);
-        model.setParent(anchorNode);
-        model.select();
-        model.setOnTapListener(new Node.OnTapListener() {
-            @Override
-            public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                Log.d("순서", "모델 클릭됨");
-                //여기서 앵커 종류를 설정해줘야 할 듯
-                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
-                    @Override
-                    public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                        tapPositive(anchor, model, tmpText, anchorType);
-
-                    }
-                    @Override
-                    public void onNegativeClick() {
-                        tapNegative(anchor);
-                    }
-
-                    @Override
-                    public void onImageClick(ImageView dialogImg) {
-                        tapImage(dialogImg);
-                    }
-                });
-                customDialog.show();
-            }
-        });
-    }
 
 
     @Override
