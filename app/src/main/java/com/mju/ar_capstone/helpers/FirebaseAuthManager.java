@@ -46,6 +46,11 @@ public class FirebaseAuthManager {
     }
 
     public String getUID(){
-        return firebaseAuth.getUid().toString();
+        try {
+            return firebaseAuth.getUid().toString();
+        }catch (NullPointerException e){
+            return "temp_account";
+        }
+
     }
 }

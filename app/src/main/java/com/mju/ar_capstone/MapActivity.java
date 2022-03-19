@@ -52,7 +52,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //예시
         //서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager();
-        firebaseManager.registerValueListnerForMap();
+        firebaseManager.registerGPSValueListner();
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
             double lat = wrappedAnchor.getLat();
             double lng = wrappedAnchor.getLng();

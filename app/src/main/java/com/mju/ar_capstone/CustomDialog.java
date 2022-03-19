@@ -56,7 +56,6 @@ public class CustomDialog extends Dialog {
         dialogRdBtnImg = (RadioButton) findViewById(R.id.dialog_rdbtn_img);
         dialogRdBtnTest = (RadioButton) findViewById(R.id.dialog_rdbtn_test);
         dialogEdt = (EditText) findViewById(R.id.dialog_edt);
-
         dialogImg = (ImageView) findViewById(R.id.dialog_img);
 
         textView = (TextView) findViewById(R.id.dialog_tv_test);
@@ -101,8 +100,6 @@ public class CustomDialog extends Dialog {
 
             dismiss();
         });
-
-
 
         dialogBtnDelete.setOnClickListener(v -> {
             this.customDialogClickListener.onNegativeClick();

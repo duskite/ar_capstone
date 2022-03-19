@@ -28,17 +28,27 @@ public class FirebaseManager {
 
     private DatabaseReference mDatabase;
     private DatabaseReference contentsDatabase;
+    private DatabaseReference anchorNumDatabase;
+    private DatabaseReference gpsDatabase;
+
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
     private static final String KEY_ROOT_DIR = "test_channel";
 
     //값 불러오는 리스너
-    private ValueEventListener mDatabaseListener = null;
     private ValueEventListener contentsListener = null;
+    private ValueEventListener anchorNumListener = null;
+    private ValueEventListener gpsListener = null;
+
+    private static int nextAnchorNum;
 
     public static List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
     
     public FirebaseManager(){
         mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(KEY_ROOT_DIR);
+
+        //앵커 넘버 가져오기
+        registerAnchorNumValueLisner();
+
         DatabaseReference.goOnline();
     }
 
@@ -49,9 +59,6 @@ public class FirebaseManager {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
 
         return (String) dateFormat.format(date);
-    }
-
-    public void getAnchorNum(){
     }
 
     // 컨텐츠 삭제, 앵커아이디 기준으로 삭제
@@ -98,6 +105,35 @@ public class FirebaseManager {
         poses.put("Rc", poseR[2]);
         poses.put("Rd", poseR[3]);
         poseDB.setValue(poses);
+
+        anchorNumDatabase.setValue(nextAnchorNum + 1);
+
+    }
+
+    public int getAnchorNum(){
+        return nextAnchorNum;
+    }
+
+    public void registerAnchorNumValueLisner(){
+        anchorNumDatabase = mDatabase.child("nextAnchorNum");
+        anchorNumListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                try{
+                    nextAnchorNum = snapshot.getValue(int.class);
+                }catch (NullPointerException e){
+                    anchorNumDatabase.setValue(0);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+        anchorNumDatabase.addValueEventListener(anchorNumListener);
 
     }
 
@@ -151,35 +187,40 @@ public class FirebaseManager {
     }
 
 
-    public void registerValueListnerForMap() {
+    public void registerGPSValueListner() {
 
-        mDatabaseListener =
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot postSnapshot: dataSnapshot.child("contents").getChildren()){
+        gpsDatabase = mDatabase.child("anchorList");
+        gpsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for(DataSnapshot tmpSnapshot: snapshot.getChildren()){
+                    String anchorID = tmpSnapshot.getKey();
 
-                            Log.d("순서 더블 문제", "onDataChange");
-                            Log.d("순서 더블 문제", postSnapshot.child("lat").getValue().toString());
-                            String cloudAnchorID = (String) postSnapshot.getKey();
-                            String text_or_path = (String) postSnapshot.child("text_or_path").getValue();
-                            String userID = (String) postSnapshot.child("userID").getValue();
-                            String anchorType = (String) postSnapshot.child("type").getValue();
-                            double anchorLat = postSnapshot.child("lat").getValue(double.class);
-                            double anchorLng = postSnapshot.child("lng").getValue(double.class);
+                    try{
+                        HashMap<String, Double> anchorList = (HashMap<String, Double>) tmpSnapshot.getValue();
 
+                        wrappedAnchorList.add(new WrappedAnchor(
+                                anchorID,
+                                anchorList.get("lat").doubleValue(),
+                                anchorList.get("lng").doubleValue()
+                        ));
+                    }catch (NullPointerException e){
 
-                            wrappedAnchorList.add(new WrappedAnchor(cloudAnchorID, text_or_path, userID, anchorLat, anchorLng, anchorType));
-
-                        }
+                    }catch (ClassCastException e){
+                        //여기 아직 확실하지 않음
+                        //gps가 안찍히는 오류 때문에 정상적인 값으로 테스트가 안됨
                     }
+                }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                };
+            }
 
-        mDatabase.addValueEventListener(mDatabaseListener);
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+        gpsDatabase.addValueEventListener(gpsListener);
     }
 
 }

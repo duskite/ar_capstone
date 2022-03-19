@@ -42,17 +42,15 @@ import java.util.Map;
  */
 public class CloudAnchorManager {
 
-
   private FirebaseManager firebaseManager;
-  private static int cntAnchorID = 0;
-  private static String strAnchorID = "anchorID";
+  private static String strAnchorID = "anchorID_";
   private String currentAnchorID;
   private WrappedAnchor wrappedAnchor;
 
   public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
   public String makeCloudAnchorID(){
-    currentAnchorID = strAnchorID + String.valueOf(cntAnchorID);
+    currentAnchorID = strAnchorID + String.valueOf(firebaseManager.getAnchorNum());
     return currentAnchorID;
   }
 
@@ -67,8 +65,6 @@ public class CloudAnchorManager {
 
   public void onUpdate() {
     firebaseManager.setContent(wrappedAnchor);
-
-    cntAnchorID += 1;
   }
 
 

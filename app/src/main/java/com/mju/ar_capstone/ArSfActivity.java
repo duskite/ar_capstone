@@ -90,10 +90,8 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_arsf);
         getSupportFragmentManager().addFragmentOnAttachListener(this);
-
         if (savedInstanceState == null) {
             if (Sceneform.isSupported(this)) {
                 getSupportFragmentManager().beginTransaction()
@@ -102,7 +100,9 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
-        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
         firebaseManager.registerContentsValueListner();
@@ -129,6 +129,8 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         });
 
+        //모델 로드
+        //이 후에는 각각 필요한 모델들만 로드됨
         makePreModels(-1);
         makePreModels(0);
         makePreModels(1);
@@ -148,14 +150,25 @@ public class ArSfActivity extends AppCompatActivity implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        try{
-            lat = currentLocation.getLatitude();
-            lng = currentLocation.getLongitude();
-        }catch (Exception e){
-            Log.d("순서", "checkGPS null");
+        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(currentLocation == null){
+            Log.d("순서", "Location NETWORK 프로바이더로 변경");
+
+            currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if(currentLocation == null){
+                Log.d("순서", "이것도 없음");
+            }
+
+            try{
+                lat = currentLocation.getLatitude();
+                lng = currentLocation.getLongitude();
+            }catch (Exception e){
+                Log.d("순서", "gps오류" + e);
+                Log.d("순서", "checkGPS null");
+            }
         }
+
         Log.d("순서", "checkGPS end");
 
 

@@ -21,18 +21,15 @@ public class WrappedAnchor {
 
     }
 
-    //맵에서 불러올때
-    public WrappedAnchor(String cloudAnchorId, String text, String userID, double lat, double lng, String anchorType){
+    // map gps
+    public WrappedAnchor(String cloudAnchorId, double lat, double lng){
         this.cloudAnchorId = cloudAnchorId;
-        this.textOrPath = text;
-        this.userID = userID;
-        this.anchorType = anchorType;
         this.lat = lat;
         this.lng = lng;
     }
 
 
-    //클라우드 앵커 없이 테스트 중, 올릴때
+    // upload
     public WrappedAnchor(Pose pose, String text, String userID, double lat, double lng, String anchorType){
         this.textOrPath = text;
         this.userID = userID;
@@ -42,7 +39,7 @@ public class WrappedAnchor {
         this.pose = pose;
 
     }
-    //클라우드 앵커 없이 테스트 중, 불러올때
+    // download
     public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, String anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
