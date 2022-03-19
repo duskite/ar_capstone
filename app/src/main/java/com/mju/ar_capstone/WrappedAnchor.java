@@ -3,15 +3,17 @@ package com.mju.ar_capstone;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Trackable;
+import com.google.firebase.database.Exclude;
 
 public class WrappedAnchor {
 
     private String cloudAnchorId;
     private String textOrPath;
-    private double lat;
-    private double lng;
     private String userID;
     private String anchorType;
+
+    private double lat;
+    private double lng;
 
     private Pose pose;
 
@@ -49,19 +51,60 @@ public class WrappedAnchor {
         this.pose = pose;
     }
 
-    public String getCloudAnchorId(){
+    public String getCloudAnchorId() {
         return cloudAnchorId;
     }
-    public String getText() {return textOrPath;}
-    public double getlat() {return (double) lat;}
-    public double getlng() {return (double) lng;}
-    public String getUserID() {return userID;}
-    public String getAnchorType(){return anchorType;}
 
-    public Pose getPose(){return pose;}
-
-
-    public void setCloudAnchorID(String cloudAnchorID){
-        this.cloudAnchorId = cloudAnchorID;
+    public void setCloudAnchorId(String cloudAnchorId) {
+        this.cloudAnchorId = cloudAnchorId;
     }
+
+    public String getTextOrPath() {
+        return textOrPath;
+    }
+
+    public void setTextOrPath(String textOrPath) {
+        this.textOrPath = textOrPath;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public String getAnchorType() {
+        return anchorType;
+    }
+
+    public void setAnchorType(String anchorType) {
+        this.anchorType = anchorType;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLng() {
+        return lng;
+    }
+
+    public void setLng(double lng) {
+        this.lng = lng;
+    }
+
+    public Pose getPose() {
+        return pose;
+    }
+
+    public void setPose(Pose pose) {
+        this.pose = pose;
+    }
+
 }

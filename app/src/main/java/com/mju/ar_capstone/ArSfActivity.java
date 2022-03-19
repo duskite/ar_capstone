@@ -85,23 +85,6 @@ public class ArSfActivity extends AppCompatActivity implements
     private double lat = 0.0;
     private double lng = 0.0;
 
-    //현재 위치 가져오기
-    public void checkGPS() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        lat = (double) currentLocation.getLatitude();
-        lng = (double) currentLocation.getLongitude();
-
-    }
 
 
     @Override
@@ -119,10 +102,10 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
-        firebaseManager.registerValueListner();
+//        firebaseManager.registerValueListner();
         fireStorageManager = new FireStorageManager();
 
 
@@ -152,13 +135,35 @@ public class ArSfActivity extends AppCompatActivity implements
         makePreModels(1);
     }
 
+
+    //현재 위치 가져오기
+    public void checkGPS() {
+        Log.d("순서", "checkGPS");
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        lat = currentLocation.getLatitude();
+        lng = currentLocation.getLongitude();
+        Log.d("순서", "checkGPS end");
+
+
+    }
+
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
         writeMode = false;
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
-            String text_or_path = wrappedAnchor.getText();
+            String text_or_path = wrappedAnchor.getTextOrPath();
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();
@@ -237,6 +242,8 @@ public class ArSfActivity extends AppCompatActivity implements
     //임시 앵커 생성 후 실제 앵커까지
     public void createSelectAnchor(HitResult hitResult){
 
+        Log.d("순서", "createSelectAnchor");
+
         //터치 한 곳의 pose를 가져옴
         Anchor anchor = hitResult.createAnchor();
         Pose pose = anchor.getPose();
@@ -255,6 +262,8 @@ public class ArSfActivity extends AppCompatActivity implements
                 CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
                     @Override
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                        Log.d("순서", "onTap/onPositiveClick");
+
                         writeMode = true;
 
                         changeAnchor(model, tmpText, anchorType);
@@ -268,6 +277,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     }
                     @Override
                     public void onNegativeClick() {
+                        Log.d("순서", "onTap/onNegativeClick");
                         if(!model.getName().equals("temp")){
                             String tmpAnchorID = model.getName();
                             firebaseManager.deleteContent(tmpAnchorID);
@@ -279,6 +289,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     @Override
                     public void onImageClick(ImageView dialogImg) {
+                        Log.d("순서", "onTap/onImageClick");
                         writeMode = true;
 
                         tmpImageView = dialogImg;
@@ -294,6 +305,8 @@ public class ArSfActivity extends AppCompatActivity implements
     //화면상에 보여지는 앵커를 우선 바꿈
     //여기가 너무 일찍 실행됨
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
+        Log.d("순서", "changeAnchor");
+
         if(anchorType == CustomDialog.AnchorType.text){
             model.setRenderable(makeTextModels(text_or_path));
 
@@ -312,7 +325,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
-        checkGPS();
+        Log.d("순서", "saveAnchor");
+//        checkGPS();
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
@@ -377,7 +391,6 @@ public class ArSfActivity extends AppCompatActivity implements
                             activity.textRenderableList.add(renderable);
                             cntTextRenderable += 1;
                         }
-                        Log.d("순서 미리 모델 로드", "미리 모델 생성 ");
                     })
                     .exceptionally(throwable -> {
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
@@ -448,6 +461,7 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
+        createSelectAnchor(hitResult);
 //
 //        float[] a = {(float) 0.4292885, (float) -0.1790904, (float) -0.53670293};
 //        float[] b = {0,0,0,0};
@@ -459,7 +473,7 @@ public class ArSfActivity extends AppCompatActivity implements
 //        model1.setParent(anchorNode1);
 //        model1.select();
 
-        createSelectAnchor(hitResult);
+
 
 
         //참고용

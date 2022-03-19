@@ -47,7 +47,5 @@ public class FirebaseAuthManager {
 
     public String getUID(){
         return firebaseAuth.getUid().toString();
-
-//        return "admin";
     }
 }
