@@ -75,6 +75,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -86,7 +87,12 @@ public class ArSfActivity extends AppCompatActivity implements
         ArFragment.OnViewCreatedListener {
 
     private ArFragment arFragment;
-    private ViewRenderable textRenderable, selectRenderable, imageRanderable;
+    private ViewRenderable textRenderable, selectRenderable, imageRenderable;
+    private List<ViewRenderable> textRenderableList = new ArrayList<>();
+    private List<ViewRenderable> imageRenderableList = new ArrayList<>();
+
+    private static int cntTextRenderable = -1;
+    private static int cntImageRenderable = -1;
 
 
     private FirebaseAuthManager firebaseAuthManager;
@@ -107,8 +113,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
-    private double lat;
-    private double lng;
+    private double lat = 0.0;
+    private double lng = 0.0;
 
     //현재 위치 가져오기
     public void checkGPS() {
@@ -123,8 +129,10 @@ public class ArSfActivity extends AppCompatActivity implements
             return;
         }
         Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        lat = currentLocation.getLatitude();
-        lng = currentLocation.getLongitude();
+        lat = (double) currentLocation.getLatitude();
+        lng = (double) currentLocation.getLongitude();
+
+        Log.d("순서 더블 문제", "checkGPS 실행완료");
     }
 
 
@@ -167,13 +175,13 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-
                 startActivity(intent);
             }
         });
 
 
         loadModels();
+        makePreModels();
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
@@ -186,11 +194,6 @@ public class ArSfActivity extends AppCompatActivity implements
             String userID = wrappedAnchor.getUserID();
             String stringAnchorType = wrappedAnchor.getAnchorType();
             CustomDialog.AnchorType anchorType = null;
-
-            //여기서는 좌표값이 당장은 필요없음
-//            double lat = wrappedAnchor.getlat();
-//            double lng = wrappedAnchor.getlng();
-//            Log.d("순서 다 불러와져서 lat", String.valueOf(lat));
 
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
@@ -338,6 +341,10 @@ public class ArSfActivity extends AppCompatActivity implements
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
         if(anchorType == CustomDialog.AnchorType.text){
             model.setRenderable(makeTextModels(text_or_path));
+
+            //미리 모델 만들기
+            makePreModels();
+
         }else if(anchorType == CustomDialog.AnchorType.image){
             if(!writeMode){
                 Log.d("순서 이미지 로드 상태", "readMode임");
@@ -350,8 +357,15 @@ public class ArSfActivity extends AppCompatActivity implements
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public String saveAnchor(Anchor anchor, String text, CustomDialog.AnchorType anchorType){
-        String userId = firebaseAuthManager.getUID().toString();
         checkGPS();
+        String userId = firebaseAuthManager.getUID().toString();
+
+        if(lat == 0.0 || lat <= 0){
+            Log.d("순서 더블", "문제 있음");
+        }
+        Log.d("순서 더블", String.valueOf(lat));
+        Log.d("순서 더블", String.valueOf(lng));
+
 
         if(anchorType == CustomDialog.AnchorType.text){
             cloudManager.hostCloudAnchor(anchor, text, userId, lat, lng, "text");
@@ -452,7 +466,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 .thenAccept(renderable -> {
                     ArSfActivity activity = weakActivity.get();
                     if (activity != null) {
-                        activity.imageRanderable = renderable;
+                        activity.imageRenderable = renderable;
                     }
                     Log.d("순서 모델", "모델 생성 3");
                 })
@@ -462,17 +476,41 @@ public class ArSfActivity extends AppCompatActivity implements
                 });
     }
 
+    //미리 렌더러블을 만들어 놓기
+    public void makePreModels(){
+        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
+
+        //텍스트 모델 생성
+        ViewRenderable.builder()
+                .setView(this, R.layout.view_model_text)
+                .build()
+                .thenAccept(renderable -> {
+                    ArSfActivity activity = weakActivity.get();
+                    if (activity != null) {
+                        activity.textRenderableList.add(renderable);
+                        cntTextRenderable += 1;
+                    }
+                    Log.d("순서 미리 모델 로드", "미리 모델 생성 ");
+                })
+                .exceptionally(throwable -> {
+                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                    return null;
+                });
+    }
+
+
     // 한번 만들어 놓은 렌더러블은 수정가능함
     // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
     public ViewRenderable makeTextModels(String text){
-        ViewRenderable tmpRenderable = textRenderable.makeCopy();
+//        ViewRenderable tmpRenderable = textRenderable.makeCopy();
+        ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
         TextView textView = (TextView) tmpRenderable.getView();
         textView.setText(text);
 
         return tmpRenderable;
     }
     public ViewRenderable makeImageModels(){
-        ViewRenderable tmpRenderable = imageRanderable.makeCopy();
+        ViewRenderable tmpRenderable = imageRenderable.makeCopy();
         ImageView imageView = (ImageView) tmpRenderable.getView();
 
         //이미지 다운 때문에 바로 처리가 안됨
