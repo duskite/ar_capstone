@@ -63,6 +63,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private List<ViewRenderable> imageRenderableList = new ArrayList<>();
     private List<ViewRenderable> mp3RenderableList = new ArrayList<>();
 
+    //37.237219, 127.189968
+
     private static int cntTextRenderable = -1;
     private static int cntImageRenderable = -1;
     private static int cntMp3Renderable = -1;
@@ -90,7 +92,6 @@ public class ArSfActivity extends AppCompatActivity implements
     private Location currentLocation;
     private double lat = 0.0;
     private double lng = 0.0;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -218,60 +219,54 @@ public class ArSfActivity extends AppCompatActivity implements
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
             changeAnchor(model, text_or_path, anchorType);
-            setTapListenerType(model, anchor, cloudAnchorID, anchorType);
             model.select();
-        }
-    }
+            if(anchorType == CustomDialog.AnchorType.text){
+                model.setOnTapListener(new Node.OnTapListener() {
+                    @Override
+                    public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                        CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
+                            @Override
+                            public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                                writeMode = true;
 
-    // 서버에 생성되어있는 앵커 불러와서 리스너 달아주는 거임
-    public void setTapListenerType(TransformableNode model, Anchor anchor, String cloudAnchorID, CustomDialog.AnchorType anchorType){
-        if(anchorType == CustomDialog.AnchorType.text){
-            model.setOnTapListener(new Node.OnTapListener() {
-                @Override
-                public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
-                        @Override
-                        public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                            writeMode = true;
+                                Log.d("순서", "예스 클릭됨");
+                                changeAnchor(model, tmpText, anchorType);
+                                saveAnchor(anchor.getPose(), tmpText, anchorType);
 
-                            Log.d("순서", "예스 클릭됨");
-                            changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(), tmpText, anchorType);
+                            }
 
-                        }
+                            @Override
+                            public void onNegativeClick() {
+                                firebaseManager.deleteContent(cloudAnchorID);
+                                anchor.detach();
+                            }
 
-                        @Override
-                        public void onNegativeClick() {
-                            firebaseManager.deleteContent(cloudAnchorID);
-                            anchor.detach();
-                        }
+                            @Override
+                            public void onImageClick(ImageView dialogImg) {
+                                writeMode = true;
 
-                        @Override
-                        public void onImageClick(ImageView dialogImg) {
-                            writeMode = true;
+                                tmpImageView = dialogImg;
+                                loadAlbum();
+                            }
+                        });
+                        customDialog.show();
+                    }
+                });
 
-                            tmpImageView = dialogImg;
-                            loadAlbum();
-                        }
-                    });
-                    customDialog.show();
-                }
-            });
+            }else if(anchorType == CustomDialog.AnchorType.image){
+                model.setOnTapListener(new Node.OnTapListener() {
+                    @Override
+                    public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                        Log.d("순서", "모델이 잘 로드 되기는 함");
+                    }
+                });
 
-        }else if(anchorType == CustomDialog.AnchorType.image){
-            model.setOnTapListener(new Node.OnTapListener() {
-                @Override
-                public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                    Log.d("순서", "모델이 잘 로드 되기는 함");
-                }
-            });
+            }else if(anchorType == CustomDialog.AnchorType.mp3){
 
-        }else if(anchorType == CustomDialog.AnchorType.mp3){
+            }
 
         }
-
     }
-
 
     //임시 앵커 생성 후 실제 앵커까지
     public void createSelectAnchor(HitResult hitResult){
@@ -291,6 +286,7 @@ public class ArSfActivity extends AppCompatActivity implements
         model.select();
         model.setName("temp"); //모델명을 변수로 임시 사용
         model.setOnTapListener(new Node.OnTapListener() {
+
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
                 CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
@@ -513,12 +509,19 @@ public class ArSfActivity extends AppCompatActivity implements
     }
     public ViewRenderable makeMp3Models(){
         ViewRenderable tmpRenderable = mp3RenderableList.get(cntMp3Renderable).makeCopy();
-        Button button = (Button) tmpRenderable.getView().findViewById(R.id.mp3play);
-        button.setOnClickListener(new View.OnClickListener() {
+        Button buttonPlay = (Button) tmpRenderable.getView().findViewById(R.id.mp3play);
+        Button buttonStop = (Button) tmpRenderable.getView().findViewById(R.id.mp3stop);
+        buttonPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.test);
                 mediaPlayer.start();
+            }
+        });
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer.stop();
             }
         });
 

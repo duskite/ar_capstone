@@ -6,9 +6,15 @@
 
     <Button
         android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_height="50dp"
         android:id="@+id/mp3play"
         android:text="실행"
+        />
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:id="@+id/mp3stop"
+        android:text="중지"
         />
 
 </LinearLayout>
