@@ -44,7 +44,7 @@ public class FirebaseManager {
     private static int nextAnchorNum;
     private static int nextImageNum;
 
-    public static List<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
+    public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
     
     public FirebaseManager(){
         mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(KEY_ROOT_DIR);
@@ -55,6 +55,17 @@ public class FirebaseManager {
 
         DatabaseReference.goOnline();
     }
+
+
+    // ar에서 가져가서 처리하는게 나을듯
+    public ArrayList<WrappedAnchor> getWrappedAnchorList(){
+        return wrappedAnchorList;
+    }
+    // 데이터를 다른 곳에서 한번 가져간후 호출하면 리스트 비워줌
+    public void clearWrappedAnchorList(){
+        wrappedAnchorList.clear();
+    }
+
 
     //컨텐츠 생성 시간
     public String createdTimeOfContent(){

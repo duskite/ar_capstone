@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
@@ -13,6 +15,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -44,6 +47,7 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -55,6 +59,7 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
@@ -162,7 +167,7 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
         makePreModels(MP3_MODEL);
-        for(int i=0; i<5; i++){
+        for(int i=0; i<30; i++){
             makePreModels(TEXT_MODEL);
             makePreModels(IMAGE_MODEL);
 
@@ -354,8 +359,11 @@ public class ArSfActivity extends AppCompatActivity implements
         writeMode = false;
 
         Log.d("불러오기", "loadCloudAnchors");
-        for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
 
+        ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
+        Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
+        while (iterator.hasNext()){
+            WrappedAnchor wrappedAnchor = iterator.next();
             //앵커가 내 근처에 있는지를 판단하고 보여줄꺼임
             //서버에서 가져온 앵커 위경도
             Log.d("순서", "잠깐");
@@ -373,6 +381,7 @@ public class ArSfActivity extends AppCompatActivity implements
             String text_or_path = wrappedAnchor.getTextOrPath();
             String stringAnchorType = wrappedAnchor.getAnchorType();
 
+            // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
             }else if(stringAnchorType.equals("image")){
@@ -416,6 +425,8 @@ public class ArSfActivity extends AppCompatActivity implements
                             loadAlbum();
                         }
                     });
+                    customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                     customDialog.show();
                 }
             });
@@ -438,7 +449,10 @@ public class ArSfActivity extends AppCompatActivity implements
                 cntImageRenderable++;
             }
 
+            iterator.remove();
         }
+        //여러번 불러오기 호출로 똑같은 앵커가 계속 쌓이는거 방지
+        firebaseManager.clearWrappedAnchorList();
     }
 
     //임시 앵커 생성 후 실제 앵커까지
@@ -501,6 +515,8 @@ public class ArSfActivity extends AppCompatActivity implements
                         loadAlbum();
                     }
                 });
+                customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 customDialog.show();
             }
         });
@@ -610,10 +626,13 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         createSelectAnchor(hitResult);
-        
+
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     // 이미지 업로드 부분
     //사용자 갤러리 불러오기

@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="300dp"
+    android:layout_height="500dp"
+    android:gravity="center"
+    android:background="@drawable/dialog_radius"
+    >
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="2.5"
+        android:layout_gravity="center"
         >
         <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
+            android:padding="5dp"
+            android:gravity="center"
             android:id="@+id/dialog_rd_group"
             >
             <RadioButton
@@ -19,18 +26,24 @@
                 android:layout_height="wrap_content"
                 android:text="텍스트"
                 android:id="@+id/dialog_rdbtn_text"
+                android:padding="1dp"
+                android:layout_margin="2dp"
                 />
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="이미지"
                 android:id="@+id/dialog_rdbtn_img"
+                android:padding="1dp"
+                android:layout_margin="2dp"
                 />
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="음성"
                 android:id="@+id/dialog_rdbtn_mp3"
+                android:padding="1dp"
+                android:layout_margin="2dp"
                 />
         </RadioGroup>
     </LinearLayout>
@@ -38,13 +51,20 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:padding="5dp"
+        >
         <TextView
             android:layout_width="match_parent"
             android:layout_height="30dp"
             android:id="@+id/dialog_tv_test"
             android:text="앵커 종류를 골라주세요"
+            android:gravity="center"
+            android:padding="3dp"
+            android:layout_marginBottom="3dp"
             />
         <EditText
             android:layout_width="match_parent"
@@ -52,6 +72,9 @@
             android:hint="내용을 입력해주세요."
             android:visibility="gone"
             android:id="@+id/dialog_edt"
+            android:gravity="center"
+            android:padding="3dp"
+            android:layout_margin="15dp"
             />
         <ImageView
             android:layout_width="match_parent"
@@ -59,26 +82,37 @@
             android:visibility="gone"
             android:src="@drawable/ic_launcher"
             android:id="@+id/dialog_img"
+            android:gravity="center"
+            android:padding="3dp"
             />
     </LinearLayout>
 
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_gravity="center"
         >
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/dialog_btn_ok"
-            android:text="확인"
-            />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:id="@+id/dialog_btn_delete"
             android:text="삭제"
+            android:background="@drawable/btn_shape_no"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_marginLeft="3dp"
+            />
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/dialog_btn_ok"
+            android:text="확인"
+            android:background="@drawable/btn_shape_yes"
+            android:layout_marginRight="3dp"
+            style="@style/Widget.AppCompat.Button.Borderless"
             />
     </LinearLayout>
 

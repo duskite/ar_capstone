@@ -46,7 +46,6 @@ public class CustomDialog extends Dialog {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_select);
 
-
         dialogBtnOk = (Button) findViewById(R.id.dialog_btn_ok);
         dialogBtnDelete = (Button) findViewById(R.id.dialog_btn_delete);
         dialogRdGroup = (RadioGroup) findViewById(R.id.dialog_rd_group);
