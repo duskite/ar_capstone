@@ -50,7 +50,7 @@ public class CloudAnchorManager {
   public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
   public String makeCloudAnchorID(){
-    currentAnchorID = strAnchorID + String.valueOf(firebaseManager.getAnchorNum());
+    currentAnchorID = strAnchorID + String.valueOf(firebaseManager.getNextAnchorNum());
     return currentAnchorID;
   }
 
@@ -65,7 +65,6 @@ public class CloudAnchorManager {
   public void onUpdate() {
     firebaseManager.setContent(wrappedAnchor);
   }
-
 
 }
 
