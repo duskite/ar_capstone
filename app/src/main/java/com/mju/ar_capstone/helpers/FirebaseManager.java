@@ -91,13 +91,15 @@ public class FirebaseManager {
         DatabaseReference contentDB = mDatabase.child("contents").child(wrappedAnchor.getCloudAnchorId());
         HashMap<String, String> contents = new HashMap<String, String>();
         contents.put("created", createdTimeOfContent());
-        contents.put("text", wrappedAnchor.getTextOrPath());
-        contents.put("type", wrappedAnchor.getAnchorType());
         contents.put("userID", wrappedAnchor.getUserID());
-        contentDB.setValue(contents);
+        contents.put("type", wrappedAnchor.getAnchorType());
         if(contents.get("type").equals("image")){
+            contents.put("text_or_path", wrappedAnchor.getTextOrPath() + ".jpg");
             imageNumDatabase.setValue(nextImageNum + 1);
+        }else {
+            contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
+        contentDB.setValue(contents);
 
         //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
@@ -209,7 +211,7 @@ public class FirebaseManager {
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
                                 pose,
-                                tmpSnapshot.child("text").getValue(String.class),
+                                tmpSnapshot.child("text_or_path").getValue(String.class),
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),

@@ -1,21 +1,29 @@
 package com.mju.ar_capstone.helpers;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.google.ar.sceneform.ux.TransformableNode;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mju.ar_capstone.ArSfActivity;
+import com.mju.ar_capstone.R;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 public class FireStorageManager {
 
@@ -23,10 +31,10 @@ public class FireStorageManager {
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference;
     private StorageReference tmpReferece;
-    private Uri tmpUri;
 
     //이미지 파일명 동적 생성
-    private static String strImageID = "imageID_";
+    private static final String strImageID = "imageID_";
+    private static final String FILE_TYPE = ".jpg";
     private String currentImageID;
 
     public FireStorageManager(){
@@ -46,18 +54,27 @@ public class FireStorageManager {
         return makeImageFileID();
     }
 
-    public Uri getUri(){
-        Log.d("이미지", "Uri요청");
-        Log.d("이미지", String.valueOf(tmpUri));
-        return tmpUri;
-    }
+    // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
+    public void downloadImage(Context context, String path, TransformableNode model, ViewRenderable viewRenderable){
+        Log.d("다운로드", "이미지 다운로드 시작");
 
-    public void downloadImage(String path){
         tmpReferece.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
-                tmpUri = uri;
-                Log.d("이미지", "다운 성공");
+                Log.d("다운로드", "이미지 다운로드 성공");
+                ImageView imageView = (ImageView) viewRenderable.getView().findViewById(R.id.imgView);
+                if(uri == null){
+                    Log.d("다운로드", "uri가 null임");
+                }
+                Log.d("다운로드","Uri: " + String.valueOf(uri));
+                Glide.with(context).load(uri).into(imageView);
+                Log.d("다운로드", model.getName());
+                Log.d("다운로드", String.valueOf(System.identityHashCode(model)));
+
+                model.setRenderable(viewRenderable);
+
+                Log.d("다운로드", "모델에 렌더링 적용완료");
+                Log.d("다운로드", "리플레이스 성공");
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -69,7 +86,7 @@ public class FireStorageManager {
 
     //액티비티에서 Uri 넘겨줘야함
     public void uploadImage(Uri file){
-        UploadTask uploadTask = tmpReferece.child(currentImageID).putFile(file);
+        UploadTask uploadTask = tmpReferece.child(currentImageID + FILE_TYPE).putFile(file);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
