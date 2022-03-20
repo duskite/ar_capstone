@@ -14,10 +14,11 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,7 +44,6 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
-import com.google.ar.sceneform.rendering.Renderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -55,13 +55,12 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
         BaseArFragment.OnTapArPlaneListener,
         BaseArFragment.OnSessionConfigurationListener,
-        ArFragment.OnViewCreatedListener {
+        ArFragment.OnViewCreatedListener{
 
     private ArFragment arFragment;
     private ViewRenderable selectRenderable;
@@ -88,7 +87,7 @@ public class ArSfActivity extends AppCompatActivity implements
     //잠시 테스트 중인 애들
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
-    private Uri tmpImage;
+    private Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
 
     private MediaPlayer mediaPlayer;
@@ -265,12 +264,12 @@ public class ArSfActivity extends AppCompatActivity implements
         ImageView imageView = (ImageView) imageRenderableList.get(cntImageRenderable).getView().findViewById(R.id.imgView);
 
         // 사용자가 다이얼로그에서 선택한 이미지가 tmpImage에 Uri로 들어가는거임
-        if (tmpImage != null){
+        if (tmpImageUri != null){
             Log.d("이미지", "이미지 변경 성공");
-            imageView.setImageURI(tmpImage);
+            Glide.with(this).load(tmpImageUri).into(imageView);
         }else{ //이미지가 선택 오류일때
-            Log.d("이미지", "tmpImage Uri가 비어있음");
-            imageView.setImageResource(R.drawable.ic_launcher);
+            Log.d("이미지", "tmpImageUri가 비어있음");
+            Glide.with(this).load(R.drawable.ic_launcher).into(imageView);
         }
 
         return imageRenderableList.get(cntImageRenderable);
@@ -406,6 +405,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         public void onNegativeClick() {
                             firebaseManager.deleteContent(cloudAnchorID);
                             anchor.detach();
+                            model.setRenderable(null);
                         }
 
                         @Override
@@ -429,7 +429,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
                 //서버에서 불러오는거는 여기서 다운로드하고 change까지 모두 함
                 //이미지 Uri가 다운완료 되고나서 change해야해서
-                model.setName("전달");
                 Log.d("다운로드", String.valueOf(System.identityHashCode(model)));
                 fireStorageManager.downloadImage(getApplicationContext(), text_or_path, model, imageRenderableList.get(cntImageRenderable));
 
@@ -438,8 +437,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
                 cntImageRenderable++;
             }
-
-//            changeAnchor(model, text_or_path, anchorType);
 
         }
     }
@@ -488,8 +485,10 @@ public class ArSfActivity extends AppCompatActivity implements
                             String tmpAnchorID = model.getName();
                             firebaseManager.deleteContent(tmpAnchorID);
                             anchor.detach();
+                            model.setRenderable(null);
                         }else{
                             anchor.detach(); //여기는 임시일때
+                            model.setRenderable(null);
                         }
                     }
 
@@ -561,8 +560,8 @@ public class ArSfActivity extends AppCompatActivity implements
             String path = fireStorageManager.getImagePath();
             cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
 
-            //자꾸 업로드 하는거 우선 막아놓음 테스트 다하고 풀 예정
-            fireStorageManager.uploadImage(tmpImage);
+
+            fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
             cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
         }
@@ -612,7 +611,11 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("순서", "onTapPlane");
         createSelectAnchor(hitResult);
 
+
+        //여기는 재미로 만든거임
+//        ysy5593(hitResult);
     }
+
 
 
     // 이미지 업로드 부분
@@ -628,9 +631,62 @@ public class ArSfActivity extends AppCompatActivity implements
 
         if(requestCode == GALLERY_CODE) {
             Log.d("순서 갤러리", "이미지 불러와서 이미지 뷰에 넣는 부분");
-            tmpImage = data.getData();
-            tmpImageView.setImageURI(tmpImage);
+            tmpImageUri = data.getData();
+            Glide.with(this).load(tmpImageUri).into(tmpImageView);
         }
+    }
+
+
+
+
+
+
+
+
+
+    //재미로 만든거라 동작 이해안해도 됨
+    //실행
+    public void ysy5593(HitResult hitResult){
+        //터치 한 곳의 pose를 가져옴
+        Anchor anchor = hitResult.createAnchor();
+        Pose pose = anchor.getPose();
+        AnchorNode anchorNode = new AnchorNode(anchor);
+        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+        model.setParent(anchorNode);
+        model.select();
+
+        ViewRenderable.builder()
+                .setView(this, R.layout.view_model_youtube)
+                .build()
+                .thenAccept(renderable -> {
+
+                    VideoView videoView = (VideoView) renderable.getView().findViewById(R.id.videoYoutube);
+                    EditText editText = (EditText) renderable.getView().findViewById(R.id.edtYoutube);
+                    Button button = (Button) renderable.getView().findViewById(R.id.btnYoutube);
+                    button.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+//                            Uri uri = Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4");
+//                            videoView.setVideoURI(uri);
+                            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.testvideo);
+                            videoView.setVideoURI(uri);
+                        }
+                    });
+                    videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            mp.start();
+                        }
+                    });
+                    model.setRenderable(renderable);
+
+                })
+                .exceptionally(throwable -> {
+                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                    return null;
+                });
+
     }
 }
 
