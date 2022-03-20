@@ -78,11 +78,12 @@ public class FirebaseManager {
     public void setContent(WrappedAnchor wrappedAnchor){
 
         DatabaseReference anchorListDB = mDatabase.child("anchorList").child(wrappedAnchor.getCloudAnchorId());
-        HashMap<String, Double> anchorList = new HashMap<String, Double>();
-        anchorList.put("lat", wrappedAnchor.getLat());
-        anchorList.put("lng", wrappedAnchor.getLng());
-        anchorListDB.setValue(anchorList);
+        HashMap<String, Double> gps = new HashMap<String, Double>();
+        gps.put("lat", wrappedAnchor.getLat());
+        gps.put("lng", wrappedAnchor.getLng());
+        anchorListDB.setValue(gps);
 
+        //컨테츠 내용
         DatabaseReference contentDB = mDatabase.child("contents").child(wrappedAnchor.getCloudAnchorId());
         HashMap<String, String> contents = new HashMap<String, String>();
         contents.put("created", createdTimeOfContent());
@@ -91,6 +92,7 @@ public class FirebaseManager {
         contents.put("userID", wrappedAnchor.getUserID());
         contentDB.setValue(contents);
 
+        //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
         HashMap<String, Float> poses = new HashMap<String, Float>();
         Pose pose = wrappedAnchor.getPose();
@@ -105,6 +107,10 @@ public class FirebaseManager {
         poses.put("Rc", poseR[2]);
         poses.put("Rd", poseR[3]);
         poseDB.setValue(poses);
+
+        //위경도, 위에 해시맵 재사용
+        DatabaseReference gpsDB = contentDB.child("gps");
+        gpsDB.setValue(gps);
 
         anchorNumDatabase.setValue(nextAnchorNum + 1);
 
@@ -148,6 +154,7 @@ public class FirebaseManager {
                     String anchorID = tmpSnapshot.getKey();
 
                     try{
+                        //포즈 정보 불러오기
                         HashMap<String, Double> poses = (HashMap<String, Double>) tmpSnapshot.child("pose").getValue();
                         float[] poseT = {
                                 ((Double) poses.get("Tx")).floatValue(),
@@ -162,11 +169,16 @@ public class FirebaseManager {
                         };
                         Pose pose = new Pose(poseT, poseR);
 
+                        //gps정보 불러오기
+                        HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
+
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
                                 pose,
                                 tmpSnapshot.child("text").getValue(String.class),
                                 tmpSnapshot.child("userID").getValue(String.class),
+                                gps.get("lat"),
+                                gps.get("lng"),
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){
