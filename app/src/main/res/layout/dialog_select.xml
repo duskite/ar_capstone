@@ -29,8 +29,8 @@
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="테스트"
-                android:id="@+id/dialog_rdbtn_test"
+                android:text="음성"
+                android:id="@+id/dialog_rdbtn_mp3"
                 />
         </RadioGroup>
     </LinearLayout>
@@ -42,9 +42,9 @@
         android:orientation="vertical">
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:id="@+id/dialog_tv_test"
-            android:text="테스트용ㅁㄴㅇㅁㄴㅇㅁㄴㅇㅁㄴㅇ"
+            android:text="앵커 종류를 골라주세요"
             />
         <EditText
             android:layout_width="match_parent"

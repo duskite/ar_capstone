@@ -14,8 +14,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.google.ar.core.Anchor;
-
 
 public class CustomDialog extends Dialog {
 
@@ -23,12 +21,12 @@ public class CustomDialog extends Dialog {
     private CustomDialogClickListener customDialogClickListener;
     private Button dialogBtnOk, dialogBtnDelete;
     private RadioGroup dialogRdGroup;
-    private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnTest;
+    private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnMp3;
 
     public enum AnchorType{
         text,
         image,
-        test
+        mp3
     }
     AnchorType anchorType;
 
@@ -54,9 +52,8 @@ public class CustomDialog extends Dialog {
         dialogRdGroup = (RadioGroup) findViewById(R.id.dialog_rd_group);
         dialogRdBtnText = (RadioButton) findViewById(R.id.dialog_rdbtn_text);
         dialogRdBtnImg = (RadioButton) findViewById(R.id.dialog_rdbtn_img);
-        dialogRdBtnTest = (RadioButton) findViewById(R.id.dialog_rdbtn_test);
+        dialogRdBtnMp3 = (RadioButton) findViewById(R.id.dialog_rdbtn_mp3);
         dialogEdt = (EditText) findViewById(R.id.dialog_edt);
-
         dialogImg = (ImageView) findViewById(R.id.dialog_img);
 
         textView = (TextView) findViewById(R.id.dialog_tv_test);
@@ -82,13 +79,12 @@ public class CustomDialog extends Dialog {
                     Log.d("순서", "이미지 모드 눌림");
 
 
-                }else if(checkedId == R.id.dialog_rdbtn_test){
+                }else if(checkedId == R.id.dialog_rdbtn_mp3){
 
                     dialogImg.setVisibility(View.GONE);
                     dialogEdt.setVisibility(View.GONE);
-                    anchorType = anchorType.test;
+                    anchorType = anchorType.mp3;
 
-                    textView.setText("테스트트트트  모드");
                 }
             }
         });
@@ -101,8 +97,6 @@ public class CustomDialog extends Dialog {
 
             dismiss();
         });
-
-
 
         dialogBtnDelete.setOnClickListener(v -> {
             this.customDialogClickListener.onNegativeClick();
