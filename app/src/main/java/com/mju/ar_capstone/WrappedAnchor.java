@@ -28,24 +28,15 @@ public class WrappedAnchor {
         this.lng = lng;
     }
 
-
-    // upload
-    public WrappedAnchor(Pose pose, String text, String userID, double lat, double lng, String anchorType){
-        this.textOrPath = text;
-        this.userID = userID;
-        this.lat = lat;
-        this.lng = lng;
-        this.anchorType = anchorType;
-        this.pose = pose;
-
-    }
-    // download
-    public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, String anchorType){
+    // ar에서 사용하는 객체
+    public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, double lat, double lng, String anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
         this.userID = userID;
         this.anchorType = anchorType;
         this.pose = pose;
+        this.lat = lat;
+        this.lng = lng;
     }
 
     public String getCloudAnchorId() {

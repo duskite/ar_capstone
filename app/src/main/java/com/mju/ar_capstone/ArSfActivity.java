@@ -62,15 +62,13 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private ArFragment arFragment;
     private ViewRenderable selectRenderable;
-    private List<ViewRenderable> textRenderableList = new ArrayList<>();
-    private List<ViewRenderable> imageRenderableList = new ArrayList<>();
-    private List<ViewRenderable> mp3RenderableList = new ArrayList<>();
+    private ArrayList<ViewRenderable> textRenderableList = new ArrayList<>();
+    private ArrayList<ViewRenderable> imageRenderableList = new ArrayList<>();
+    private ArrayList<ViewRenderable> mp3RenderableList = new ArrayList<>();
 
-    //37.237219, 127.189968
-
-    private static int cntTextRenderable = -1;
-    private static int cntImageRenderable = -1;
-    private static int cntMp3Renderable = -1;
+    private static int cntTextRenderable = 0;
+    private static int cntImageRenderable = 0;
+    private static int cntMp3Renderable = 0;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -86,11 +84,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private MediaPlayer mediaPlayer;
 
-    //내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
+    // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
     private static boolean writeMode = false;
 
-    //대략적인 gps정보 앵커랑 같이 서버에 업로드하려고
+    //gps정보 앵커랑 같이 서버에 업로드하려고
     private LocationManager locationManager;
     private Location currentLocation;
     private double lat = 0.0;
@@ -142,19 +140,145 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         });
 
-        //모델 로드
+        //모델 로드, 미리 만들어놓는거임
+        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         //이 후에는 각각 필요한 모델들만 로드됨
+        // 불러올때 좀 미리할 좋은 방법을 고민해야함
         makePreModels(-1);
-        makePreModels(0);
-        makePreModels(1);
-        makePreModels(2);
+        for(int i=0; i<3; i++){
+            makePreModels(0);
+            makePreModels(1);
+            makePreModels(2);
+        }
+    }
+
+
+    //미리 렌더러블을 만들어 놓기
+    public void makePreModels(int type){
+        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
+
+        Log.d("불러오기", "makePreModels 시작");
+        if (type == 0){
+            Log.d("불러오기", "텍스트 모델 미리 만들러옴");
+            //텍스트 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_text)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.textRenderableList.add(renderable);
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else if(type == 1){
+            // 이미지 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_image)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.imageRenderableList.add(renderable);
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else if(type == -1){
+            //선택 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_select)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.selectRenderable = renderable;
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else if(type == 2){
+            //mp3 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_mp3)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.mp3RenderableList.add(renderable);
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }
+        Log.d("불러오기", "makePreModels 끝");
+
+    }
+
+
+    // 한번 만들어 놓은 렌더러블은 수정가능함
+    // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
+    public ViewRenderable makeTextModels(String text){
+
+        Log.d("불러오기", "현재 카운트" + String.valueOf(cntTextRenderable));
+        Log.d("불러오기", "현재 사이즈" + String.valueOf(textRenderableList.size()));
+
+        Log.d("불러오기", "makeTextModels");
+        Log.d("불러오기", "makeTextModels 가져온 텍스트: " + text);
+        TextView textView = (TextView) textRenderableList.get(cntTextRenderable).getView().findViewById(R.id.tvTestText);
+        textView.setText(text);
+        Log.d("불러오기", "렌더러블 체크" + textRenderableList.get(cntTextRenderable).toString());
+        Log.d("불러오기", "텍스트뷰 체크" + textView.getText());
+        Log.d("불러오기", "makeTextModels 렌더러블 다만들고 리턴");
+
+        return textRenderableList.get(cntTextRenderable);
+    }
+    public ViewRenderable makeImageModels(){
+
+        ImageView imageView = (ImageView) imageRenderableList.get(cntImageRenderable).getView().findViewById(R.id.imgView);
+        //이미지 다운 때문에 바로 처리가 안됨
+        if (tmpImage != null){
+            imageView.setImageURI(tmpImage);
+        }else{
+            imageView.setImageResource(R.drawable.ic_launcher);
+            Toast.makeText(this, "현재 이미지가 다운중임...", Toast.LENGTH_LONG).show();
+        }
+
+        return imageRenderableList.get(cntImageRenderable);
+    }
+    public ViewRenderable makeMp3Models(){
+        Button buttonPlay = (Button) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);
+        Button buttonStop = (Button) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3stop);
+        buttonPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.test);
+                mediaPlayer.start();
+            }
+        });
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer.stop();
+            }
+        });
+
+        return mp3RenderableList.get(cntMp3Renderable);
     }
 
 
     //현재 위치 가져오기
     public void checkGPS() {
         Log.d("순서", "checkGPS");
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -167,7 +291,7 @@ public class ArSfActivity extends AppCompatActivity implements
         }
         currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if(currentLocation == null){
-            Log.d("순서", "기존꺼 널");
+            // location이 null이면 다른 방식으로 얻어오기
             fusedLocationProviderClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
@@ -186,17 +310,51 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("순서", "checkGPS end");
     }
 
+    //거리 구하는 함수
+    public double getDistance(double latA, double lngA){
+        checkGPS();
+        double distance;
+
+        //사용자의 위치
+        Location locationA = new Location("user");
+        locationA.setLatitude(lat);
+        locationA.setLongitude(lng);
+
+        //앵커가 남겨진 위치
+        Location locationB = new Location("anchor");
+        locationB.setLatitude(latA);
+        locationB.setLongitude(lngA);
+
+        distance = locationA.distanceTo(locationB);
+
+        return distance;
+    }
+
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
         writeMode = false;
 
+        Log.d("불러오기", "loadCloudAnchors");
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList){
-            CustomDialog.AnchorType anchorType = null;
 
+            //앵커가 내 근처에 있는지를 판단하고 보여줄꺼임
+            //서버에서 가져온 앵커 위경도
+            Log.d("순서", "잠깐");
+            Double lat = wrappedAnchor.getLat();
+            Double lng = wrappedAnchor.getLng();
+            Log.d("순서", "거리" + String.valueOf(getDistance(lat, lng)));
+            //거리가 멀면 넘어감 30 m 넘으면 안불러옴
+            if(getDistance(lat, lng) > 30){
+                continue;
+            }
+
+            CustomDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getTextOrPath();
             String stringAnchorType = wrappedAnchor.getAnchorType();
+
+            Log.d("불러오기", "불러와진 텍스트:" + text_or_path);
 
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
@@ -207,12 +365,16 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = CustomDialog.AnchorType.mp3;
             }
 
+            Log.d("불러오기", "불러와진 앵커 타입:" + anchorType.toString());
+
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(pose);
             AnchorNode anchorNode = new AnchorNode(anchor);
             anchorNode.setParent(arFragment.getArSceneView().getScene());
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
+            Log.d("불러오기", "changeAnchor 전");
             changeAnchor(model, text_or_path, anchorType);
+            Log.d("불러오기", "changeAnchor 후");
             model.select();
             if(anchorType == CustomDialog.AnchorType.text){
                 model.setOnTapListener(new Node.OnTapListener() {
@@ -330,24 +492,37 @@ public class ArSfActivity extends AppCompatActivity implements
     //여기가 너무 일찍 실행됨
     public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
         Log.d("순서", "changeAnchor");
+        Log.d("불러오기", "changeAnchor 들어옴");
 
         if(anchorType == CustomDialog.AnchorType.text){
+            Log.d("불러오기", "changeAnchor 앵커 텍스트 타입");
             model.setRenderable(makeTextModels(text_or_path));
+
+            Log.d("불러오기", "model 렌더러블까지 끝남");
 
             //미리 모델 만들기
             makePreModels(0);
 
+            cntTextRenderable += 1;
+
         }else if(anchorType == CustomDialog.AnchorType.image){
+            Log.d("불러오기", "changeAnchor 앵커 이미지 타입");
             if(!writeMode){
                 tmpImage = fireStorageManager.getUri();
             }
             model.setRenderable(makeImageModels());
 
             makePreModels(1);
+
+            cntImageRenderable += 1;
+
+
         }else if(anchorType == CustomDialog.AnchorType.mp3){
             model.setRenderable(makeMp3Models());
 
             makePreModels(2);
+
+            cntMp3Renderable += 1;
         }
     }
 
@@ -406,121 +581,6 @@ public class ArSfActivity extends AppCompatActivity implements
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
     }
 
-    //미리 렌더러블을 만들어 놓기
-    public void makePreModels(int type){
-        WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
-
-        if (type == 0){
-            //텍스트 모델 생성
-            ViewRenderable.builder()
-                    .setView(this, R.layout.view_model_text)
-                    .build()
-                    .thenAccept(renderable -> {
-                        ArSfActivity activity = weakActivity.get();
-                        if (activity != null) {
-                            activity.textRenderableList.add(renderable);
-                            cntTextRenderable += 1;
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                        return null;
-                    });
-        }else if(type == 1){
-            // 이미지 모델 생성
-            ViewRenderable.builder()
-                    .setView(this, R.layout.view_model_image)
-                    .build()
-                    .thenAccept(renderable -> {
-                        ArSfActivity activity = weakActivity.get();
-                        if (activity != null) {
-                            activity.imageRenderableList.add(renderable);
-                            cntImageRenderable += 1;
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                        return null;
-                    });
-        }else if(type == -1){
-            //선택 모델 생성
-            ViewRenderable.builder()
-                    .setView(this, R.layout.view_model_select)
-                    .build()
-                    .thenAccept(renderable -> {
-                        ArSfActivity activity = weakActivity.get();
-                        if (activity != null) {
-                            activity.selectRenderable = renderable;
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                        return null;
-                    });
-        }else if(type == 2){
-            //mp3 모델 생성
-            ViewRenderable.builder()
-                    .setView(this, R.layout.view_model_mp3)
-                    .build()
-                    .thenAccept(renderable -> {
-                        ArSfActivity activity = weakActivity.get();
-                        if (activity != null) {
-                            activity.mp3RenderableList.add(renderable);
-                            cntMp3Renderable += 1;
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                        return null;
-                    });
-        }
-
-    }
-
-
-    // 한번 만들어 놓은 렌더러블은 수정가능함
-    // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
-    public ViewRenderable makeTextModels(String text){
-        ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
-        TextView textView = (TextView) tmpRenderable.getView();
-        textView.setText(text);
-
-        return tmpRenderable;
-    }
-    public ViewRenderable makeImageModels(){
-        ViewRenderable tmpRenderable = imageRenderableList.get(cntImageRenderable).makeCopy();
-        ImageView imageView = (ImageView) tmpRenderable.getView();
-
-        //이미지 다운 때문에 바로 처리가 안됨
-        if (tmpImage != null){
-            imageView.setImageURI(tmpImage);
-        }else{
-            imageView.setImageResource(R.drawable.ic_launcher);
-            Toast.makeText(this, "현재 이미지가 다운중임...", Toast.LENGTH_LONG).show();
-        }
-
-        return tmpRenderable;
-    }
-    public ViewRenderable makeMp3Models(){
-        ViewRenderable tmpRenderable = mp3RenderableList.get(cntMp3Renderable).makeCopy();
-        Button buttonPlay = (Button) tmpRenderable.getView().findViewById(R.id.mp3play);
-        Button buttonStop = (Button) tmpRenderable.getView().findViewById(R.id.mp3stop);
-        buttonPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.test);
-                mediaPlayer.start();
-            }
-        });
-        buttonStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mediaPlayer.stop();
-            }
-        });
-
-        return tmpRenderable;
-    }
 
 
     @Override
