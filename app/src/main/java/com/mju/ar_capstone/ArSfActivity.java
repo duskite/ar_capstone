@@ -26,6 +26,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentOnAttachListener;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Config;
 import com.google.ar.core.HitResult;
@@ -92,6 +95,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private Location currentLocation;
     private double lat = 0.0;
     private double lng = 0.0;
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,18 +110,10 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
+        //지도 우선 두개다 유지
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        checkGPS();
 
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
@@ -158,6 +154,7 @@ public class ArSfActivity extends AppCompatActivity implements
     //현재 위치 가져오기
     public void checkGPS() {
         Log.d("순서", "checkGPS");
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -168,28 +165,25 @@ public class ArSfActivity extends AppCompatActivity implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
         currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if(currentLocation == null){
-            Log.d("순서", "Location NETWORK 프로바이더로 변경");
-
-            currentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if(currentLocation == null){
-                Log.d("순서", "이것도 없음");
-            }
-
-            try{
-                lat = currentLocation.getLatitude();
-                lng = currentLocation.getLongitude();
-            }catch (Exception e){
-                Log.d("순서", "gps오류" + e);
-                Log.d("순서", "checkGPS null");
-            }
+            Log.d("순서", "기존꺼 널");
+            fusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                lat = location.getLatitude();
+                                lng = location.getLongitude();
+                            }
+                        }
+                    });
+        }else {
+            lat = currentLocation.getLatitude();
+            lng = currentLocation.getLongitude();
         }
-
         Log.d("순서", "checkGPS end");
-
-
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
