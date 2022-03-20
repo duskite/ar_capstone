@@ -74,9 +74,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //모델 종류 상수 선언
     private static final int SELECT_MODEL = -1;
-    private static final int TEXT_MODEL = -1;
-    private static final int IMAGE_MODEL = -1;
-    private static final int MP3_MODEL = -1;
+    private static final int TEXT_MODEL = 0;
+    private static final int IMAGE_MODEL = 1;
+    private static final int MP3_MODEL = 2;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -255,34 +255,20 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("불러오기", "렌더러블 체크" + textRenderableList.get(cntTextRenderable).toString());
         Log.d("불러오기", "그냥 텍스트뷰 값" + textView.getText().toString());
 
-        //두개 주소 같은지 보려고
-        //주소가 다르다
-        //내부 텍스뷰 값은 같음
-        //하나의 모델을 가지고 내부 뷰를 동적 생성하고 arrayList에 add하면 되지 않을까?
-//        ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
-//        Log.d("불러오기", "렌더러블 체크 카피" + tmpRenderable.toString());
-//        TextView textView1 = new TextView(getApplicationContext());
-//        textView1.setText("asd");
-//        textView1.setId(0);
-//        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-//                LinearLayout.LayoutParams.WRAP_CONTENT);
-//        textView1.setLayoutParams(params);
-//        LinearLayout linearLayout = (LinearLayout) tmpRenderable.getView();
-//        linearLayout.addView(textView1);
-//        Log.d("불러오기", "카피 텍스트뷰 값" + textView1.getText().toString());
-
         return textRenderableList.get(cntTextRenderable);
-//        return tmpRenderable;
     }
     public ViewRenderable makeImageModels(){
+
+        Log.d("이미지", "makeImageModels");
 
         ImageView imageView = (ImageView) imageRenderableList.get(cntImageRenderable).getView().findViewById(R.id.imgView);
         //이미지 다운 때문에 바로 처리가 안됨
         if (tmpImage != null){
+            Log.d("이미지", "이미지 변경 성공");
             imageView.setImageURI(tmpImage);
-        }else{
+        }else{ //이미지가 아직 안불러져 왔을때 기본 화면
+            Log.d("이미지", "tmpImage Uri가 비어있음");
             imageView.setImageResource(R.drawable.ic_launcher);
-            Toast.makeText(this, "현재 이미지가 다운중임...", Toast.LENGTH_LONG).show();
         }
 
         return imageRenderableList.get(cntImageRenderable);
@@ -388,6 +374,13 @@ public class ArSfActivity extends AppCompatActivity implements
 
             Log.d("불러오기", "불러와진 텍스트:" + text_or_path);
 
+            Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(pose);
+            AnchorNode anchorNode = new AnchorNode(anchor);
+            anchorNode.setParent(arFragment.getArSceneView().getScene());
+            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+            model.setParent(anchorNode);
+            model.select();
+
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
             }else if(stringAnchorType.equals("image")){
@@ -396,18 +389,8 @@ public class ArSfActivity extends AppCompatActivity implements
             }else if(stringAnchorType.equals("mp3")){
                 anchorType = CustomDialog.AnchorType.mp3;
             }
-
             Log.d("불러오기", "불러와진 앵커 타입:" + anchorType.toString());
 
-            Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(pose);
-            AnchorNode anchorNode = new AnchorNode(anchor);
-            anchorNode.setParent(arFragment.getArSceneView().getScene());
-            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-            model.setParent(anchorNode);
-            Log.d("불러오기", "changeAnchor 전");
-            changeAnchor(model, text_or_path, anchorType);
-            Log.d("불러오기", "changeAnchor 후");
-            model.select();
             if(anchorType == CustomDialog.AnchorType.text){
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
@@ -420,9 +403,7 @@ public class ArSfActivity extends AppCompatActivity implements
                                 Log.d("순서", "예스 클릭됨");
                                 changeAnchor(model, tmpText, anchorType);
                                 saveAnchor(anchor.getPose(), tmpText, anchorType);
-
                             }
-
                             @Override
                             public void onNegativeClick() {
                                 firebaseManager.deleteContent(cloudAnchorID);
@@ -452,6 +433,11 @@ public class ArSfActivity extends AppCompatActivity implements
             }else if(anchorType == CustomDialog.AnchorType.mp3){
 
             }
+
+
+            Log.d("불러오기", "changeAnchor 전");
+            changeAnchor(model, text_or_path, anchorType);
+            Log.d("불러오기", "changeAnchor 후");
 
         }
     }
@@ -539,8 +525,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
         }else if(anchorType == CustomDialog.AnchorType.image){
             Log.d("불러오기", "changeAnchor 앵커 이미지 타입");
-            if(!writeMode){
+            Log.d("이미지", "changeAnchor image로 분기");
+            if(!writeMode){ //이미지 앵커를 불러올때
+                Log.d("이미지", "changeAnchor readMode임");
                 tmpImage = fireStorageManager.getUri();
+                Log.d("이미지", "Uri요청 끝");
             }
             model.setRenderable(makeImageModels());
 
@@ -567,12 +556,11 @@ public class ArSfActivity extends AppCompatActivity implements
         if(anchorType == CustomDialog.AnchorType.text){
             cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
-            Log.d("순서 패스",fireStorageManager.getImagePath());
             String path = fireStorageManager.getImagePath();
             cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
 
             //자꾸 업로드 하는거 우선 막아놓음 테스트 다하고 풀 예정
-//            fireStorageManager.uploadImage(tmpImage);
+            fireStorageManager.uploadImage(tmpImage);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
             cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
         }
@@ -603,6 +591,7 @@ public class ArSfActivity extends AppCompatActivity implements
         config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
         session.configure(config);
         cloudManager.setFirebaseManager(firebaseManager);
+        fireStorageManager.setFirebaseManager(firebaseManager);
 
     }
 
