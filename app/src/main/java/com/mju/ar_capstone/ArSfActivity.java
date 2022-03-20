@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +42,7 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
+import com.google.ar.sceneform.rendering.Renderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -69,6 +71,12 @@ public class ArSfActivity extends AppCompatActivity implements
     private static int cntTextRenderable = 0;
     private static int cntImageRenderable = 0;
     private static int cntMp3Renderable = 0;
+
+    //모델 종류 상수 선언
+    private static final int SELECT_MODEL = -1;
+    private static final int TEXT_MODEL = -1;
+    private static final int IMAGE_MODEL = -1;
+    private static final int MP3_MODEL = -1;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -144,12 +152,22 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         //이 후에는 각각 필요한 모델들만 로드됨
         // 불러올때 좀 미리할 좋은 방법을 고민해야함
-        makePreModels(-1);
-        for(int i=0; i<3; i++){
-            makePreModels(0);
-            makePreModels(1);
-            makePreModels(2);
+        preLoadModels();
+    }
+
+
+    public void preLoadModels(){
+
+        //모델 로드, 미리 만들어놓는거임
+        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
+        makePreModels(SELECT_MODEL);
+        makePreModels(MP3_MODEL);
+        for(int i=0; i<5; i++){
+            makePreModels(TEXT_MODEL);
+            makePreModels(IMAGE_MODEL);
+
         }
+
     }
 
 
@@ -158,7 +176,7 @@ public class ArSfActivity extends AppCompatActivity implements
         WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
 
         Log.d("불러오기", "makePreModels 시작");
-        if (type == 0){
+        if (type == TEXT_MODEL){
             Log.d("불러오기", "텍스트 모델 미리 만들러옴");
             //텍스트 모델 생성
             ViewRenderable.builder()
@@ -174,7 +192,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == 1){
+        }else if(type == IMAGE_MODEL){
             // 이미지 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_image)
@@ -189,7 +207,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == -1){
+        }else if(type == SELECT_MODEL){
             //선택 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_select)
@@ -204,7 +222,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == 2){
+        }else if(type == MP3_MODEL){
             //mp3 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_mp3)
@@ -220,6 +238,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         return null;
                     });
         }
+
         Log.d("불러오기", "makePreModels 끝");
 
     }
@@ -229,18 +248,31 @@ public class ArSfActivity extends AppCompatActivity implements
     // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
     public ViewRenderable makeTextModels(String text){
 
-        Log.d("불러오기", "현재 카운트" + String.valueOf(cntTextRenderable));
-        Log.d("불러오기", "현재 사이즈" + String.valueOf(textRenderableList.size()));
-
         Log.d("불러오기", "makeTextModels");
         Log.d("불러오기", "makeTextModels 가져온 텍스트: " + text);
         TextView textView = (TextView) textRenderableList.get(cntTextRenderable).getView().findViewById(R.id.tvTestText);
         textView.setText(text);
         Log.d("불러오기", "렌더러블 체크" + textRenderableList.get(cntTextRenderable).toString());
-        Log.d("불러오기", "텍스트뷰 체크" + textView.getText());
-        Log.d("불러오기", "makeTextModels 렌더러블 다만들고 리턴");
+        Log.d("불러오기", "그냥 텍스트뷰 값" + textView.getText().toString());
+
+        //두개 주소 같은지 보려고
+        //주소가 다르다
+        //내부 텍스뷰 값은 같음
+        //하나의 모델을 가지고 내부 뷰를 동적 생성하고 arrayList에 add하면 되지 않을까?
+//        ViewRenderable tmpRenderable = textRenderableList.get(cntTextRenderable).makeCopy();
+//        Log.d("불러오기", "렌더러블 체크 카피" + tmpRenderable.toString());
+//        TextView textView1 = new TextView(getApplicationContext());
+//        textView1.setText("asd");
+//        textView1.setId(0);
+//        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT);
+//        textView1.setLayoutParams(params);
+//        LinearLayout linearLayout = (LinearLayout) tmpRenderable.getView();
+//        linearLayout.addView(textView1);
+//        Log.d("불러오기", "카피 텍스트뷰 값" + textView1.getText().toString());
 
         return textRenderableList.get(cntTextRenderable);
+//        return tmpRenderable;
     }
     public ViewRenderable makeImageModels(){
 
@@ -501,7 +533,7 @@ public class ArSfActivity extends AppCompatActivity implements
             Log.d("불러오기", "model 렌더러블까지 끝남");
 
             //미리 모델 만들기
-            makePreModels(0);
+            makePreModels(TEXT_MODEL);
 
             cntTextRenderable += 1;
 
@@ -512,7 +544,7 @@ public class ArSfActivity extends AppCompatActivity implements
             }
             model.setRenderable(makeImageModels());
 
-            makePreModels(1);
+            makePreModels(IMAGE_MODEL);
 
             cntImageRenderable += 1;
 
@@ -520,7 +552,7 @@ public class ArSfActivity extends AppCompatActivity implements
         }else if(anchorType == CustomDialog.AnchorType.mp3){
             model.setRenderable(makeMp3Models());
 
-            makePreModels(2);
+            makePreModels(MP3_MODEL);
 
             cntMp3Renderable += 1;
         }
