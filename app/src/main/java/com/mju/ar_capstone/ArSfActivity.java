@@ -610,10 +610,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         createSelectAnchor(hitResult);
-
-
-        //여기는 재미로 만든거임
-//        ysy5593(hitResult);
+        
     }
 
 
@@ -634,59 +631,6 @@ public class ArSfActivity extends AppCompatActivity implements
             tmpImageUri = data.getData();
             Glide.with(this).load(tmpImageUri).into(tmpImageView);
         }
-    }
-
-
-
-
-
-
-
-
-
-    //재미로 만든거라 동작 이해안해도 됨
-    //실행
-    public void ysy5593(HitResult hitResult){
-        //터치 한 곳의 pose를 가져옴
-        Anchor anchor = hitResult.createAnchor();
-        Pose pose = anchor.getPose();
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
-        TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-        model.setParent(anchorNode);
-        model.select();
-
-        ViewRenderable.builder()
-                .setView(this, R.layout.view_model_youtube)
-                .build()
-                .thenAccept(renderable -> {
-
-                    VideoView videoView = (VideoView) renderable.getView().findViewById(R.id.videoYoutube);
-                    EditText editText = (EditText) renderable.getView().findViewById(R.id.edtYoutube);
-                    Button button = (Button) renderable.getView().findViewById(R.id.btnYoutube);
-                    button.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-//                            Uri uri = Uri.parse("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4");
-//                            videoView.setVideoURI(uri);
-                            Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.testvideo);
-                            videoView.setVideoURI(uri);
-                        }
-                    });
-                    videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                        @Override
-                        public void onPrepared(MediaPlayer mp) {
-                            mp.start();
-                        }
-                    });
-                    model.setRenderable(renderable);
-
-                })
-                .exceptionally(throwable -> {
-                    Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
-                    return null;
-                });
-
     }
 }
 
