@@ -111,8 +111,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //센서 정보를 가져와야 할 꺼 같아서 테스트 중
     private SensorPoseManager sensorPoseManager;
-    //가속도 센서 데이터
-    private float[] accXYZ = new float[3];
+//    //가속도 센서 데이터
+//    private float[] createAccXYZ = new float[3];
+//    private float[] loadAccXYZ = new float[3];
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -148,10 +149,10 @@ public class ArSfActivity extends AppCompatActivity implements
 
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
                 //불러오기 버튼 눌린순간 현재 나의 가속도 값 다시 가져오기
-                accXYZ = sensorPoseManager.getAccXYZ();
-                loadCloudAnchors();
+                float[] resolveAcc = sensorPoseManager.getAccXYZ();
+                Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
+                loadCloudAnchors(resolveAcc);
             }
         });
 
@@ -367,7 +368,7 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
-    public void loadCloudAnchors(){
+    public void loadCloudAnchors(float[] resolveAcc){
         writeMode = false;
 
         Log.d("불러오기", "loadCloudAnchors");
@@ -396,7 +397,7 @@ public class ArSfActivity extends AppCompatActivity implements
             //여기서 불러온 가속도랑 현재 내가 보고 있는 가속도 비교해야할듯
             float[] loadedAccXYZ = wrappedAnchor.getAccXYZ();
             // pose, acc, loaded acc 모두 넘겨서 실제로 앵커가 그려져야할 위치를 구함
-            sensorPoseManager.getRealPose();
+            sensorPoseManager.getRealPose(pose.getTranslation(), loadedAccXYZ, resolveAcc);
 
             // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
             if(stringAnchorType.equals("text")){
@@ -425,7 +426,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(), tmpText, anchorType);
+                            saveAnchor(anchor.getPose(), resolveAcc, tmpText, anchorType);
                         }
                         @Override
                         public void onNegativeClick() {
@@ -473,13 +474,23 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     //임시 앵커 생성 후 실제 앵커까지
-    public void createSelectAnchor(HitResult hitResult){
+    public void createSelectAnchor(HitResult hitResult, float[] hostAcc){
 
         Log.d("순서", "createSelectAnchor");
+
+        Log.d("앵커포즈 남길때 acc: ", "x: " + String.valueOf(hostAcc[0]) +
+                ", y:" + String.valueOf(hostAcc[1]) +
+                ", z: " + String.valueOf(hostAcc[2]));
 
         //터치 한 곳의 pose를 가져옴
         Anchor anchor = hitResult.createAnchor();
         Pose pose = anchor.getPose();
+
+        //체크중인 부분
+        float[] tmpFloat = pose.getTranslation();
+        Log.d("앵커포즈 T: ", "Tx: " + String.valueOf(tmpFloat[0]) +
+                ", Ty: " + String.valueOf(tmpFloat[1]) +
+                ", Tz: " + String.valueOf(tmpFloat[2]));
 
         AnchorNode anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
@@ -501,7 +512,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         changeAnchor(model, tmpText, anchorType);
                         //앵커 아이디 리턴함. 지울때 판단하는 용도
-                        String tmpAnchorID = saveAnchor(pose, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(pose, hostAcc, tmpText, anchorType);
                         if(tmpAnchorID != null){
                             model.setName(tmpAnchorID);
                         }else{
@@ -582,21 +593,21 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Pose pose, float[] hostAcc, String text, CustomDialog.AnchorType anchorType){
         Log.d("순서", "saveAnchor");
         checkGPS();
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, accXYZ, "text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, hostAcc, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, accXYZ, "image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, hostAcc, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, accXYZ, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, hostAcc, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -642,11 +653,12 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
-        accXYZ = sensorPoseManager.getAccXYZ();
-        Log.d("센서", "x: " + String.valueOf(accXYZ[0]) +
-                ", y:" + String.valueOf(accXYZ[1]) +
-                ", z: " + String.valueOf(accXYZ[2]));
-        createSelectAnchor(hitResult);
+        //acc 가져오면서 잠깐 센서 데이터 저장 멈춤
+        //너무 빨리 다음 데이터가 덮어쓰여질까봐
+        float[] hostAcc = sensorPoseManager.getAccXYZ();
+        createSelectAnchor(hitResult, hostAcc);
+        //다시 수신상태로 바꿈
+        sensorPoseManager.setSensorCheckdTrue();
 
     }
 
