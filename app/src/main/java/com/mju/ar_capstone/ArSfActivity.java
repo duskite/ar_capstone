@@ -56,6 +56,7 @@ import com.mju.ar_capstone.helpers.CloudAnchorManager;
 import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.helpers.SensorPoseManager;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -108,6 +109,11 @@ public class ArSfActivity extends AppCompatActivity implements
     private double lng = 0.0;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
+    //센서 정보를 가져와야 할 꺼 같아서 테스트 중
+    private SensorPoseManager sensorPoseManager;
+    //가속도 센서 데이터
+    private float[] accXYZ = new float[3];
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -132,6 +138,10 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
+        //가속도 쎈서 관련
+        sensorPoseManager = new SensorPoseManager(getSystemService(SENSOR_SERVICE));
+        sensorPoseManager.startSensorcheck();
+
         // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
@@ -139,6 +149,8 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
+                //불러오기 버튼 눌린순간 현재 나의 가속도 값 다시 가져오기
+                accXYZ = sensorPoseManager.getAccXYZ();
                 loadCloudAnchors();
             }
         });
@@ -381,6 +393,11 @@ public class ArSfActivity extends AppCompatActivity implements
             String text_or_path = wrappedAnchor.getTextOrPath();
             String stringAnchorType = wrappedAnchor.getAnchorType();
 
+            //여기서 불러온 가속도랑 현재 내가 보고 있는 가속도 비교해야할듯
+            float[] loadedAccXYZ = wrappedAnchor.getAccXYZ();
+            // pose, acc, loaded acc 모두 넘겨서 실제로 앵커가 그려져야할 위치를 구함
+            sensorPoseManager.getRealPose();
+
             // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
             if(stringAnchorType.equals("text")){
                 anchorType = CustomDialog.AnchorType.text;
@@ -571,15 +588,15 @@ public class ArSfActivity extends AppCompatActivity implements
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, "text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, accXYZ, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, accXYZ, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, accXYZ, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -625,6 +642,10 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
+        accXYZ = sensorPoseManager.getAccXYZ();
+        Log.d("센서", "x: " + String.valueOf(accXYZ[0]) +
+                ", y:" + String.valueOf(accXYZ[1]) +
+                ", z: " + String.valueOf(accXYZ[2]));
         createSelectAnchor(hitResult);
 
     }

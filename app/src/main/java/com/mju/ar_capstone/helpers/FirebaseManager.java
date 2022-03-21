@@ -122,15 +122,23 @@ public class FirebaseManager {
         poses.put("Ty", poseT[1]);
         poses.put("Tz", poseT[2]);
 
-        poses.put("Ra", poseR[0]);
-        poses.put("Rb", poseR[1]);
-        poses.put("Rc", poseR[2]);
-        poses.put("Rd", poseR[3]);
+        poses.put("Rx", poseR[0]);
+        poses.put("Ry", poseR[1]);
+        poses.put("Rz", poseR[2]);
+        poses.put("Rw", poseR[3]);
         poseDB.setValue(poses);
 
         //위경도, 위에 해시맵 재사용
         DatabaseReference gpsDB = contentDB.child("gps");
         gpsDB.setValue(gps);
+
+        DatabaseReference accDB = contentDB.child("accXYZ");
+        HashMap<String, Float> accXYZs = new HashMap<String, Float>();
+        float[] accXYZ = wrappedAnchor.getAccXYZ();
+        accXYZs.put("accX", accXYZ[0]);
+        accXYZs.put("accY", accXYZ[1]);
+        accXYZs.put("accZ", accXYZ[2]);
+        accDB.setValue(accXYZs);
 
         anchorNumDatabase.setValue(nextAnchorNum + 1);
 
@@ -209,15 +217,17 @@ public class FirebaseManager {
                                 ((Double) poses.get("Tz")).floatValue()
                         };
                         float[] poseR = {
-                                ((Double) poses.get("Ra")).floatValue(),
-                                ((Double) poses.get("Rb")).floatValue(),
-                                ((Double) poses.get("Rc")).floatValue(),
-                                ((Double) poses.get("Rd")).floatValue(),
+                                ((Double) poses.get("Rx")).floatValue(),
+                                ((Double) poses.get("Ry")).floatValue(),
+                                ((Double) poses.get("Rz")).floatValue(),
+                                ((Double) poses.get("Rw")).floatValue(),
                         };
                         Pose pose = new Pose(poseT, poseR);
 
                         //gps정보 불러오기
                         HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
+                        //가속도 정보 불러오기
+                        HashMap<String, Double> accXYZ = (HashMap<String, Double>) tmpSnapshot.child("accXYZ").getValue();
 
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
@@ -226,6 +236,11 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
+                                new float[]{
+                                        ((Double) accXYZ.get("accX")).floatValue(),
+                                        ((Double) accXYZ.get("accY")).floatValue(),
+                                        ((Double) accXYZ.get("accZ")).floatValue()
+                                },
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){
