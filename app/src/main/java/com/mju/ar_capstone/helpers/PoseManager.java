@@ -1,5 +1,6 @@
 package com.mju.ar_capstone.helpers;
 
+import android.location.Location;
 import android.util.Log;
 
 import com.google.ar.core.Pose;
@@ -10,6 +11,7 @@ public class PoseManager {
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
+    private final static double scale = 1000.0;
 
     public PoseManager() {
         //기본 생성자
@@ -37,13 +39,18 @@ public class PoseManager {
         return vector3rotated;
     }
 
-    public Pose makeRealPosePosition(Pose pose, int loadedAzimuth, int myAzimuth){
+    public Pose makeRealPosePosition(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
 
         Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
         Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
         float[] tmp = pose.getTranslation();
+
         //불러온 포즈를 가지고 벡터를 만들음
-        Vector3 vectorOld = new Vector3(tmp[0], tmp[1], tmp[2]);
+        Vector3 vectorOld = new Vector3(
+                (float) (tmp[0] + (distanceArray[1] * scale)),
+                tmp[1],
+                (float) (tmp[2] + (distanceArray[2] * scale))
+        );
 
         int tmpAzimuth=0;
 
@@ -60,6 +67,47 @@ public class PoseManager {
         return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
     }
 
+
+    public double[] distanceBetweenLocation(Location user, Location anchor){
+
+        double[] distanceArray = {0.0, 0.0, 0.0};
+        double distance = 0.0; //두 지점 사이의 거리
+        double distanceX = 0.0; //x끼리 차이
+        double distanceY = 0.0; //y끼리 차이
+
+        LatXLngY userXY = convertGRID_GPS(TO_GRID, user.getLatitude(), user.getLongitude());
+        LatXLngY anchorXY = convertGRID_GPS(TO_GRID, anchor.getLatitude(), anchor.getLongitude());
+
+        Log.d("거리 유저//", "x: " + userXY.x + ", y: " + userXY.y);
+        Log.d("거리 앵커", "x: " + anchorXY.x + ", y: " + anchorXY.y);
+
+        //우선 각각 차이 구함
+        distanceX = Math.abs(userXY.x - anchorXY.x);
+        distanceY = Math.abs(userXY.y - anchorXY.y);
+
+        // 부호 바꿔줌
+        if(userXY.x > anchorXY.x){
+            distanceX = -distanceX;
+        }
+        if(userXY.y < anchorXY.y){
+            distanceY = -distanceY;
+        }
+
+        Log.d("거리 x 차이", String.valueOf(distanceX));
+        Log.d("거리 y 차이", String.valueOf(distanceY));
+
+        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
+        Log.d("거리: ", String.valueOf(distance));
+
+        distanceArray[0] = distance;
+        distanceArray[1] = distanceX;
+        distanceArray[2] = distanceY;
+
+        //미터 단위로 바꿔서 넘겨줘야함
+        return distanceArray;
+    }
+
+    //좌표 부분
     public LatXLngY convertGRID_GPS(int mode, double lat_X, double lng_Y )
     {
         double RE = 6371.00877; // 지구 반경(km)
