@@ -17,9 +17,7 @@ public class SensorAllManager implements SensorEventListener {
     private final float[] magnetometerReading = new float[3];
     private final float[] rotationMatrix = new float[9];
     private final float[] orientationAngles = new float[3];
-    private float azimuth;
-
-    private boolean sensorCheckd = true;
+    private int azimuth;
 
     public SensorAllManager(Object systemService) {
         sensorManager = (SensorManager) systemService;
@@ -47,7 +45,7 @@ public class SensorAllManager implements SensorEventListener {
                 accelerometerReading, magnetometerReading);
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
     }
-    public float getAzimuth(){
+    public int getAzimuth(){
         updateOrientationAngles();
         azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
         return azimuth;
@@ -69,11 +67,5 @@ public class SensorAllManager implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-    //다시 수신 상태로 바꿔놓음
-    public void setSensorCheckdTrue(){
-        sensorCheckd = true;
-    }
-
 
 }

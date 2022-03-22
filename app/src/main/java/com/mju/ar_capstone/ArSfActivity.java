@@ -107,8 +107,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private PoseManager poseManager;
-
-
+    private int azimuth;
+    private final int LOAD_DISTANCE = 15;
     //센서 정보를 가져와야 할 꺼 같아서 테스트 중
     private SensorAllManager sensorAllManager;
 
@@ -140,14 +140,23 @@ public class ArSfActivity extends AppCompatActivity implements
 
         poseManager = new PoseManager();
 
+        checkGPS();
+
         // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                //불러오기 버튼 눌린순간 현재 나의 가속도 값 다시 가져오기
                 Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
+
+                //불러올때 나의 gps정보 가져오기
+                checkGPS();
+                Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
+                // 나의 방위각 정보 가져오기
+                azimuth = sensorAllManager.getAzimuth();
+//                Toast.makeText(getApplicationContext(), "방위각 이용 불러오기/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
+                Log.d("앵커위치", "나의 방위각" + azimuth);
                 loadCloudAnchors();
             }
         });
@@ -344,7 +353,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //거리 구하는 함수
     public double getDistance(double latA, double lngA){
-        checkGPS();
         double distance;
 
         //사용자의 위치
@@ -366,7 +374,7 @@ public class ArSfActivity extends AppCompatActivity implements
     public void loadCloudAnchors(){
         writeMode = false;
 
-        Log.d("불러오기", "loadCloudAnchors");
+        Log.d("앵커위치", "loadCloudAnchors");
 
         ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
         Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
@@ -374,12 +382,10 @@ public class ArSfActivity extends AppCompatActivity implements
             WrappedAnchor wrappedAnchor = iterator.next();
             //앵커가 내 근처에 있는지를 판단하고 보여줄꺼임
             //서버에서 가져온 앵커 위경도
-            Log.d("순서", "잠깐");
             Double lat = wrappedAnchor.getLat();
             Double lng = wrappedAnchor.getLng();
-            Log.d("순서", "거리" + String.valueOf(getDistance(lat, lng)));
-            //거리가 멀면 넘어감 30 m 넘으면 안불러옴
-            if(getDistance(lat, lng) > 30){
+            //거리가 멀면 넘어감
+            if(getDistance(lat, lng) > LOAD_DISTANCE){
                 continue;
             }
 
@@ -399,11 +405,16 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = CustomDialog.AnchorType.mp3;
             }
 
-            Log.d("불러오기", "불러와진 텍스트:" + text_or_path);
+            //여기서 포즈의 상대적인 위치를 가지고 정보 구해야 할 듯
+            //불러온 포즈의 실제 위치를 구한후 최종적으로 화면에 맞게 띄우주면 됨
+            //방위각도 넘겨줌
+            Pose realPose = poseManager.makeRealPosePosition(pose, wrappedAnchor.getAzimuth(), azimuth);
+            Log.d("앵커위치", "포즈생성");
 
-            Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(pose);
+            Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);
             AnchorNode anchorNode = new AnchorNode(anchor);
             anchorNode.setParent(arFragment.getArSceneView().getScene());
+            Log.d("앵커위치", "앵커생성");
 
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
@@ -418,7 +429,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(), tmpText, anchorType);
+                            saveAnchor(anchor.getPose(), azimuth, tmpText, anchorType);
                         }
                         @Override
                         public void onNegativeClick() {
@@ -474,10 +485,8 @@ public class ArSfActivity extends AppCompatActivity implements
         Anchor anchor = hitResult.createAnchor();
         Pose pose = anchor.getPose();
 
-
         AnchorNode anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
-
 
         TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
         model.setRenderable(this.selectRenderable);
@@ -496,7 +505,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         changeAnchor(model, tmpText, anchorType);
                         //앵커 아이디 리턴함. 지울때 판단하는 용도
-                        String tmpAnchorID = saveAnchor(pose, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(pose, azimuth, tmpText, anchorType);
                         if(tmpAnchorID != null){
                             model.setName(tmpAnchorID);
                         }else{
@@ -576,20 +585,20 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Pose pose, int azimuth, String text, CustomDialog.AnchorType anchorType){
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng,"text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng,"image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, azimuth, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -629,7 +638,7 @@ public class ArSfActivity extends AppCompatActivity implements
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
     }
 
-    private float azimuth;
+
 
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {

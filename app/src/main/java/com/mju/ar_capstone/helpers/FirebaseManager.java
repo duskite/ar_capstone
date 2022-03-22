@@ -104,6 +104,7 @@ public class FirebaseManager {
         contents.put("created", createdTimeOfContent());
         contents.put("userID", wrappedAnchor.getUserID());
         contents.put("type", wrappedAnchor.getAnchorType());
+
         if(contents.get("type").equals("image")){
             contents.put("text_or_path", wrappedAnchor.getTextOrPath() + ".jpg");
             imageNumDatabase.setValue(nextImageNum + 1);
@@ -111,6 +112,8 @@ public class FirebaseManager {
             contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
         contentDB.setValue(contents);
+        //방위각은 따로 넣음
+        contentDB.child("azimuth").setValue(wrappedAnchor.getAzimuth());
 
         //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
@@ -228,6 +231,7 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
+                                tmpSnapshot.child("azimuth").getValue(Integer.class),
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){

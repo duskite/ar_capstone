@@ -1,5 +1,7 @@
 package com.mju.ar_capstone.helpers;
 
+import android.util.Log;
+
 import com.google.ar.core.Pose;
 import com.google.ar.sceneform.math.Vector3;
 import com.mju.ar_capstone.ArSfActivity;
@@ -24,7 +26,8 @@ public class PoseManager {
     }
 
     //벡터를 각도만큼 회전한 후 리턴
-    public Vector3 vector3roatate(Vector3 vector3, Double degree){
+    public Vector3 vector3roatate(Vector3 vector3, int degree){
+
         Double radian = Math.toRadians(degree);
         Vector3 vector3rotated = new Vector3(
                 ((float) (vector3.x * Math.cos(radian)) - (float) (vector3.z * Math.sin(radian))),
@@ -33,9 +36,32 @@ public class PoseManager {
         );
         return vector3rotated;
     }
-    //벡터를 pose로 만들기
-    public Pose makePosePosition(Vector3 vector3rotated){
-        return Pose.makeTranslation(vector3rotated.x, vector3rotated.y, vector3rotated.z);
+
+    public Pose makeRealPosePosition(Pose pose, int loadedAzimuth, int myAzimuth){
+
+        Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
+        Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
+        float[] tmp = pose.getTranslation();
+        //불러온 포즈를 가지고 벡터를 만들음
+        Vector3 vectorOld = new Vector3(tmp[0], tmp[1], tmp[2]);
+
+        int tmpAzimuth=0;
+        if ((loadedAzimuth - myAzimuth) > 0){
+            // - 각도 해주면 됨
+            tmpAzimuth = Math.abs(loadedAzimuth - myAzimuth);
+            Log.d("앵커위치", "방위각 내가 남겨진거보다 양의 방향: " + tmpAzimuth);
+        }else{
+            // + 각도 해줘야함
+            tmpAzimuth = -(Math.abs(myAzimuth - loadedAzimuth));
+            Log.d("앵커위치", "방위각 내가 남겨진거보다 음의 방향: " + tmpAzimuth);
+
+        }
+        Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
+        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
+
+        //방위각에 따라 어느쪽으로 돌릴지 결정해야함
+
+        return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
     }
 
     public LatXLngY convertGRID_GPS(int mode, double lat_X, double lng_Y )
