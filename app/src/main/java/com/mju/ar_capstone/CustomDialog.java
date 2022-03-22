@@ -23,6 +23,9 @@ public class CustomDialog extends Dialog {
     private RadioGroup dialogRdGroup;
     private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnMp3;
 
+    //화면 회전에 따라 다른 레이아웃 보여줌
+    private static boolean ORIENTATION = false;
+
     public enum AnchorType{
         text,
         image,
@@ -35,8 +38,9 @@ public class CustomDialog extends Dialog {
     public ImageView dialogImg;
     private TextView textView;
 
-    public CustomDialog(@NonNull Context context, CustomDialogClickListener customDialogClickListener) {
+    public CustomDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
         super(context);
+        this.ORIENTATION = orientation;
         this.context = context;
         this.customDialogClickListener = customDialogClickListener;
     }
@@ -44,7 +48,12 @@ public class CustomDialog extends Dialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dialog_select);
+        if (!ORIENTATION){ //세로일때
+            setContentView(R.layout.dialog_select);
+        }else{ //가로일때
+            setContentView(R.layout.dialog_select_landscape);
+        }
+
 
         dialogBtnOk = (Button) findViewById(R.id.dialog_btn_ok);
         dialogBtnDelete = (Button) findViewById(R.id.dialog_btn_delete);
