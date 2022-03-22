@@ -14,9 +14,9 @@ public class WrappedAnchor {
 
     private double lat;
     private double lng;
+    private int azimuth;
 
     private Pose pose;
-    private float[] accXYZ;
 
     public WrappedAnchor(){
 
@@ -30,7 +30,7 @@ public class WrappedAnchor {
     }
 
     // ar에서 사용하는 객체
-    public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, double lat, double lng, float[] accXYZ, String anchorType){
+    public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, double lat, double lng, int azimuth, String anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
         this.userID = userID;
@@ -38,7 +38,7 @@ public class WrappedAnchor {
         this.pose = pose;
         this.lat = lat;
         this.lng = lng;
-        this.accXYZ = accXYZ;
+        this.azimuth = azimuth;
     }
 
     public String getCloudAnchorId() {
@@ -97,12 +97,12 @@ public class WrappedAnchor {
         this.pose = pose;
     }
 
-    public float[] getAccXYZ() {
-        return accXYZ;
+    public int getAzimuth() {
+        return azimuth;
     }
 
-    public void setPose(float[] accXYZ) {
-        this.accXYZ = accXYZ;
+    public void setAzimuth(int azimuth) {
+        this.azimuth = azimuth;
     }
 
 }
