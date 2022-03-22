@@ -46,15 +46,11 @@ public class PoseManager {
         Vector3 vectorOld = new Vector3(tmp[0], tmp[1], tmp[2]);
 
         int tmpAzimuth=0;
-        if ((loadedAzimuth - myAzimuth) > 0){
-            // - 각도 해주면 됨
-            tmpAzimuth = Math.abs(loadedAzimuth - myAzimuth);
-            Log.d("앵커위치", "방위각 내가 남겨진거보다 양의 방향: " + tmpAzimuth);
-        }else{
-            // + 각도 해줘야함
-            tmpAzimuth = -(Math.abs(myAzimuth - loadedAzimuth));
-            Log.d("앵커위치", "방위각 내가 남겨진거보다 음의 방향: " + tmpAzimuth);
 
+        if(myAzimuth > loadedAzimuth){
+            tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth);
+        }else {
+            tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth);
         }
         Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
         Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
