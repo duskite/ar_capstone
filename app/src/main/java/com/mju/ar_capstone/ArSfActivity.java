@@ -3,6 +3,7 @@ package com.mju.ar_capstone;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
@@ -89,17 +90,17 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private Button btnAnchorLoad, btnMapApp;
 
-    //잠시 테스트 중인 애들
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
     private Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
-
     private MediaPlayer mediaPlayer;
 
     // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
     private static boolean writeMode = false;
+    // 화면 회전 체크
+    private static boolean ORIENTATION = false;
 
     //gps정보 앵커랑 같이 서버에 업로드하려고
     private double lat = 0.0;
@@ -111,6 +112,20 @@ public class ArSfActivity extends AppCompatActivity implements
     private final int LOAD_DISTANCE = 15;
     //센서 정보를 가져와야 할 꺼 같아서 테스트 중
     private SensorAllManager sensorAllManager;
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            //화면 세로
+            Log.d("화면 전환", "세로");
+            ORIENTATION = false;
+        }else if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            Log.d("화면 전환", "가로");
+            ORIENTATION = true;
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -136,8 +151,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
         //센서 모음
         sensorAllManager = new SensorAllManager(getSystemService(SENSOR_SERVICE));
-        sensorAllManager.startSensorcheck();
-
         poseManager = new PoseManager();
 
         checkGPS();
@@ -154,7 +167,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 checkGPS();
                 Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
                 // 나의 방위각 정보 가져오기
-                azimuth = sensorAllManager.getAzimuth();
+                azimuth = sensorAllManager.getAzimuth(ORIENTATION);
 //                Toast.makeText(getApplicationContext(), "방위각 이용 불러오기/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
                 Log.d("앵커위치", "나의 방위각" + azimuth);
                 loadCloudAnchors();
@@ -422,7 +435,7 @@ public class ArSfActivity extends AppCompatActivity implements
             model.setOnTapListener(new Node.OnTapListener() {
                 @Override
                 public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
+                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, ORIENTATION, new CustomDialog.CustomDialogClickListener() {
                         @Override
                         public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
                             writeMode = true;
@@ -496,7 +509,7 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, new CustomDialog.CustomDialogClickListener() {
+                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, ORIENTATION, new CustomDialog.CustomDialogClickListener() {
                     @Override
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
                         Log.d("순서", "onTap/onPositiveClick");
@@ -647,7 +660,7 @@ public class ArSfActivity extends AppCompatActivity implements
         //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
         checkGPS();
         //앵커 남겼던 방위각 구하는 부분
-        azimuth = sensorAllManager.getAzimuth();
+        azimuth = sensorAllManager.getAzimuth(ORIENTATION);
         Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
 
         createSelectAnchor(hitResult);
@@ -656,6 +669,18 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorAllManager.registerListener();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorAllManager.unRegisterListener();
     }
 
     // 이미지 업로드 부분
