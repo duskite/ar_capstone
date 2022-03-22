@@ -132,14 +132,6 @@ public class FirebaseManager {
         DatabaseReference gpsDB = contentDB.child("gps");
         gpsDB.setValue(gps);
 
-        DatabaseReference accDB = contentDB.child("accXYZ");
-        HashMap<String, Float> accXYZs = new HashMap<String, Float>();
-        float[] accXYZ = wrappedAnchor.getAccXYZ();
-        accXYZs.put("accX", accXYZ[0]);
-        accXYZs.put("accY", accXYZ[1]);
-        accXYZs.put("accZ", accXYZ[2]);
-        accDB.setValue(accXYZs);
-
         anchorNumDatabase.setValue(nextAnchorNum + 1);
 
     }
@@ -236,11 +228,6 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
-                                new float[]{
-                                        ((Double) accXYZ.get("accX")).floatValue(),
-                                        ((Double) accXYZ.get("accY")).floatValue(),
-                                        ((Double) accXYZ.get("accZ")).floatValue()
-                                },
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){

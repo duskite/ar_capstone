@@ -21,10 +21,6 @@ public class SensorAllManager implements SensorEventListener {
 
     private boolean sensorCheckd = true;
 
-    //이거는 예전에 쓰던거라 나중에 삭제 예정
-    private float[] accXYZ = new float[3];
-
-
     public SensorAllManager(Object systemService) {
         sensorManager = (SensorManager) systemService;
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -67,12 +63,6 @@ public class SensorAllManager implements SensorEventListener {
             System.arraycopy(event.values, 0, magnetometerReading,
                     0, magnetometerReading.length);
         }
-
-        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER && sensorCheckd == true){
-            accXYZ[0] = event.values[0];
-            accXYZ[1] = event.values[1];
-            accXYZ[2] = event.values[2];
-        }
     }
 
     @Override
@@ -80,18 +70,10 @@ public class SensorAllManager implements SensorEventListener {
 
     }
 
-
-    public float[] getAccXYZ() {
-        // acc 한번 가져가면 잠깐 센서 수신 막아놓음
-        // 센서 수신이 너무 빨라서 다른 값이 자꾸 들어오는듯
-        sensorCheckd = false;
-        return accXYZ;
-    }
     //다시 수신 상태로 바꿔놓음
     public void setSensorCheckdTrue(){
         sensorCheckd = true;
     }
-
 
 
 }
