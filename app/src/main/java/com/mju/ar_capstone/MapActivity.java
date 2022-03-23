@@ -15,6 +15,9 @@ import androidx.fragment.app.FragmentManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.naver.maps.geometry.LatLng;
+import com.naver.maps.geometry.LatLngBounds;
+import com.naver.maps.map.CameraPosition;
+import com.naver.maps.map.CameraUpdate;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
@@ -92,12 +95,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             //위치 정보를 넣은 marker값을 listMarker에 저장
             listMarker.add(marker);
         }
+
+        firebaseManager.clearWrappedAnchorList();
     }
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         Log.d( TAG, "onMapReady");
-        
+
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
         mNaverMap = naverMap;
         mNaverMap.setLocationSource(mLocationSource);
