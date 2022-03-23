@@ -109,7 +109,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private PoseManager poseManager;
     private int azimuth;
-    private final int LOAD_DISTANCE = 15;
+    private final int LOAD_DISTANCE = 10;
     //센서 정보를 가져와야 할 꺼 같아서 테스트 중
     private SensorAllManager sensorAllManager;
     public static int TO_GRID = 0;
@@ -381,10 +381,10 @@ public class ArSfActivity extends AppCompatActivity implements
             WrappedAnchor wrappedAnchor = iterator.next();
             //앵커가 내 근처에 있는지를 판단하고 보여줄꺼임
             //서버에서 가져온 앵커 위경도
-            Double lat = wrappedAnchor.getLat();
-            Double lng = wrappedAnchor.getLng();
+            Double anchorlat = wrappedAnchor.getLat();
+            Double anchorlng = wrappedAnchor.getLng();
             //거리가 멀면 넘어감
-            double[] distanceArray = getDistance(lat, lng);
+            double[] distanceArray = getDistance(anchorlat, anchorlng);
             if(distanceArray[0] > LOAD_DISTANCE){ //둘 사이의 거리
                 continue;
             }
@@ -666,55 +666,40 @@ public class ArSfActivity extends AppCompatActivity implements
         //앵커 남겼던 방위각 구하는 부분
         sensorAllManager.setSensorCheck(true);
         azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-//        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
-//
-//        createSelectAnchor(hitResult);
+        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
+
+        createSelectAnchor(hitResult);
 
 
-        ///현재 확인중 정밀한 거리 계산 정북방향 기준
-
-        //1
-        //37.2373618
-        //127.189917
-
-        //2
-        //37.2373993
-        //127.1899129
-
-        //3
-        //37.2373491
-        //127.1899218
+//        //테스트중
 //        double[] distanceArray;
 //        //사용자의 위치
 //        Location locationA = new Location("user");
-//        locationA.setLatitude(37.2373618);
-//        locationA.setLongitude(127.189917);
+//        locationA.setLatitude(37.2373632);//
+//        locationA.setLongitude(127.1899173);
 //
 //        //앵커가 남겨진 위치
 //        Location locationB = new Location("anchor");
-//        locationB.setLatitude(37.2373993);
-//        locationB.setLongitude(127.1899129);
-//
+//        locationB.setLatitude(37.2373889);
+//        locationB.setLongitude(127.1899067);
 //        distanceArray = poseManager.distanceBetweenLocation(locationA, locationB);
 //
-        Anchor anchor = hitResult.createAnchor();
-        AnchorNode anchorNode = new AnchorNode(anchor);
-        Vector3 vector3 = anchorNode.getWorldPosition();
-        anchorNode.setRenderable(this.selectRenderable);
-        anchorNode.setParent(arFragment.getArSceneView().getScene());
-        Log.d("거리", "현재 앵커 위치 x: " + vector3.x + ", y: " + vector3.y + ", z: " + vector3.z);
+//        Anchor anchor = hitResult.createAnchor();
+//        AnchorNode anchorNode = new AnchorNode(anchor);
+//        Vector3 vector3 = anchorNode.getWorldPosition();
+//        anchorNode.setRenderable(this.selectRenderable);
+//        anchorNode.setParent(arFragment.getArSceneView().getScene());
+//        Log.d("거리", "현재 앵커 위치 x: " + vector3.x + ", y: " + vector3.y + ", z: " + vector3.z);
 //
-//        double scale = 1000.0;
-
-        Pose pose = anchor.getPose();
-        //방위각이 같다는 가정하에
-        Pose realPose = poseManager.makeRealPosePosition(pose, 30, 270);
-        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(realPose);
-        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
-        anchorNodeNew.setRenderable(this.selectRenderable);
-        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
-
-//        Log.d("거리", "새 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
+//        Pose pose = anchor.getPose();
+//        //방위각이 같다는 가정하에
+//        Pose realPose = poseManager.makeRealPosePosition(pose, distanceArray, 60, 120);
+//        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(realPose);
+//        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
+//        anchorNodeNew.setRenderable(this.selectRenderable);
+//        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
+//
+////        Log.d("거리", "새 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
 
 
     }
