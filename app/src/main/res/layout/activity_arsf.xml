@@ -28,4 +28,22 @@
         android:background="@drawable/ic_map"
         android:id="@+id/btnMapApp"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:id="@+id/northCheckLayout"
+        >
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="북쪽 체크"
+            android:id="@+id/btnNorth"
+            android:background="@drawable/btn_shape"
+            android:enabled="true"
+            android:layout_margin="10dp"
+            android:layout_marginBottom="50dp"
+            />
+    </LinearLayout>
+
 </FrameLayout>

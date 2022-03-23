@@ -34,20 +34,34 @@ public class PoseManager {
         return vector3roatate(vector3, -loadedAzimuth);
     }
 
+    //사용자가 앵커를 남길때
+    //앵커 위치와 카메라 위치를 고려한 벡터생성 후 포즈 리턴
+    public Pose createRealVector(Pose tmpPose, Vector3 anchorVector, Vector3 cameraVector){
+        Vector3 realVector = Vector3.add(anchorVector, cameraVector);
+
+        Pose realPose = new Pose(
+                new float[]{realVector.x, realVector.y, realVector.z},
+                tmpPose.getRotationQuaternion()
+        );
+
+        return realPose;
+    }
+
 
     // 방위각에 따라 돌리는 코드는 이상이 없음
     // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
-    public Pose makeRealPosePosition(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
+    public Pose resolveRealPose(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
 
         Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
         Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
-        float[] tmp = pose.getTranslation();
+        float[] tmpT = pose.getTranslation();
+        float[] tmpR = pose.getRotationQuaternion();
 
         //불러온 포즈를 가지고 벡터를 만들음
         Vector3 vectorOld = new Vector3(
-                tmp[0],
-                tmp[1],
-                tmp[2]
+                tmpT[0],
+                tmpT[1],
+                tmpT[2]
         );
         int tmpAzimuth = 0;
         // 식 자체는 논리적으로 문제없음. 근데 지표면 인식에 따라서 결과가 많이 상이함
@@ -60,18 +74,13 @@ public class PoseManager {
 
         //방위각에 따라 어느쪽으로 돌릴지 결정해야함
         Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
-        // 이미 한번 내가 보는 방향에서 원래 앵커가남겨졌던 방향으로 회전이 된거임
-        // 이 앵커를 다시 정북 방향으로 보냄
-        Vector3 vectorNorth = createNorthVector(vectorNew, loadedAzimuth);
-        // 새로 만든 벡터와 북쪽벡터, x축 변화량을 보냄
-        computeXVector(vectorNew, vectorNorth, distanceArray[1]);
 
-        return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
-    }
+        Pose resolvePose = new Pose(
+                new float[]{vectorNew.x, vectorNew.y, vectorNew.z},
+                tmpR
+        );
 
-    //근데 여기서 distanceX를 얼마만큼 scale up할껀지가 중요함
-    public void computeXVector(Vector3 vectorNew, Vector3 vectorNorth, double distanceX){
-        Vector3 vectorC = Vector3.subtract(vectorNorth, vectorNew);
+        return resolvePose;
     }
 
     //벡터를 각도만큼 회전한 후 리턴
@@ -85,6 +94,7 @@ public class PoseManager {
         );
         return vector3rotated;
     }
+
 
     public double[] distanceBetweenLocation(Location user, Location anchor){
 
@@ -118,6 +128,7 @@ public class PoseManager {
 //        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
 //        Log.d("거리: ", String.valueOf(distance));
 
+        // 값의 스케일이 불분명해서 우선은 location객체로 연산함
         distance = user.distanceTo(anchor);
 
         distanceArray[0] = distance;
