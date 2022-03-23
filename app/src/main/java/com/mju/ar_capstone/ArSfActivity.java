@@ -155,7 +155,7 @@ public class ArSfActivity extends AppCompatActivity implements
         sensorAllManager = new SensorAllManager(getSystemService(SENSOR_SERVICE));
         poseManager = new PoseManager();
 
-        checkGPS();
+        checkGPS(true);
 
         // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
@@ -166,7 +166,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
 
                 //불러올때 나의 gps정보 가져오기
-                checkGPS();
+                checkGPS(true);
                 Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
                 // 나의 방위각 정보 가져오기
                 azimuth = sensorAllManager.getAzimuth(ORIENTATION);
@@ -335,7 +335,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     //현재 위치 가져오기
-    public void checkGPS() {
+    public void checkGPS(boolean gpsCheck) {
         Log.d("순서", "checkGPS");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -355,10 +355,11 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onComplete(@NonNull Task<Location> task) {
                 if(task.isSuccessful()){
-                    Location location = task.getResult();
-                    lat = location.getLatitude();
-                    lng = location.getLongitude();
-
+                    if(gpsCheck){
+                        Location location = task.getResult();
+                        lat = location.getLatitude();
+                        lng = location.getLongitude();
+                    }
                     Log.d("정밀 위치", "lat: " + lat + ", lng: " + lng);
                 }
             }
@@ -661,12 +662,13 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
-        checkGPS();
+        checkGPS(true);
         //앵커 남겼던 방위각 구하는 부분
+        sensorAllManager.setSensorCheck(true);
         azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
-
-        createSelectAnchor(hitResult);
+//        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
+//
+//        createSelectAnchor(hitResult);
 
 
         ///현재 확인중 정밀한 거리 계산 정북방향 기준
@@ -695,28 +697,25 @@ public class ArSfActivity extends AppCompatActivity implements
 //
 //        distanceArray = poseManager.distanceBetweenLocation(locationA, locationB);
 //
-//        Anchor anchor = hitResult.createAnchor();
-//        AnchorNode anchorNode = new AnchorNode(anchor);
-//        Vector3 vector3 = anchorNode.getWorldPosition();
-//        anchorNode.setRenderable(this.selectRenderable);
-//        anchorNode.setParent(arFragment.getArSceneView().getScene());
-//        Log.d("거리", "현재 앵커 위치 x: " + vector3.x + ", y: " + vector3.y + ", z: " + vector3.z);
+        Anchor anchor = hitResult.createAnchor();
+        AnchorNode anchorNode = new AnchorNode(anchor);
+        Vector3 vector3 = anchorNode.getWorldPosition();
+        anchorNode.setRenderable(this.selectRenderable);
+        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        Log.d("거리", "현재 앵커 위치 x: " + vector3.x + ", y: " + vector3.y + ", z: " + vector3.z);
 //
 //        double scale = 1000.0;
-//
-//        Vector3 vectorNew = new Vector3(
-//                (float) (vector3.x + (distanceArray[1] * scale)),
-//                vector3.y,
-//                (float) (vector3.z + (distanceArray[2] * scale))
-//        );
-//        Pose pose = Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
-//        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(pose);
-//        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
-//        anchorNodeNew.setRenderable(this.selectRenderable);
-//        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
-//
-//        Log.d("거리", "distance적용 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
-//
+
+        Pose pose = anchor.getPose();
+        //방위각이 같다는 가정하에
+        Pose realPose = poseManager.makeRealPosePosition(pose, 30, 270);
+        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(realPose);
+        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
+        anchorNodeNew.setRenderable(this.selectRenderable);
+        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
+
+//        Log.d("거리", "새 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
+
 
     }
 

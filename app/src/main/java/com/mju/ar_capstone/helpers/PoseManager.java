@@ -12,6 +12,7 @@ public class PoseManager {
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
     private final static double scale = 1000.0;
+    private final static int DEGREE_CONTROL = 15;
 
     public PoseManager() {
         //기본 생성자
@@ -27,18 +28,9 @@ public class PoseManager {
 
     }
 
-    //벡터를 각도만큼 회전한 후 리턴
-    public Vector3 vector3roatate(Vector3 vector3, int degree){
 
-        Double radian = Math.toRadians(degree);
-        Vector3 vector3rotated = new Vector3(
-                ((float) (vector3.x * Math.cos(radian)) - (float) (vector3.z * Math.sin(radian))),
-                vector3.y,
-                ((float) (vector3.x * Math.sin(radian)) + (float) (vector3.z * Math.cos(radian)))
-        );
-        return vector3rotated;
-    }
-
+    // 방위각에 따라 돌리는 코드는 이상이 없음
+    // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
     public Pose makeRealPosePosition(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
 
         Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
@@ -52,17 +44,60 @@ public class PoseManager {
                 (float) (tmp[2] + (distanceArray[2] * scale))
         );
 
-        int tmpAzimuth=0;
-
+        int tmpAzimuth = 0;
         if(myAzimuth > loadedAzimuth){
             tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth);
         }else {
             tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth);
         }
+
         Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
-        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
 
         //방위각에 따라 어느쪽으로 돌릴지 결정해야함
+        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
+
+
+
+        return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
+    }
+
+    //벡터를 각도만큼 회전한 후 리턴
+    public Vector3 vector3roatate(Vector3 vector3, int degree){
+
+        Double radian = Math.toRadians(degree);
+        Vector3 vector3rotated = new Vector3(
+                ((float) (vector3.x * Math.cos(radian)) - (float) (vector3.z * Math.sin(radian))),
+                vector3.y,
+                ((float) (vector3.x * Math.sin(radian)) + (float) (vector3.z * Math.cos(radian)))
+        );
+        return vector3rotated;
+    }
+
+    //테스트중
+    public Pose makeRealPosePosition(Pose pose, int loadedAzimuth, int myAzimuth){
+
+        float[] tmp = pose.getTranslation();
+
+        //불러온 포즈를 가지고 벡터를 만들음
+        Vector3 vectorOld = new Vector3(
+                tmp[0],
+                tmp[1],
+                tmp[2]
+        );
+
+        int tmpAzimuth = 0;
+        // 식 자체는 논리적으로 문제없음. 근데 지표면 인식에 따라서 결과가 많이 상이함
+        if(true){
+            if(myAzimuth > loadedAzimuth){
+                tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth); // 맞음
+            }else {
+                tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth); // 맞음
+            }
+        }
+
+        Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
+        //방위각에 따라 어느쪽으로 돌릴지 결정해야함
+        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
 
         return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
     }
