@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
 
+import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
@@ -52,8 +53,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-
-
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment)fm.findFragmentById(R.id.map);
@@ -70,21 +69,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mLocationSource =
                 new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
 
+        // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
+        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
 
+
+        // 액티비티 생성시 서버와 연결후 데이터 가져옴
+        firebaseManager = new FirebaseManager();
+        firebaseManager.registerGPSValueListner();
 
     }
 
-    @Override
-    public void onMapReady(@NonNull NaverMap naverMap) {
-        Log.d( TAG, "onMapReady");
-
-
+    public void updateAnchors(NaverMap naverMap){
         List<Marker> listMarker = new ArrayList<Marker>();
 
-
-        //서버와 연결후 데이터 가져옴
-        firebaseManager = new FirebaseManager();
-        firebaseManager.registerGPSValueListner();
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
             //(루프 한번 돌 때 마다 marker객체 생성)
             Marker marker = new Marker();
@@ -94,14 +91,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
             //위치 정보를 넣은 marker값을 listMarker에 저장
             listMarker.add(marker);
-
         }
+    }
 
-
-
+    @Override
+    public void onMapReady(@NonNull NaverMap naverMap) {
+        Log.d( TAG, "onMapReady");
+        
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
         mNaverMap = naverMap;
         mNaverMap.setLocationSource(mLocationSource);
+        mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(int i, boolean b) {
+                updateAnchors(mNaverMap);
+            }
+        });
 
         // UI 컨트롤 재배치
         UiSettings uiSettings = mNaverMap.getUiSettings();
@@ -120,8 +125,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LocationButtonView locationButtonView = findViewById(R.id.location);
         locationButtonView.setMap(mNaverMap);
 
-        // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
-        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
+
     }
 
     @Override

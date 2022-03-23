@@ -11,7 +11,8 @@ public class PoseManager {
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
-    private final static double scale = 1000.0;
+    private final static double SCALE = 1000.0;
+    private final static int DEGREE_CONTROL = 15;
 
     public PoseManager() {
         //기본 생성자
@@ -27,6 +28,52 @@ public class PoseManager {
 
     }
 
+    //앵커가 남겨졌던 loadedAzimuth로 북쪽 벡터를 구함
+    public Vector3 createNorthVector(Vector3 vector3, int loadedAzimuth){
+        //앵커가 찍혔던 방위각만큼 다시 반대로 돌리면 정북방향 앵커가 나옴
+        return vector3roatate(vector3, -loadedAzimuth);
+    }
+
+
+    // 방위각에 따라 돌리는 코드는 이상이 없음
+    // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
+    public Pose makeRealPosePosition(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
+
+        Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
+        Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
+        float[] tmp = pose.getTranslation();
+
+        //불러온 포즈를 가지고 벡터를 만들음
+        Vector3 vectorOld = new Vector3(
+                tmp[0],
+                tmp[1],
+                tmp[2]
+        );
+        int tmpAzimuth = 0;
+        // 식 자체는 논리적으로 문제없음. 근데 지표면 인식에 따라서 결과가 많이 상이함
+        if(myAzimuth > loadedAzimuth){
+            tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth); // 맞음
+        }else {
+            tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth); // 맞음
+        }
+        Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
+
+        //방위각에 따라 어느쪽으로 돌릴지 결정해야함
+        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
+        // 이미 한번 내가 보는 방향에서 원래 앵커가남겨졌던 방향으로 회전이 된거임
+        // 이 앵커를 다시 정북 방향으로 보냄
+        Vector3 vectorNorth = createNorthVector(vectorNew, loadedAzimuth);
+        // 새로 만든 벡터와 북쪽벡터, x축 변화량을 보냄
+        computeXVector(vectorNew, vectorNorth, distanceArray[1]);
+
+        return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
+    }
+
+    //근데 여기서 distanceX를 얼마만큼 scale up할껀지가 중요함
+    public void computeXVector(Vector3 vectorNew, Vector3 vectorNorth, double distanceX){
+        Vector3 vectorC = Vector3.subtract(vectorNorth, vectorNew);
+    }
+
     //벡터를 각도만큼 회전한 후 리턴
     public Vector3 vector3roatate(Vector3 vector3, int degree){
 
@@ -38,35 +85,6 @@ public class PoseManager {
         );
         return vector3rotated;
     }
-
-    public Pose makeRealPosePosition(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
-
-        Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
-        Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
-        float[] tmp = pose.getTranslation();
-
-        //불러온 포즈를 가지고 벡터를 만들음
-        Vector3 vectorOld = new Vector3(
-                (float) (tmp[0] + (distanceArray[1] * scale)),
-                tmp[1],
-                (float) (tmp[2] + (distanceArray[2] * scale))
-        );
-
-        int tmpAzimuth=0;
-
-        if(myAzimuth > loadedAzimuth){
-            tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth);
-        }else {
-            tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth);
-        }
-        Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
-        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
-
-        //방위각에 따라 어느쪽으로 돌릴지 결정해야함
-
-        return Pose.makeTranslation(vectorNew.x, vectorNew.y, vectorNew.z);
-    }
-
 
     public double[] distanceBetweenLocation(Location user, Location anchor){
 
@@ -86,18 +104,21 @@ public class PoseManager {
         distanceY = Math.abs(userXY.y - anchorXY.y);
 
         // 부호 바꿔줌
+        // 여기서는 일반적인 좌표로 생각함
         if(userXY.x > anchorXY.x){
             distanceX = -distanceX;
         }
         if(userXY.y < anchorXY.y){
-            distanceY = -distanceY;
+            distanceY = distanceY;
         }
 
         Log.d("거리 x 차이", String.valueOf(distanceX));
         Log.d("거리 y 차이", String.valueOf(distanceY));
 
-        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
-        Log.d("거리: ", String.valueOf(distance));
+//        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
+//        Log.d("거리: ", String.valueOf(distance));
+
+        distance = user.distanceTo(anchor);
 
         distanceArray[0] = distance;
         distanceArray[1] = distanceX;
@@ -122,7 +143,6 @@ public class PoseManager {
         //
         // LCC DFS 좌표변환 ( code : "TO_GRID"(위경도->좌표, lat_X:위도,  lng_Y:경도), "TO_GPS"(좌표->위경도,  lat_X:x, lng_Y:y) )
         //
-
 
         double DEGRAD = Math.PI / 180.0;
         double RADDEG = 180.0 / Math.PI;
