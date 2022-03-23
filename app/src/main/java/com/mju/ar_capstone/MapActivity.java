@@ -26,6 +26,9 @@ import com.naver.maps.map.widget.LocationButtonView;
 import com.naver.maps.map.widget.ScaleBarView;
 import com.naver.maps.map.widget.ZoomControlView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "MapActivity";
@@ -49,16 +52,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        //예시
-        //서버와 연결후 데이터 가져옴
-        firebaseManager = new FirebaseManager();
-        firebaseManager.registerGPSValueListner();
-        for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
-            double lat = wrappedAnchor.getLat();
-            double lng = wrappedAnchor.getLng();
-            Log.d("순서 맵에서 랩앵커 객체 확인",
-                    "lat: " + String.valueOf(lat) + "lng :" + String.valueOf(lng));
-        }
+
 
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();
@@ -77,11 +71,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
 
 
+
     }
 
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
         Log.d( TAG, "onMapReady");
+
+
+        List<Marker> listMarker = new ArrayList<Marker>();
+
+
+        //서버와 연결후 데이터 가져옴
+        firebaseManager = new FirebaseManager();
+        firebaseManager.registerGPSValueListner();
+        for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
+            //(루프 한번 돌 때 마다 marker객체 생성)
+            Marker marker = new Marker();
+            marker.setPosition(new LatLng(wrappedAnchor.getLat(), wrappedAnchor.getLng()));
+
+            marker.setMap(naverMap);
+
+            //위치 정보를 넣은 marker값을 listMarker에 저장
+            listMarker.add(marker);
+
+        }
+
 
 
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
