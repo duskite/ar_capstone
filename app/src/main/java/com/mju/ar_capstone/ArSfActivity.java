@@ -6,17 +6,24 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +34,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentOnAttachListener;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -69,7 +77,8 @@ public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
         BaseArFragment.OnTapArPlaneListener,
         BaseArFragment.OnSessionConfigurationListener,
-        ArFragment.OnViewCreatedListener{
+        ArFragment.OnViewCreatedListener,
+        SensorAllManager.SensorAllManagerListener {
 
     private ArFragment arFragment;
     private ViewRenderable selectRenderable;
@@ -99,10 +108,6 @@ public class ArSfActivity extends AppCompatActivity implements
     private FireStorageManager fireStorageManager;
     private MediaPlayer mediaPlayer;
 
-    // ar
-    private Session session;
-    private ArSceneView arSceneView;
-    private Config config;
 
     // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
@@ -118,10 +123,16 @@ public class ArSfActivity extends AppCompatActivity implements
     private PoseManager poseManager;
     private int azimuth;
     private final int LOAD_DISTANCE = 30;
-    //센서 정보를 가져와야 할 꺼 같아서 테스트 중
+
+    //방위각으로 북쪽 찾는 용도
     private SensorAllManager sensorAllManager;
+
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
+
+    private ImageView imgNorth;
+    private TextView tvNorth;
+
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -160,15 +171,20 @@ public class ArSfActivity extends AppCompatActivity implements
         fireStorageManager = new FireStorageManager();
 
         //센서 모음
-        sensorAllManager = new SensorAllManager(getSystemService(SENSOR_SERVICE));
+        sensorAllManager = new SensorAllManager(getApplicationContext());
+        sensorAllManager.setListener(this);
         poseManager = new PoseManager();
-
         checkGPS(true);
 
-        // 기타 필요한 화면 요소들
+//         기타 필요한 화면 요소들
+        imgNorth = (ImageView) findViewById(R.id.imgNorth);
+        imgNorth.setRotation(-90f);
+        tvNorth = (TextView) findViewById(R.id.tvNorth);
+        azimuth = sensorAllManager.getAzimuth(ORIENTATION);
+
+
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 //불러올때 나의 gps정보 가져오기
@@ -176,7 +192,6 @@ public class ArSfActivity extends AppCompatActivity implements
                 Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
                 // 나의 방위각 정보 가져오기
                 azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-//                Toast.makeText(getApplicationContext(), "방위각 이용 불러오기/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
                 Log.d("앵커위치", "나의 방위각" + azimuth);
                 loadCloudAnchors();
 
@@ -199,28 +214,23 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러올때 좀 미리할 좋은 방법을 고민해야함
         preLoadModels();
 
-
-
         btnNorth = findViewById(R.id.btnNorth);
         btnNorth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-//                if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-//                    config.setDepthMode(Config.DepthMode.AUTOMATIC);
-//                }
-//                Config config = arFragment.getArSceneView().getSession().getConfig();
-//                config.setPlaneFindingMode(Config.PlaneFindingMode.HORIZONTAL);
-//                arFragment.getArSceneView().getSession().configure(config);
-//
-//                //여기는 지금 인식이 안됨
-//                arFragment.getArSceneView().getPlaneRenderer().setVisible(true);
+                //북쪽을 한 번은 인식시켜야함
+                azimuth = sensorAllManager.getAzimuth(ORIENTATION);
+                tvNorth.setText("방위각" + azimuth);
 
-//                Pose northPose = Pose.makeTranslation(0,-1,-1);
-//                Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(northPose);
-//                AnchorNode anchorNode = new AnchorNode(anchor);
-//                anchorNode.setParent(arFragment.getArSceneView().getScene());
-//                anchorNode.setRenderable(selectRenderable);
+                //북쪽을 바라보고 있을때
+                if(azimuth >= 358 || azimuth <=3){
+                    Pose northPose = Pose.makeTranslation(0,-0.5f,-1);
+                    Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(northPose);
+                    AnchorNode anchorNode = new AnchorNode(anchor);
+                    anchorNode.setParent(arFragment.getArSceneView().getScene());
+                    anchorNode.setRenderable(selectRenderable);
+                }
             }
         });
     }
@@ -230,13 +240,11 @@ public class ArSfActivity extends AppCompatActivity implements
             config.setDepthMode(Config.DepthMode.AUTOMATIC);
         }
         session.configure(config);
-//        config.setPlaneFindingMode(Config.PlaneFindingMode.DISABLED);
-        session.configure(config);
 
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
 
-//        arFragment.getArSceneView().getPlaneRenderer().setVisible(false);
+
     }
 
 
@@ -429,6 +437,7 @@ public class ArSfActivity extends AppCompatActivity implements
             Double anchorlat = wrappedAnchor.getLat();
             Double anchorlng = wrappedAnchor.getLng();
             //거리가 멀면 넘어감
+            // 0- 거리, 1-x끼리 차이, 2-y끼리 차이
             double[] distanceArray = getDistance(anchorlat, anchorlng);
             if(distanceArray[0] > LOAD_DISTANCE){ //둘 사이의 거리
                 continue;
@@ -450,10 +459,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = CustomDialog.AnchorType.mp3;
             }
 
-            //여기서 포즈의 상대적인 위치를 가지고 정보 구해야 할 듯
-            //불러온 포즈의 실제 위치를 구한후 최종적으로 화면에 맞게 띄우주면 됨
-            //방위각도 넘겨줌
-            Pose realPose = poseManager.resolveRealPose(pose, distanceArray, wrappedAnchor.getAzimuth(), azimuth);
+            Pose realPose = poseManager.resolveRealPose(pose, distanceArray);
             Log.d("앵커위치", "포즈생성");
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);
@@ -474,7 +480,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(), azimuth, tmpText, anchorType);
+                            saveAnchor(anchor.getPose(), tmpText, anchorType);
                         }
                         @Override
                         public void onNegativeClick() {
@@ -522,19 +528,14 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     //임시 앵커 생성 후 실제 앵커까지
-    public void createSelectAnchor(HitResult hitResult, Vector3 cameraVector){
+    public void createSelectAnchor(HitResult hitResult){
 
         Log.d("순서", "createSelectAnchor");
 
         Anchor anchor = hitResult.createAnchor();
-        Pose tmpPose = anchor.getPose();
+        Pose pose = anchor.getPose();
         AnchorNode anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
-
-        //실제 벡터를 구해서 와야함
-        Vector3 anchorVector = anchorNode.getWorldPosition();
-        //그리고 그걸 서버로 전송해야함
-        Pose pose = poseManager.createRealVector(tmpPose, anchorVector, cameraVector);
 
         TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
         model.setRenderable(this.selectRenderable);
@@ -553,7 +554,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         changeAnchor(model, tmpText, anchorType);
                         //앵커 아이디 리턴함. 지울때 판단하는 용도
-                        String tmpAnchorID = saveAnchor(pose, azimuth, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(pose, tmpText, anchorType);
                         if(tmpAnchorID != null){
                             model.setName(tmpAnchorID);
                         }else{
@@ -633,20 +634,20 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose, int azimuth, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, "text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng,"text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, "image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, azimuth, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -673,7 +674,6 @@ public class ArSfActivity extends AppCompatActivity implements
         arFragment.setOnViewCreatedListener(null);
         // Fine adjust the maximum frame rate
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
-        this.arSceneView = arSceneView;
     }
 
     //거리 구하는 함수
@@ -700,57 +700,10 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
-        checkGPS(true);
+//        checkGPS(true);
         //앵커 남겼던 방위각 구하는 부분
-        azimuth = sensorAllManager.getAzimuth(ORIENTATION);
         Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
-        //터치하는 순간 터치한곳 정보랑 카메라 벡터 넘김
-        Vector3 cameraVector = arFragment.getArSceneView().getScene().getCamera().getWorldPosition();
-        createSelectAnchor(hitResult, cameraVector);
-
-
-//
-//        //테스트중 여기는 두명이 위경도가 같다고 가정한 부분
-//        double[] distanceArray;
-//        //사용자의 위치
-//        Location locationA = new Location("user");
-//        locationA.setLatitude(37.2373632);//
-//        locationA.setLongitude(127.1899173);
-//
-//        //앵커가 남겨진 위치
-//        Location locationB = new Location("anchor");
-//        locationB.setLatitude(37.2373632);
-//        locationB.setLongitude(127.1899173);
-//        distanceArray = poseManager.distanceBetweenLocation(locationA, locationB);
-//
-//        // 북쪽을 바라보고 있다는 가정하에 진행
-//        // 터치하면 앵커 벡터와 카메라 벡터 생성
-//        Anchor anchor = hitResult.createAnchor();
-//
-//
-//        AnchorNode anchorNode = new AnchorNode(anchor);
-//        Vector3 anchorVector = anchorNode.getWorldPosition();
-//
-//        //벡터끼리 연산
-//        Vector3 realVector = Vector3.add(cameraVector, anchorVector);
-//
-//        Log.d("방향", "앵커 위치 x: " + anchorVector.x + ", y: " + anchorVector.y + ", z: " + anchorVector.z);
-//        Log.d("방향", "카메라 위치 x: " + cameraVector.x + ", y: " + cameraVector.y + ", z: " + cameraVector.z);
-//        Log.d("방향", "카메라 위치 x: " + realVector.x + ", y: " + realVector.y + ", z: " + realVector.z);
-//
-//
-//        anchorNode.setRenderable(this.selectRenderable);
-//        anchorNode.setParent(arFragment.getArSceneView().getScene());
-//        Pose pose = Pose.makeTranslation(realVector.x, realVector.y, realVector.z);
-//        //방위각이 같다는 가정하에
-//        Pose realPose = poseManager.makeRealPosePosition(pose, distanceArray, 60, 120);
-//        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(realPose);
-//        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
-//        anchorNodeNew.setRenderable(this.selectRenderable);
-//        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
-
-//        Log.d("거리", "새 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
-
+        createSelectAnchor(hitResult);
 
     }
 
@@ -787,6 +740,11 @@ public class ArSfActivity extends AppCompatActivity implements
             tmpImageUri = data.getData();
             Glide.with(this).load(tmpImageUri).into(tmpImageView);
         }
+    }
+
+    @Override
+    public void onAzimuthChanged(int azimuth) {
+        tvNorth.setText("현재 방위각" + azimuth);
     }
 }
 

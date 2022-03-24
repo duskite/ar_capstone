@@ -112,8 +112,6 @@ public class FirebaseManager {
             contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
         contentDB.setValue(contents);
-        //방위각은 따로 넣음
-        contentDB.child("azimuth").setValue(wrappedAnchor.getAzimuth());
 
         //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
@@ -221,8 +219,6 @@ public class FirebaseManager {
 
                         //gps정보 불러오기
                         HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
-                        //가속도 정보 불러오기
-                        HashMap<String, Double> accXYZ = (HashMap<String, Double>) tmpSnapshot.child("accXYZ").getValue();
 
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
@@ -231,7 +227,6 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
-                                tmpSnapshot.child("azimuth").getValue(Integer.class),
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){

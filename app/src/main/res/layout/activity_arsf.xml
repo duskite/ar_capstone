@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ArSfActivity">
 
     <androidx.fragment.app.FragmentContainerView
@@ -33,10 +34,38 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:id="@+id/northCheckLayout"
-        >
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:orientation="vertical"
+            android:background="@drawable/btn_shape"
+            android:layout_margin="10dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_marginBottom="50dp"
+                android:id="@+id/tvNorth"
+                android:layout_gravity="center"
+                android:text="북쪽을 찾아야합니다"
+                android:textColor="@color/white"
+                />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_marginBottom="50dp"
+                android:id="@+id/imgNorth"
+                android:layout_gravity="center"
+                android:src="@drawable/arrow_red"
+
+                />
+        </LinearLayout>
+
         <Button
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="100dp"
             android:text="북쪽 체크"
             android:id="@+id/btnNorth"
             android:background="@drawable/btn_shape"

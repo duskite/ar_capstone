@@ -28,19 +28,12 @@ public class PoseManager {
 
     }
 
-    //앵커가 남겨졌던 loadedAzimuth로 북쪽 벡터를 구함
-    public Vector3 createNorthVector(Vector3 vector3, int loadedAzimuth){
-        //앵커가 찍혔던 방위각만큼 다시 반대로 돌리면 정북방향 앵커가 나옴
-        return vector3roatate(vector3, -loadedAzimuth);
-    }
-
     //사용자가 앵커를 남길때
     //앵커 위치와 카메라 위치를 고려한 벡터생성 후 포즈 리턴
-    public Pose createRealVector(Pose tmpPose, Vector3 anchorVector, Vector3 cameraVector){
-        Vector3 realVector = Vector3.add(anchorVector, cameraVector);
+    public Pose createRealVector(Pose tmpPose, Vector3 anchorVector){
 
         Pose realPose = new Pose(
-                new float[]{realVector.x, realVector.y, realVector.z},
+                new float[]{anchorVector.x, anchorVector.y, anchorVector.z},
                 tmpPose.getRotationQuaternion()
         );
 
@@ -50,49 +43,24 @@ public class PoseManager {
 
     // 방위각에 따라 돌리는 코드는 이상이 없음
     // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
-    public Pose resolveRealPose(Pose pose, double[] distanceArray, int loadedAzimuth, int myAzimuth){
+    public Pose resolveRealPose(Pose pose, double[] distanceArray){
 
-        Log.d("앵커위치", "방위각 불러온거" + loadedAzimuth);
-        Log.d("앵커위치", "방위각 내꺼" + myAzimuth);
         float[] tmpT = pose.getTranslation();
         float[] tmpR = pose.getRotationQuaternion();
 
         //불러온 포즈를 가지고 벡터를 만들음
-        Vector3 vectorOld = new Vector3(
+        Vector3 vector3 = new Vector3(
                 tmpT[0],
                 tmpT[1],
                 tmpT[2]
         );
-        int tmpAzimuth = 0;
-        // 식 자체는 논리적으로 문제없음. 근데 지표면 인식에 따라서 결과가 많이 상이함
-        if(myAzimuth > loadedAzimuth){
-            tmpAzimuth = -Math.abs(myAzimuth - loadedAzimuth); // 맞음
-        }else {
-            tmpAzimuth = Math.abs(myAzimuth - loadedAzimuth); // 맞음
-        }
-        Log.d("앵커위치", "방위각 차이" + tmpAzimuth);
-
-        //방위각에 따라 어느쪽으로 돌릴지 결정해야함
-        Vector3 vectorNew = vector3roatate(vectorOld, tmpAzimuth);
 
         Pose resolvePose = new Pose(
-                new float[]{vectorNew.x, vectorNew.y, vectorNew.z},
+                new float[]{vector3.x, vector3.y, vector3.z},
                 tmpR
         );
 
         return resolvePose;
-    }
-
-    //벡터를 각도만큼 회전한 후 리턴
-    public Vector3 vector3roatate(Vector3 vector3, int degree){
-
-        Double radian = Math.toRadians(degree);
-        Vector3 vector3rotated = new Vector3(
-                ((float) (vector3.x * Math.cos(radian)) - (float) (vector3.z * Math.sin(radian))),
-                vector3.y,
-                ((float) (vector3.x * Math.sin(radian)) + (float) (vector3.z * Math.cos(radian)))
-        );
-        return vector3rotated;
     }
 
 
