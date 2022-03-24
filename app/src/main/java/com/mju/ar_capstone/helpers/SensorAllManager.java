@@ -28,7 +28,6 @@ public class SensorAllManager implements SensorEventListener {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        registerListener();
     }
 
     public void unRegisterListener(){
@@ -45,18 +44,10 @@ public class SensorAllManager implements SensorEventListener {
         }
     }
 
-
     public int getAzimuth(boolean ORIENTATION){
-
-        Log.d("앵커위치", "앵커 라디안: " + orientationAngles[0]);
-        azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
-        Log.d("앵커위치", "앵커 디그리: " + Math.toDegrees(orientationAngles[0]));
-        Log.d("앵커위치", "앵커 방위각: " + azimuth);
-
         if(ORIENTATION){ // 만약 화면이 눕혀져있는 상태로 앵커를 남겼다면 실제 방위각만큼 보정해줘야함
             azimuth += 90;
         }
-
         return azimuth;
     }
 
@@ -76,6 +67,10 @@ public class SensorAllManager implements SensorEventListener {
         SensorManager.getRotationMatrix(rotationMatrix, null,
                 accelerometerReading, magnetometerReading);
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+        //센서 바뀌는 순간마다 우선 방위각 구하도록 함
+        azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
+        Log.d("방위각", "방위각 계산됨: " + azimuth);
 
     }
 

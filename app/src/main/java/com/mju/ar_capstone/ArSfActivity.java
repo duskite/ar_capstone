@@ -1,6 +1,7 @@
 package com.mju.ar_capstone;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -122,6 +123,9 @@ public class ArSfActivity extends AppCompatActivity implements
     private PoseManager poseManager;
     private final int LOAD_DISTANCE = 30;
 
+//    private SensorAzimuthManager sensorAzimuthManager;
+    private int azimuth = 0;
+
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
@@ -154,6 +158,10 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
+        Intent intent = getIntent();
+        azimuth = intent.getIntExtra("azimuth", 0);
+        Log.d("방위각 불러오기 인텐트", String.valueOf(azimuth));
+
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -163,16 +171,18 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
+
+
         poseManager = new PoseManager();
+        //gps는 ar화면이 불러와지는 순간으로만 체크
         checkGPS(true);
 
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //불러올때 나의 gps정보 가져오기
-//                checkGPS(true);
-                loadCloudAnchors();
+//                loadCloudAnchors();
+                Log.d("방위각", String.valueOf(azimuth));
             }
         });
 
@@ -595,15 +605,15 @@ public class ArSfActivity extends AppCompatActivity implements
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng,"text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, "text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth,"image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, azimuth, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -655,8 +665,6 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
-        //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
-//        checkGPS(true);
         createSelectAnchor(hitResult);
 
     }

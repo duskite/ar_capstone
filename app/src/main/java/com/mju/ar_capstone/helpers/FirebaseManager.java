@@ -112,6 +112,7 @@ public class FirebaseManager {
             contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
         contentDB.setValue(contents);
+        contentDB.child("azimuth").setValue(wrappedAnchor.getAzimuth());
 
         //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
@@ -227,6 +228,7 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
+                                (Integer) tmpSnapshot.child("azimuth").getValue(),
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){
