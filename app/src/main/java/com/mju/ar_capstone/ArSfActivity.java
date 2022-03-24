@@ -6,17 +6,24 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +34,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentOnAttachListener;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -43,11 +51,13 @@ import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.ArSceneView;
+import com.google.ar.sceneform.Camera;
 import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
 import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.PlaneRenderer;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -89,13 +99,14 @@ public class ArSfActivity extends AppCompatActivity implements
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
-    private Button btnAnchorLoad, btnMapApp;
+    private Button btnAnchorLoad, btnMapApp, btnNorth;
 
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
     private Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
     private MediaPlayer mediaPlayer;
+
 
     // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
     // 불러오는 상황인지 체크
@@ -109,12 +120,12 @@ public class ArSfActivity extends AppCompatActivity implements
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private PoseManager poseManager;
-    private int azimuth;
-    private final int LOAD_DISTANCE = 10;
-    //센서 정보를 가져와야 할 꺼 같아서 테스트 중
-    private SensorAllManager sensorAllManager;
+    private final int LOAD_DISTANCE = 30;
+
+
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
+
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -152,27 +163,15 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
-        //센서 모음
-        sensorAllManager = new SensorAllManager(getSystemService(SENSOR_SERVICE));
         poseManager = new PoseManager();
-
         checkGPS(true);
 
-        // 기타 필요한 화면 요소들
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "앵커 불러오는중...", Toast.LENGTH_SHORT).show();
-
                 //불러올때 나의 gps정보 가져오기
-                checkGPS(true);
-                Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
-                // 나의 방위각 정보 가져오기
-                azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-//                Toast.makeText(getApplicationContext(), "방위각 이용 불러오기/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
-                Log.d("앵커위치", "나의 방위각" + azimuth);
+//                checkGPS(true);
                 loadCloudAnchors();
             }
         });
@@ -192,6 +191,17 @@ public class ArSfActivity extends AppCompatActivity implements
         //이 후에는 각각 필요한 모델들만 로드됨
         // 불러올때 좀 미리할 좋은 방법을 고민해야함
         preLoadModels();
+    }
+    @Override
+    public void onSessionConfiguration(Session session, Config config) {
+        if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+            config.setDepthMode(Config.DepthMode.AUTOMATIC);
+        }
+        session.configure(config);
+
+        cloudManager.setFirebaseManager(firebaseManager);
+        fireStorageManager.setFirebaseManager(firebaseManager);
+
 
     }
 
@@ -368,8 +378,6 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("순서", "checkGPS end");
     }
 
-
-
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
         writeMode = false;
@@ -384,11 +392,12 @@ public class ArSfActivity extends AppCompatActivity implements
             //서버에서 가져온 앵커 위경도
             Double anchorlat = wrappedAnchor.getLat();
             Double anchorlng = wrappedAnchor.getLng();
-            //거리가 멀면 넘어감
             double[] distanceArray = getDistance(anchorlat, anchorlng);
             if(distanceArray[0] > LOAD_DISTANCE){ //둘 사이의 거리
+                Log.d("거리", "거리가 너무 멈!!!");
                 continue;
             }
+            Log.d("거리", "앵커 생성");
 
             CustomDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();
@@ -406,10 +415,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = CustomDialog.AnchorType.mp3;
             }
 
-            //여기서 포즈의 상대적인 위치를 가지고 정보 구해야 할 듯
-            //불러온 포즈의 실제 위치를 구한후 최종적으로 화면에 맞게 띄우주면 됨
-            //방위각도 넘겨줌
-            Pose realPose = poseManager.makeRealPosePosition(pose, distanceArray, wrappedAnchor.getAzimuth(), azimuth);
+            Pose realPose = poseManager.resolveRealPose(pose, distanceArray);
             Log.d("앵커위치", "포즈생성");
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);
@@ -430,7 +436,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(), azimuth, tmpText, anchorType);
+                            saveAnchor(anchor.getPose(), tmpText, anchorType);
                         }
                         @Override
                         public void onNegativeClick() {
@@ -482,10 +488,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "createSelectAnchor");
 
-        //터치 한 곳의 pose를 가져옴
         Anchor anchor = hitResult.createAnchor();
         Pose pose = anchor.getPose();
-
         AnchorNode anchorNode = new AnchorNode(anchor);
         anchorNode.setParent(arFragment.getArSceneView().getScene());
 
@@ -506,7 +510,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         changeAnchor(model, tmpText, anchorType);
                         //앵커 아이디 리턴함. 지울때 판단하는 용도
-                        String tmpAnchorID = saveAnchor(pose, azimuth, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(pose, tmpText, anchorType);
                         if(tmpAnchorID != null){
                             model.setName(tmpAnchorID);
                         }else{
@@ -586,20 +590,20 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose, int azimuth, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Pose pose, String text, CustomDialog.AnchorType anchorType){
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
         if(anchorType == CustomDialog.AnchorType.text){
-            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, "text");
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng,"text");
         }else if(anchorType == CustomDialog.AnchorType.image){
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, "image");
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, azimuth, "mp3");
+            cloudManager.hostCloudAnchor(pose, "mp3", userId, lat, lng, "mp3");
         }
         cloudManager.onUpdate();
 
@@ -619,18 +623,7 @@ public class ArSfActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onSessionConfiguration(Session session, Config config) {
-        if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
-            config.setDepthMode(Config.DepthMode.AUTOMATIC);
-        }
 
-        config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
-        session.configure(config);
-        cloudManager.setFirebaseManager(firebaseManager);
-        fireStorageManager.setFirebaseManager(firebaseManager);
-
-    }
 
     @Override
     public void onViewCreated(ArSceneView arSceneView) {
@@ -663,45 +656,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
-        checkGPS(true);
-        //앵커 남겼던 방위각 구하는 부분
-        sensorAllManager.setSensorCheck(true);
-        azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
-
+//        checkGPS(true);
         createSelectAnchor(hitResult);
-
-
-//        //테스트중
-//        double[] distanceArray;
-//        //사용자의 위치
-//        Location locationA = new Location("user");
-//        locationA.setLatitude(37.2373632);//
-//        locationA.setLongitude(127.1899173);
-//
-//        //앵커가 남겨진 위치
-//        Location locationB = new Location("anchor");
-//        locationB.setLatitude(37.2373889);
-//        locationB.setLongitude(127.1899067);
-//        distanceArray = poseManager.distanceBetweenLocation(locationA, locationB);
-//
-//        Anchor anchor = hitResult.createAnchor();
-//        AnchorNode anchorNode = new AnchorNode(anchor);
-//        Vector3 vector3 = anchorNode.getWorldPosition();
-//        anchorNode.setRenderable(this.selectRenderable);
-//        anchorNode.setParent(arFragment.getArSceneView().getScene());
-//        Log.d("거리", "현재 앵커 위치 x: " + vector3.x + ", y: " + vector3.y + ", z: " + vector3.z);
-//
-//        Pose pose = anchor.getPose();
-//        //방위각이 같다는 가정하에
-//        Pose realPose = poseManager.makeRealPosePosition(pose, distanceArray, 60, 120);
-//        Anchor anchorNew = arFragment.getArSceneView().getSession().createAnchor(realPose);
-//        AnchorNode anchorNodeNew = new AnchorNode(anchorNew);
-//        anchorNodeNew.setRenderable(this.selectRenderable);
-//        anchorNodeNew.setParent(arFragment.getArSceneView().getScene());
-//
-////        Log.d("거리", "새 앵커 위치 x: " + vectorNew.x + ", y: " + vectorNew.y + ", z: " + vectorNew.z);
-
 
     }
 
@@ -713,13 +669,11 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        sensorAllManager.registerListener();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorAllManager.unRegisterListener();
     }
 
     // 이미지 업로드 부분
@@ -739,6 +693,7 @@ public class ArSfActivity extends AppCompatActivity implements
             Glide.with(this).load(tmpImageUri).into(tmpImageView);
         }
     }
+
 }
 
 

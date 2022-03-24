@@ -58,8 +58,8 @@ public class CloudAnchorManager {
     return currentAnchorID;
   }
 
-  public void hostCloudAnchor(Pose pose, String text_or_path, String userId, double lat, double lng, int azimuth, String anchorType) {
-    wrappedAnchor = new WrappedAnchor(makeCloudAnchorID(), pose, text_or_path, userId, lat, lng, azimuth, anchorType);
+  public void hostCloudAnchor(Pose pose, String text_or_path, String userId, double lat, double lng, String anchorType) {
+    wrappedAnchor = new WrappedAnchor(makeCloudAnchorID(), pose, text_or_path, userId, lat, lng, anchorType);
   }
 
   public void onUpdate() {

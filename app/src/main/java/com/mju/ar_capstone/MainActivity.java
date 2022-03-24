@@ -7,12 +7,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,21 +37,68 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.helpers.SensorAllManager;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.Timer;
+import java.util.TimerTask;
 
-    private Button btnMap;
-    private Button btnArSf;
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+    private Button btnMap, btnArSf, btnIn;
+    private LinearLayout layoutNorth;
+    private TextView tvNorth;
+    private ImageView imgNorth;
+
+    //나침반
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private Sensor magneticField;
+    private float myDegree = 0.0f;
+    private float azimuthDegree = 0.0f;
+    private int cnt = 1;
+
+    private final float[] accelerometerReading = new float[3];
+    private final float[] magnetometerReading = new float[3];
+    private final float[] rotationMatrix = new float[9];
+    private final float[] orientationAngles = new float[3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 씬 폼 데트스용
+        tvNorth = (TextView)findViewById(R.id.tvNorth);
+        imgNorth = (ImageView)findViewById(R.id.imgNorth);
         btnArSf = (Button) findViewById(R.id.btnArSf);
-        //버튼 클릭시 ar 씬폼 화면으로 전환
+        btnIn = (Button) findViewById(R.id.btnIn);
+        layoutNorth = (LinearLayout)findViewById(R.id.layoutNorth);
+
+        imgNorth.setRotation(-90);
+
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+        if (magneticField != null) {
+            sensorManager.registerListener(this, magneticField,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+
+
+
         btnArSf.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnArSf.setVisibility(View.GONE);
+                btnIn.setVisibility(View.VISIBLE);
+                layoutNorth.setVisibility(View.VISIBLE);
+            }
+        });
+
+        btnIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
@@ -61,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
 
         permisionCheck();
     }
@@ -97,4 +152,62 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, accelerometer,
+                SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, magneticField,
+                SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this, accelerometer);
+        sensorManager.unregisterListener(this, magneticField);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            System.arraycopy(event.values, 0, accelerometerReading,
+                    0, accelerometerReading.length);
+        }
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            System.arraycopy(event.values, 0, magnetometerReading,
+                    0, magnetometerReading.length);
+        }
+
+        // Update rotation matrix, which is needed to update orientation angles.
+        SensorManager.getRotationMatrix(rotationMatrix, null,
+                accelerometerReading, magnetometerReading);
+        SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+        azimuthDegree = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
+
+        tvNorth.setText("현재 방위각: " + Float.toString(azimuthDegree));
+        RotateAnimation ra = new RotateAnimation(
+                myDegree,
+                -azimuthDegree,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f
+        );
+        ra.setDuration(1000);
+        ra.setFillAfter(true);
+        imgNorth.setAnimation(ra);
+        myDegree = -azimuthDegree;
+
+        if(azimuthDegree > 355 || azimuthDegree < 5){
+            btnIn.setEnabled(true);
+        }else {
+            btnIn.setEnabled(false);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
 }

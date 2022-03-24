@@ -1,10 +1,15 @@
 package com.mju.ar_capstone.helpers;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorEventListener2;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.widget.ImageView;
+
+import com.mju.ar_capstone.CustomDialog;
 
 
 public class SensorAllManager implements SensorEventListener {
@@ -18,18 +23,14 @@ public class SensorAllManager implements SensorEventListener {
     private final float[] rotationMatrix = new float[9];
     private final float[] orientationAngles = new float[3];
     private int azimuth;
-    private boolean sensorCheck = false;
 
-    public SensorAllManager(Object systemService) {
-        sensorManager = (SensorManager) systemService;
+    public SensorAllManager(Context context) {
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         registerListener();
     }
 
-    public void setSensorCheck(boolean status){
-        sensorCheck = status;
-    }
     public void unRegisterListener(){
         sensorManager.unregisterListener(this);
     }
@@ -61,21 +62,21 @@ public class SensorAllManager implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (sensorCheck){
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                System.arraycopy(event.values, 0, accelerometerReading,
-                        0, accelerometerReading.length);
-            }
-            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-                System.arraycopy(event.values, 0, magnetometerReading,
-                        0, magnetometerReading.length);
-            }
 
-            // Update rotation matrix, which is needed to update orientation angles.
-            SensorManager.getRotationMatrix(rotationMatrix, null,
-                    accelerometerReading, magnetometerReading);
-            SensorManager.getOrientation(rotationMatrix, orientationAngles);
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            System.arraycopy(event.values, 0, accelerometerReading,
+                    0, accelerometerReading.length);
         }
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            System.arraycopy(event.values, 0, magnetometerReading,
+                    0, magnetometerReading.length);
+        }
+
+        // Update rotation matrix, which is needed to update orientation angles.
+        SensorManager.getRotationMatrix(rotationMatrix, null,
+                accelerometerReading, magnetometerReading);
+        SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
     }
 
     @Override
