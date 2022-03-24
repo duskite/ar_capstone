@@ -171,10 +171,8 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 //불러올때 나의 gps정보 가져오기
-                checkGPS(true);
-                Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
+//                checkGPS(true);
                 loadCloudAnchors();
-
             }
         });
 
@@ -380,8 +378,6 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("순서", "checkGPS end");
     }
 
-
-
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
         writeMode = false;
@@ -396,12 +392,12 @@ public class ArSfActivity extends AppCompatActivity implements
             //서버에서 가져온 앵커 위경도
             Double anchorlat = wrappedAnchor.getLat();
             Double anchorlng = wrappedAnchor.getLng();
-            //거리가 멀면 넘어감
-            // 0- 거리, 1-x끼리 차이, 2-y끼리 차이
             double[] distanceArray = getDistance(anchorlat, anchorlng);
             if(distanceArray[0] > LOAD_DISTANCE){ //둘 사이의 거리
+                Log.d("거리", "거리가 너무 멈!!!");
                 continue;
             }
+            Log.d("거리", "앵커 생성");
 
             CustomDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();

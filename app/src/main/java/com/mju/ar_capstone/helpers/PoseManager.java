@@ -11,8 +11,7 @@ public class PoseManager {
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
-    private final static double SCALE = 1000.0;
-    private final static int DEGREE_CONTROL = 15;
+    private final static double SCALE = 10;
 
     public PoseManager() {
         //기본 생성자
@@ -50,9 +49,9 @@ public class PoseManager {
 
         //불러온 포즈를 가지고 벡터를 만들음
         Vector3 vector3 = new Vector3(
-                tmpT[0],
+                tmpT[0] + (float) distanceArray[1],
                 tmpT[1],
-                tmpT[2]
+                tmpT[2] + (float) distanceArray[2]
         );
 
         Pose resolvePose = new Pose(
@@ -81,13 +80,11 @@ public class PoseManager {
         distanceX = Math.abs(userXY.x - anchorXY.x);
         distanceY = Math.abs(userXY.y - anchorXY.y);
 
-        // 부호 바꿔줌
-        // 여기서는 일반적인 좌표로 생각함
-        if(userXY.x > anchorXY.x){
-            distanceX = -distanceX;
+        if(userXY.x < anchorXY.x){
+            distanceX = distanceX;
         }
         if(userXY.y < anchorXY.y){
-            distanceY = distanceY;
+            distanceY = -distanceY;
         }
 
         Log.d("거리 x 차이", String.valueOf(distanceX));
@@ -96,14 +93,14 @@ public class PoseManager {
 //        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
 //        Log.d("거리: ", String.valueOf(distance));
 
-        // 값의 스케일이 불분명해서 우선은 location객체로 연산함
+
         distance = user.distanceTo(anchor);
+        Log.d("거리 나랑 앵커", String.valueOf(distance));
 
         distanceArray[0] = distance;
-        distanceArray[1] = distanceX;
-        distanceArray[2] = distanceY;
+        distanceArray[1] = distanceX * SCALE;
+        distanceArray[2] = distanceY * SCALE;
 
-        //미터 단위로 바꿔서 넘겨줘야함
         return distanceArray;
     }
 
