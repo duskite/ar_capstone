@@ -17,7 +17,6 @@ public class SensorAllManager implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor magneticField;
-    private SensorAllManagerListener listener;
 
     private final float[] accelerometerReading = new float[3];
     private final float[] magnetometerReading = new float[3];
@@ -30,13 +29,6 @@ public class SensorAllManager implements SensorEventListener {
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         registerListener();
-    }
-
-    public static interface SensorAllManagerListener{
-        abstract void onAzimuthChanged(int azimuth);
-    }
-    public void setListener(SensorAllManagerListener listener){
-        this.listener = listener;
     }
 
     public void unRegisterListener(){
@@ -84,10 +76,6 @@ public class SensorAllManager implements SensorEventListener {
         SensorManager.getRotationMatrix(rotationMatrix, null,
                 accelerometerReading, magnetometerReading);
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
-
-        if(listener != null){
-            listener.onAzimuthChanged(azimuth);
-        }
 
     }
 

@@ -77,8 +77,7 @@ public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
         BaseArFragment.OnTapArPlaneListener,
         BaseArFragment.OnSessionConfigurationListener,
-        ArFragment.OnViewCreatedListener,
-        SensorAllManager.SensorAllManagerListener {
+        ArFragment.OnViewCreatedListener{
 
     private ArFragment arFragment;
     private ViewRenderable selectRenderable;
@@ -121,17 +120,11 @@ public class ArSfActivity extends AppCompatActivity implements
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private PoseManager poseManager;
-    private int azimuth;
     private final int LOAD_DISTANCE = 30;
 
-    //방위각으로 북쪽 찾는 용도
-    private SensorAllManager sensorAllManager;
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
-
-    private ImageView imgNorth;
-    private TextView tvNorth;
 
 
     @Override
@@ -170,18 +163,8 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
-        //센서 모음
-        sensorAllManager = new SensorAllManager(getApplicationContext());
-        sensorAllManager.setListener(this);
         poseManager = new PoseManager();
         checkGPS(true);
-
-//         기타 필요한 화면 요소들
-        imgNorth = (ImageView) findViewById(R.id.imgNorth);
-        imgNorth.setRotation(-90f);
-        tvNorth = (TextView) findViewById(R.id.tvNorth);
-        azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-
 
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
@@ -190,9 +173,6 @@ public class ArSfActivity extends AppCompatActivity implements
                 //불러올때 나의 gps정보 가져오기
                 checkGPS(true);
                 Log.d("앵커위치", "나의 위치 x: " + lat + ", y: " + lng);
-                // 나의 방위각 정보 가져오기
-                azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-                Log.d("앵커위치", "나의 방위각" + azimuth);
                 loadCloudAnchors();
 
             }
@@ -213,26 +193,6 @@ public class ArSfActivity extends AppCompatActivity implements
         //이 후에는 각각 필요한 모델들만 로드됨
         // 불러올때 좀 미리할 좋은 방법을 고민해야함
         preLoadModels();
-
-        btnNorth = findViewById(R.id.btnNorth);
-        btnNorth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //북쪽을 한 번은 인식시켜야함
-                azimuth = sensorAllManager.getAzimuth(ORIENTATION);
-                tvNorth.setText("방위각" + azimuth);
-
-                //북쪽을 바라보고 있을때
-                if(azimuth >= 358 || azimuth <=3){
-                    Pose northPose = Pose.makeTranslation(0,-0.5f,-1);
-                    Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(northPose);
-                    AnchorNode anchorNode = new AnchorNode(anchor);
-                    anchorNode.setParent(arFragment.getArSceneView().getScene());
-                    anchorNode.setRenderable(selectRenderable);
-                }
-            }
-        });
     }
     @Override
     public void onSessionConfiguration(Session session, Config config) {
@@ -701,8 +661,6 @@ public class ArSfActivity extends AppCompatActivity implements
         Log.d("순서", "onTapPlane");
         //화면 터치하는 순간 앵커 남겼던 gps한번 가져옴
 //        checkGPS(true);
-        //앵커 남겼던 방위각 구하는 부분
-        Toast.makeText(this, "방위각 이용/ " + String.valueOf(azimuth), Toast.LENGTH_LONG).show();
         createSelectAnchor(hitResult);
 
     }
@@ -715,13 +673,11 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        sensorAllManager.registerListener();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorAllManager.unRegisterListener();
     }
 
     // 이미지 업로드 부분
@@ -742,10 +698,6 @@ public class ArSfActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onAzimuthChanged(int azimuth) {
-        tvNorth.setText("현재 방위각" + azimuth);
-    }
 }
 
 
