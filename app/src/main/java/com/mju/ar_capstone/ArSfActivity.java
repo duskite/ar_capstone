@@ -100,7 +100,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
-    private Button btnAnchorLoad, btnMapApp, btnNorth;
+    private Button btnAnchorLoad, btnMapApp;
 
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
@@ -123,9 +123,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private PoseManager poseManager;
     private final int LOAD_DISTANCE = 30;
 
-//    private SensorAzimuthManager sensorAzimuthManager;
     private int azimuth = 0;
-
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
@@ -158,6 +156,7 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
+        // 메인에서 넘겨준 방위각 값 한 번만 저장
         Intent intent = getIntent();
         azimuth = intent.getIntExtra("azimuth", 0);
         Log.d("방위각 불러오기 인텐트", String.valueOf(azimuth));
@@ -171,8 +170,6 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
-
-
         poseManager = new PoseManager();
         //gps는 ar화면이 불러와지는 순간으로만 체크
         checkGPS(true);
@@ -181,8 +178,7 @@ public class ArSfActivity extends AppCompatActivity implements
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                loadCloudAnchors();
-                Log.d("방위각", String.valueOf(azimuth));
+                loadCloudAnchors();
             }
         });
 
@@ -211,8 +207,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
-
-
     }
 
 
@@ -394,6 +388,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("앵커위치", "loadCloudAnchors");
 
+        Log.d("차이 azimuth", "밖 체크");
+
         ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
         Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
         while (iterator.hasNext()){
@@ -425,7 +421,12 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = CustomDialog.AnchorType.mp3;
             }
 
-            Pose realPose = poseManager.resolveRealPose(pose, distanceArray);
+            //나와 앵커가 남겨졌던 방위각 차이 계산
+            int degree = poseManager.azimuthDifference(azimuth, wrappedAnchor.getAzimuth());
+            Log.d("차이 azimuth", "안 체크");
+            Log.d("차이 azimuth", String.valueOf(degree));
+            Pose realPose = poseManager.resolveRealPose(pose, 90);
+//            Pose realPose = poseManager.resolveRealPose(pose, 0);
             Log.d("앵커위치", "포즈생성");
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);

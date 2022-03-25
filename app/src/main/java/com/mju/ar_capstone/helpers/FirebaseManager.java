@@ -228,7 +228,7 @@ public class FirebaseManager {
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
-                                (Integer) tmpSnapshot.child("azimuth").getValue(),
+                                tmpSnapshot.child("azimuth").getValue(int.class),
                                 tmpSnapshot.child("type").getValue(String.class)
                         ));
                     }catch (NullPointerException e){

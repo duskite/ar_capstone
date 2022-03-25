@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float[] orientationAngles = new float[3];
     private int azimuth;
 
+    private TextView tvNorth, tvNorthNomalized;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +75,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
-                intent.putExtra("azimuth", azimuth);
+                intent.putExtra("azimuth", getAzimuth());
                 startActivity(intent);
             }
         });
+
+        tvNorth = (TextView)findViewById(R.id.tvNorth);
+        tvNorthNomalized = (TextView)findViewById(R.id.tvNorthNomalized);
 
 
         // 지도로 이동
@@ -147,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
+//        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -168,6 +174,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //센서 바뀌는 순간마다 우선 방위각 구하도록 함
         azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
         Log.d("방위각", "방위각 계산됨: " + azimuth);
+
+        tvNorth.setText("현재 방위각: " + Float.toString(azimuth));
+        tvNorthNomalized.setText("방위각: " + Float.toString(getAzimuth()));
     }
 
     @Override
@@ -175,11 +184,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-//    public int getAzimuth(boolean ORIENTATION){
+    public int getAzimuth(){
 //        if(ORIENTATION){ // 만약 화면이 눕혀져있는 상태로 앵커를 남겼다면 실제 방위각만큼 보정해줘야함
 //            azimuth += 90;
 //        }
-//        return azimuth;
-//    }
+        return sectionDegree(azimuth);
+    }
+
+    public int sectionDegree(int degree){
+
+        int section = 0;
+
+        if(degree > 357 || degree < 3){
+            //이정도 범위는 그냥 0이라고 보기
+        }else {
+            section = degree / 3;
+            section *= 3;
+        }
+
+        return section;
+
+    }
 
 }

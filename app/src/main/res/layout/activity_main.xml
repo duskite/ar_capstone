@@ -21,6 +21,28 @@
         android:layout_marginBottom="80dp"
         android:orientation="vertical">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="10dp"
+            android:layout_marginBottom="50dp"
+            android:id="@+id/tvNorth"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="40dp"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="10dp"
+            android:layout_marginBottom="50dp"
+            android:id="@+id/tvNorthNomalized"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="40dp"
+            />
+
         <Button
             android:id="@+id/btnMap"
             android:layout_width="300dp"

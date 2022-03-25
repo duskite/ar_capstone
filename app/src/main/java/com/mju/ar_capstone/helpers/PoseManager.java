@@ -27,38 +27,59 @@ public class PoseManager {
 
     }
 
-    //사용자가 앵커를 남길때
-    //앵커 위치와 카메라 위치를 고려한 벡터생성 후 포즈 리턴
-    public Pose createRealVector(Pose tmpPose, Vector3 anchorVector){
+    // 둘 방위각 차이만큼 벡터를 회전시켜줄꺼임
+    // 어느 방향인지까지 고려해서 리턴
+    public int azimuthDifference(int myAzimuth, int anchorAzimuth){
 
-        Pose realPose = new Pose(
-                new float[]{anchorVector.x, anchorVector.y, anchorVector.z},
-                tmpPose.getRotationQuaternion()
+        int azimuthDirection = Math.abs(myAzimuth - anchorAzimuth);
+
+        Log.d("차이 azimuth My", String.valueOf(myAzimuth));
+        Log.d("차이 azimuth Anchor", String.valueOf(anchorAzimuth));
+
+
+        //나의 방위각이 앵커 방위각 보다 크면 그 차이만큼
+        // 음의 방향으로 회전해줘야함
+        // 반대는 양의 방향으로 회전
+        if(myAzimuth > anchorAzimuth){
+            azimuthDirection = -azimuthDirection;
+        }else {
+            azimuthDirection = azimuthDirection;
+        }
+        return azimuthDirection;
+    }
+
+    //벡터 회전
+    public Vector3 vertorRotate(Vector3 vector3, int degree){
+        Vector3 rotatedVector = new Vector3(
+                (float) (vector3.x * Math.cos(degree) - vector3.z * Math.sin(degree)),
+                vector3.y,
+                (float) (vector3.x * Math.sin(degree) + vector3.z * Math.cos(degree))
         );
 
-        return realPose;
+        return rotatedVector;
     }
 
 
     // 방위각에 따라 돌리는 코드는 이상이 없음
     // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
-    public Pose resolveRealPose(Pose pose, double[] distanceArray){
+    public Pose resolveRealPose(Pose pose, int degree){ //좌표간 거리는 잠시 나중에 처리하자
 
         float[] tmpT = pose.getTranslation();
         float[] tmpR = pose.getRotationQuaternion();
 
         //불러온 포즈를 가지고 벡터를 만들음
         Vector3 vector3 = new Vector3(
-                tmpT[0] + (float) distanceArray[1],
+                tmpT[0],
                 tmpT[1],
-                tmpT[2] + (float) distanceArray[2]
+                tmpT[2]
         );
+
+        Vector3 rotatedVector = vertorRotate(vector3, degree);
 
         Pose resolvePose = new Pose(
-                new float[]{vector3.x, vector3.y, vector3.z},
+                new float[]{rotatedVector.x, rotatedVector.y, rotatedVector.z},
                 tmpR
         );
-
         return resolvePose;
     }
 
@@ -89,10 +110,6 @@ public class PoseManager {
 
         Log.d("거리 x 차이", String.valueOf(distanceX));
         Log.d("거리 y 차이", String.valueOf(distanceY));
-
-//        distance = Math.sqrt(Math.pow((userXY.x - anchorXY.x),2) + Math.pow((userXY.y - anchorXY.y),2));
-//        Log.d("거리: ", String.valueOf(distance));
-
 
         distance = user.distanceTo(anchor);
         Log.d("거리 나랑 앵커", String.valueOf(distance));
