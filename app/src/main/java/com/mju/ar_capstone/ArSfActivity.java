@@ -661,12 +661,9 @@ public class ArSfActivity extends AppCompatActivity implements
         return distance;
     }
 
-    @Override
-    public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
-        Log.d("순서", "onTapPlane");
-        createSelectAnchor(hitResult);
-
+    //앵커 방향과 위치 테스트용 삭제 금지
+    public void test_ysy(){
 
 //        Vector3 vector3 = new Vector3(
 //                0,
@@ -695,7 +692,15 @@ public class ArSfActivity extends AppCompatActivity implements
 //        anchorNode90.setRenderable(this.selectRenderable);
 //        anchorNode90.setWorldPosition(rotatedVector);
 
+    }
 
+    @Override
+    public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
+
+        Log.d("순서", "onTapPlane");
+        createSelectAnchor(hitResult);
+
+//        test_ysy();
     }
 
     @Override

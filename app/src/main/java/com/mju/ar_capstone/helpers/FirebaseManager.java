@@ -233,6 +233,8 @@ public class FirebaseManager {
                         ));
                     }catch (NullPointerException e){
                         Log.d("순서", "리스너 데이터 null 예외 발생");
+                    }catch (ClassCastException e){
+
                     }
                 }
                 Log.d("순서", "리스너 데이터 로드 완료");
