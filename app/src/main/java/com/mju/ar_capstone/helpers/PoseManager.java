@@ -53,9 +53,9 @@ public class PoseManager {
     //벡터 회전
     public Vector3 vertorRotate(Vector3 vector3, int degree){
         Vector3 rotatedVector = new Vector3(
-                (float) (vector3.x * Math.cos(degree) - vector3.z * Math.sin(degree)),
+                (float) (vector3.x * Math.cos(Math.toRadians(degree)) - vector3.z * Math.sin(Math.toRadians(degree))),
                 vector3.y,
-                (float) (vector3.x * Math.sin(degree) + vector3.z * Math.cos(degree))
+                (float) (vector3.x * Math.sin(Math.toRadians(degree)) + vector3.z * Math.cos(Math.toRadians(degree)))
         );
 
         return rotatedVector;

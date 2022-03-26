@@ -425,7 +425,7 @@ public class ArSfActivity extends AppCompatActivity implements
             int degree = poseManager.azimuthDifference(azimuth, wrappedAnchor.getAzimuth());
             Log.d("차이 azimuth", "안 체크");
             Log.d("차이 azimuth", String.valueOf(degree));
-            Pose realPose = poseManager.resolveRealPose(pose, 180);
+            Pose realPose = poseManager.resolveRealPose(pose, degree);
             Log.d("앵커위치", "포즈생성");
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);
@@ -665,59 +665,35 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
         Log.d("순서", "onTapPlane");
-//        createSelectAnchor(hitResult);
-
-        Anchor anchor = hitResult.createAnchor();
-        Pose tmp = anchor.getPose();
-
-        float[] tmpT = tmp.getTranslation();
-        float[] tmpR = tmp.getRotationQuaternion();
-
-        Log.d("회전 T", "x: "+ tmpT[0] + ", y: " + tmpT[1] + ", z:" + tmpT[2]);
-        Log.d("회전 R", "x: "+ tmpR[0] + ", y: " + tmpR[1] + ", z:" + tmpR[2] + ", w:" + tmpR[3]);
+        createSelectAnchor(hitResult);
 
 
-        Vector3 vector3 = new Vector3(
-                tmpT[0],
-                tmpT[1],
-                tmpT[2]
-        );
+//        Vector3 vector3 = new Vector3(
+//                0,
+//                0,
+//                -1
+//        );
+//
+//        Log.d("회전 v", "x: "+ vector3.x + ", y: " + vector3.y + ", z:" + vector3.z);
 
-        int degree = -10;
-
-        Vector3 rotatedVector = new Vector3(
-//                (float) (vector3.x * Math.cos(degree) - vector3.z * Math.sin(degree)),
-                vector3.x + 1,
-                vector3.y,
-//                (float) (vector3.x * Math.sin(degree) + vector3.z * Math.cos(degree))
-                vector3.z
-        );
-        Log.d("회전 rotated", "x: "+ rotatedVector.x + ", y: " + rotatedVector.y + ", z:" + rotatedVector.z);
-
-        Pose pose = new Pose(
-                new float[]{rotatedVector.x, rotatedVector.y, rotatedVector.z},
-                tmp.getRotationQuaternion()
-        );
-
-//        Pose pose90 = poseManager.resolveRealPose(pose, 90);
-        Pose pose180 = poseManager.resolveRealPose(pose, 60); // 180도 문제 있음
-        Pose pose270 = poseManager.resolveRealPose(pose, 90); // 270도 문제 있음
-
-        Anchor anchor90 = arFragment.getArSceneView().getSession().createAnchor(pose);
-        Anchor anchor180 = arFragment.getArSceneView().getSession().createAnchor(pose180);
-        Anchor anchor270 = arFragment.getArSceneView().getSession().createAnchor(pose270);
-
-        AnchorNode anchorNode90 = new AnchorNode(anchor90);
-        AnchorNode anchorNode180 = new AnchorNode(anchor180);
-        AnchorNode anchorNode270 = new AnchorNode(anchor270);
-
-        anchorNode90.setParent(arFragment.getArSceneView().getScene());
-        anchorNode180.setParent(arFragment.getArSceneView().getScene());
-        anchorNode270.setParent(arFragment.getArSceneView().getScene());
-
-        anchorNode90.setRenderable(this.selectRenderable);
-//        anchorNode180.setRenderable(this.selectRenderable);
-//        anchorNode270.setRenderable(this.selectRenderable);
+//
+//
+//        int degree = -30;
+//
+//        Vector3 rotatedVector = new Vector3(
+//                (float) (vector3.x * Math.cos(Math.toRadians(degree)) - vector3.z * Math.sin(Math.toRadians(degree))),
+//                vector3.y,
+//                (float) (vector3.x * Math.sin(Math.toRadians(degree)) + vector3.z * Math.cos(Math.toRadians(degree)))
+//
+//        );
+//        Log.d("회전 rotated", "x: "+ rotatedVector.x + ", y: " + rotatedVector.y + ", z:" + rotatedVector.z);
+//
+//        AnchorNode anchorNode90 = new AnchorNode();
+//
+//        anchorNode90.setParent(arFragment.getArSceneView().getScene());
+//
+//        anchorNode90.setRenderable(this.selectRenderable);
+//        anchorNode90.setWorldPosition(rotatedVector);
 
 
     }
