@@ -46,8 +46,8 @@ public class FirebaseManager {
 
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
     
-    public FirebaseManager(){
-        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(KEY_ROOT_DIR);
+    public FirebaseManager(String channel){
+        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
 
         //앵커 넘버, 이미지 넘버 가져오기
         registerAnchorNumValueLisner();

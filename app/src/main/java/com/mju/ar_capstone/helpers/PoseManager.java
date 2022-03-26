@@ -40,11 +40,13 @@ public class PoseManager {
         //나의 방위각이 앵커 방위각 보다 크면 그 차이만큼
         // 음의 방향으로 회전해줘야함
         // 반대는 양의 방향으로 회전
+        // 여기까지는 일반 방위각 기준으로 생각함
         if(myAzimuth > anchorAzimuth){
             azimuthDirection = -azimuthDirection;
         }else {
             azimuthDirection = azimuthDirection;
         }
+
         return azimuthDirection;
     }
 
