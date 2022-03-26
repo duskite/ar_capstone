@@ -44,67 +44,44 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private Button btnMap, btnArSf, btnIn;
-    private LinearLayout layoutNorth;
-    private TextView tvNorth;
-    private ImageView imgNorth;
+    private Button btnMap, btnArSf;
 
-    //나침반
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor magneticField;
-    private float myDegree = 0.0f;
-    private float azimuthDegree = 0.0f;
-    private int cnt = 1;
 
     private final float[] accelerometerReading = new float[3];
     private final float[] magnetometerReading = new float[3];
     private final float[] rotationMatrix = new float[9];
     private final float[] orientationAngles = new float[3];
+    private int azimuth;
+
+    private TextView tvNorth, tvNorthNomalized;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvNorth = (TextView)findViewById(R.id.tvNorth);
-        imgNorth = (ImageView)findViewById(R.id.imgNorth);
-        btnArSf = (Button) findViewById(R.id.btnArSf);
-        btnIn = (Button) findViewById(R.id.btnIn);
-        layoutNorth = (LinearLayout)findViewById(R.id.layoutNorth);
-
-        imgNorth.setRotation(-90);
-
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
-        }
-        if (magneticField != null) {
-            sensorManager.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
-        }
+        registerListener();
 
-
+        btnArSf = (Button) findViewById(R.id.btnArSf);
 
         btnArSf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnArSf.setVisibility(View.GONE);
-                btnIn.setVisibility(View.VISIBLE);
-                layoutNorth.setVisibility(View.VISIBLE);
-            }
-        });
-
-        btnIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
+                intent.putExtra("azimuth", getAzimuth());
                 startActivity(intent);
             }
         });
+
+        tvNorth = (TextView)findViewById(R.id.tvNorth);
+        tvNorthNomalized = (TextView)findViewById(R.id.tvNorthNomalized);
 
 
         // 지도로 이동
@@ -152,21 +129,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    public void unRegisterListener(){
+        sensorManager.unregisterListener(this);
+    }
+    public void registerListener(){
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+        if (magneticField != null) {
+            sensorManager.registerListener(this, magneticField,
+                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, accelerometer,
-                SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
-        sensorManager.registerListener(this, magneticField,
-                SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this, accelerometer);
-        sensorManager.unregisterListener(this, magneticField);
+//        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -185,29 +171,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 accelerometerReading, magnetometerReading);
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
 
-        azimuthDegree = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
+        //센서 바뀌는 순간마다 우선 방위각 구하도록 함
+        azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
+        Log.d("방위각", "방위각 계산됨: " + azimuth);
 
-        tvNorth.setText("현재 방위각: " + Float.toString(azimuthDegree));
-        RotateAnimation ra = new RotateAnimation(
-                myDegree,
-                -azimuthDegree,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f
-        );
-        ra.setDuration(1000);
-        ra.setFillAfter(true);
-        imgNorth.setAnimation(ra);
-        myDegree = -azimuthDegree;
-
-        if(azimuthDegree > 355 || azimuthDegree < 5){
-            btnIn.setEnabled(true);
-        }else {
-            btnIn.setEnabled(false);
-        }
+        tvNorth.setText("현재 방위각: " + Float.toString(azimuth));
+        tvNorthNomalized.setText("방위각: " + Float.toString(getAzimuth()));
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
+    public int getAzimuth(){
+//        if(ORIENTATION){ // 만약 화면이 눕혀져있는 상태로 앵커를 남겼다면 실제 방위각만큼 보정해줘야함
+//            azimuth += 90;
+//        }
+        return sectionDegree(azimuth);
+    }
+
+    public int sectionDegree(int degree){
+
+        int section = 0;
+
+        if(degree > 357 || degree < 3){
+            //이정도 범위는 그냥 0이라고 보기
+        }else {
+            section = degree / 3;
+            section *= 3;
+        }
+
+        return section;
+
+    }
+
 }

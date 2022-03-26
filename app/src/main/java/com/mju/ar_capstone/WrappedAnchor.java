@@ -3,6 +3,7 @@ package com.mju.ar_capstone;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Trackable;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.firebase.database.Exclude;
 
 public class WrappedAnchor {
@@ -12,10 +13,14 @@ public class WrappedAnchor {
     private String userID;
     private String anchorType;
 
+    private int azimuth;
+
     private double lat;
     private double lng;
 
     private Pose pose;
+
+    private Vector3 cameraVector;
 
     public WrappedAnchor(){
 
@@ -29,7 +34,7 @@ public class WrappedAnchor {
     }
 
     // ar에서 사용하는 객체
-    public WrappedAnchor(String cloudAnchorId, Pose pose, String text, String userID, double lat, double lng, String anchorType){
+    public WrappedAnchor(String cloudAnchorId, Pose pose, Vector3 cameraVector, String text, String userID, double lat, double lng, int azimuth, String anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
         this.userID = userID;
@@ -37,6 +42,8 @@ public class WrappedAnchor {
         this.pose = pose;
         this.lat = lat;
         this.lng = lng;
+        this.azimuth = azimuth;
+        this.cameraVector = cameraVector;
     }
 
     public String getCloudAnchorId() {
@@ -93,6 +100,21 @@ public class WrappedAnchor {
 
     public void setPose(Pose pose) {
         this.pose = pose;
+    }
+
+    public int getAzimuth() {
+        return azimuth;
+    }
+
+    public void setAzimuth(int azimuth) {
+        this.azimuth = azimuth;
+    }
+
+    public Vector3 getCameraVector(){
+        return cameraVector;
+    }
+    public void setCameraVector(Vector3 vector3){
+        this.cameraVector = vector3;
     }
 
 }

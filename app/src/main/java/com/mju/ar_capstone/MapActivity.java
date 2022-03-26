@@ -77,7 +77,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
-        firebaseManager = new FirebaseManager();
+        firebaseManager = new FirebaseManager("ysy_test");
         firebaseManager.registerGPSValueListner();
 
     }
