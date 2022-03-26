@@ -113,7 +113,7 @@ public class ArSfActivity extends AppCompatActivity implements
     // 불러오는 상황인지 체크
     private static boolean writeMode = false;
     // 화면 회전 체크
-    private static boolean ORIENTATION = false;
+    private static boolean DEVICE_LANDSCAPE = false;
 
     //gps정보 앵커랑 같이 서버에 업로드하려고
     private double lat = 0.0;
@@ -136,10 +136,10 @@ public class ArSfActivity extends AppCompatActivity implements
         if(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
             //화면 세로
             Log.d("화면 전환", "세로");
-            ORIENTATION = false;
+            DEVICE_LANDSCAPE = false;
         }else if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
             Log.d("화면 전환", "가로");
-            ORIENTATION = true;
+            DEVICE_LANDSCAPE = true;
         }
     }
 
@@ -166,7 +166,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
-        firebaseManager = new FirebaseManager("ysy_test");
+        firebaseManager = new FirebaseManager("base_channel");
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
 
@@ -439,7 +439,7 @@ public class ArSfActivity extends AppCompatActivity implements
             model.setOnTapListener(new Node.OnTapListener() {
                 @Override
                 public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, ORIENTATION, new CustomDialog.CustomDialogClickListener() {
+                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new CustomDialog.CustomDialogClickListener() {
                         @Override
                         public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
                             writeMode = true;
@@ -511,7 +511,7 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, ORIENTATION, new CustomDialog.CustomDialogClickListener() {
+                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new CustomDialog.CustomDialogClickListener() {
                     @Override
                     public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
                         Log.d("순서", "onTap/onPositiveClick");
