@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Pose;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -120,6 +121,7 @@ public class FirebaseManager {
         Pose pose = wrappedAnchor.getPose();
         float[] poseT = pose.getTranslation();
         float[] poseR = pose.getRotationQuaternion();
+        Vector3 cameraVector = wrappedAnchor.getCameraVector();
         poses.put("Tx", poseT[0]);
         poses.put("Ty", poseT[1]);
         poses.put("Tz", poseT[2]);
@@ -128,6 +130,11 @@ public class FirebaseManager {
         poses.put("Ry", poseR[1]);
         poses.put("Rz", poseR[2]);
         poses.put("Rw", poseR[3]);
+
+        poses.put("Cx", cameraVector.x);
+        poses.put("Cy", cameraVector.y);
+        poses.put("Cz", cameraVector.z);
+
         poseDB.setValue(poses);
 
         //위경도, 위에 해시맵 재사용
@@ -216,6 +223,11 @@ public class FirebaseManager {
                                 ((Double) poses.get("Rz")).floatValue(),
                                 ((Double) poses.get("Rw")).floatValue(),
                         };
+                        Vector3 cameraVector = new Vector3(
+                                ((Double) poses.get("Cx")).floatValue(),
+                                ((Double) poses.get("Cy")).floatValue(),
+                                ((Double) poses.get("Cz")).floatValue()
+                        );
                         Pose pose = new Pose(poseT, poseR);
 
                         //gps정보 불러오기
@@ -224,6 +236,7 @@ public class FirebaseManager {
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
                                 pose,
+                                cameraVector,
                                 tmpSnapshot.child("text_or_path").getValue(String.class),
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),

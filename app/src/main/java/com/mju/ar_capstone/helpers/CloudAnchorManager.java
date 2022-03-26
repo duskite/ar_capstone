@@ -26,6 +26,7 @@ import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.mju.ar_capstone.CustomDialog;
 import com.mju.ar_capstone.WrappedAnchor;
@@ -58,8 +59,8 @@ public class CloudAnchorManager {
     return currentAnchorID;
   }
 
-  public void hostCloudAnchor(Pose pose, String text_or_path, String userId, double lat, double lng, int azimuth, String anchorType) {
-    wrappedAnchor = new WrappedAnchor(makeCloudAnchorID(), pose, text_or_path, userId, lat, lng, azimuth, anchorType);
+  public void hostCloudAnchor(Pose pose, Vector3 cameraVector, String text_or_path, String userId, double lat, double lng, int azimuth, String anchorType) {
+    wrappedAnchor = new WrappedAnchor(makeCloudAnchorID(), pose, cameraVector, text_or_path, userId, lat, lng, azimuth, anchorType);
   }
 
   public void onUpdate() {

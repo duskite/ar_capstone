@@ -53,94 +53,97 @@ public class PoseManager {
     //벡터 회전
     public Vector3 vertorRotate(Vector3 vector3, int degree){
 
-        float xControl = 0.05f;
-        float xControlFar = xControl + 0.05f;
-
-        float zControl = 0.1f;
-        float zControlFar = zControl + 0.05f;
-
-        //각도 차이에 따라 x, z축 길이를 보정하고
-        //벡터 회전을 진행함
-        //사용자와 휴대폰의 거리 이용 0.3m라고 가정
-        if(degree > 0){ //각도가 양수면 내가 앵커보다 큰 각이었음
-            //둘의 각도 차이 절대값이 90이하일때 체크해야할듯
-            if(Math.abs(degree) < 90){
-                if(Math.abs(degree) < 45) {//또 45보다 작으면
-                    vector3.x = vector3.x - xControl;
-                    vector3.z = vector3.z - zControlFar; //z 더 멀리
-                }else {
-                    vector3.x = vector3.x - xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }
-            }else if(Math.abs(degree) < 180){ //90보다 크면 위에 반대로
-                if(Math.abs(degree) < 135) {//또 45보다 작으면
-                    vector3.x = vector3.x - xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }else {
-                    vector3.x = vector3.x - xControl;
-                    vector3.z = vector3.z - zControlFar; //z 더 멀리
-                }
-            }else if(Math.abs(degree) < 270){
-                if(Math.abs(degree) < 225) {
-                    vector3.x = vector3.x - xControl;
-                    vector3.z = vector3.z - zControlFar; //z 더 멀리
-                }else {
-                    vector3.x = vector3.x - xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }
-
-            }else {
-                if(Math.abs(degree) < 315) {
-                    vector3.x = vector3.x - xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }else {
-                    vector3.x = vector3.x - xControl;
-                    vector3.z = vector3.z - zControlFar; //z 더 멀리
-                }
-
-            }
-//            vector3.x = vector3.x - 0.1f;
-//            vector3.z = vector3.z - 0.15f;
-        }else{ // 앵커각이 더 클 때
-            if(Math.abs(degree) < 90){
-                if(Math.abs(degree) < 45) {
-                    vector3.x = vector3.x + xControl;
-                    vector3.z = vector3.z - zControlFar;
-                }else {
-                    vector3.x = vector3.x + xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }
-            }else if(Math.abs(degree) < 180) {
-                if(Math.abs(degree) < 135) {
-                    vector3.x = vector3.x + xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }else {
-                    vector3.x = vector3.x + xControl;
-                    vector3.z = vector3.z - zControlFar;
-                }
-
-            }else if(Math.abs(degree) < 270){
-                if(Math.abs(degree) < 225) {
-                    vector3.x = vector3.x + xControl;
-                    vector3.z = vector3.z - zControlFar;
-                }else {
-                    vector3.x = vector3.x + xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }
-
-            }else {
-                if(Math.abs(degree) < 315) {
-                    vector3.x = vector3.x + xControlFar;
-                    vector3.z = vector3.z - zControl;
-                }else {
-                    vector3.x = vector3.x + xControl;
-                    vector3.z = vector3.z - zControlFar;
-                }
-
-            }
-//            vector3.x = vector3.x + 0.1f;
-//            vector3.z = vector3.z - 0.15f;
-        }
+//        // 여기 차라리 카메라 벡터를 이용하는게 좋을듯
+//
+//        float xControl = 0.05f;
+//        float xControlFar = xControl + 0.05f;
+//        float xControlFarMore = xControlFar + 0.05f;
+//
+//        float zControl = 0.1f;
+//        float zControlFar = zControl + 0.05f;
+//
+//        //각도 차이에 따라 x, z축 길이를 보정하고
+//        //벡터 회전을 진행함
+//        //사용자와 휴대폰의 거리 이용 0.3m라고 가정
+//        if(degree > 0){ //각도가 양수면 내가 앵커보다 큰 각이었음
+//            //둘의 각도 차이 절대값이 90이하일때 체크해야할듯
+//            if(Math.abs(degree) < 90){
+//                if(Math.abs(degree) < 45) {//또 45보다 작으면
+//                    vector3.x = vector3.x - xControlFar;
+//                    vector3.z = vector3.z - zControlFar; //z 더 멀리
+//                }else {
+//                    vector3.x = vector3.x - xControlFarMore;
+//                    vector3.z = vector3.z - zControl;
+//                }
+//            }else if(Math.abs(degree) < 180){ //90보다 크면 위에 반대로
+//                if(Math.abs(degree) < 135) {//또 45보다 작으면
+//                    vector3.x = vector3.x - xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }else {
+//                    vector3.x = vector3.x - xControl;
+//                    vector3.z = vector3.z - zControlFar; //z 더 멀리
+//                }
+//            }else if(Math.abs(degree) < 270){
+//                if(Math.abs(degree) < 225) {
+//                    vector3.x = vector3.x - xControl;
+//                    vector3.z = vector3.z - zControlFar; //z 더 멀리
+//                }else {
+//                    vector3.x = vector3.x - xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }
+//
+//            }else {
+//                if(Math.abs(degree) < 315) {
+//                    vector3.x = vector3.x - xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }else {
+//                    vector3.x = vector3.x - xControl;
+//                    vector3.z = vector3.z - zControlFar; //z 더 멀리
+//                }
+//
+//            }
+////            vector3.x = vector3.x - 0.1f;
+////            vector3.z = vector3.z - 0.15f;
+//        }else{ // 앵커각이 더 클 때
+//            if(Math.abs(degree) < 90){
+//                if(Math.abs(degree) < 45) {
+//                    vector3.x = vector3.x + xControl;
+//                    vector3.z = vector3.z - zControlFar;
+//                }else {
+//                    vector3.x = vector3.x + xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }
+//            }else if(Math.abs(degree) < 180) {
+//                if(Math.abs(degree) < 135) {
+//                    vector3.x = vector3.x + xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }else {
+//                    vector3.x = vector3.x + xControl;
+//                    vector3.z = vector3.z - zControlFar;
+//                }
+//
+//            }else if(Math.abs(degree) < 270){
+//                if(Math.abs(degree) < 225) {
+//                    vector3.x = vector3.x + xControl;
+//                    vector3.z = vector3.z - zControlFar;
+//                }else {
+//                    vector3.x = vector3.x + xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }
+//
+//            }else {
+//                if(Math.abs(degree) < 315) {
+//                    vector3.x = vector3.x + xControlFar;
+//                    vector3.z = vector3.z - zControl;
+//                }else {
+//                    vector3.x = vector3.x + xControl;
+//                    vector3.z = vector3.z - zControlFar;
+//                }
+//
+//            }
+////            vector3.x = vector3.x + 0.1f;
+////            vector3.z = vector3.z - 0.15f;
+//        }
 
         Vector3 rotatedVector = new Vector3(
                 (float) (vector3.x * Math.cos(Math.toRadians(degree)) - vector3.z * Math.sin(Math.toRadians(degree))),
@@ -156,7 +159,7 @@ public class PoseManager {
 
     // 방위각에 따라 돌리는 코드는 이상이 없음
     // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
-    public Pose resolveRealPose(Pose pose, int degree){ //좌표간 거리는 잠시 나중에 처리하자
+    public Pose resolveRealPose(Pose pose, int degree, Vector3 cameravector){ //좌표간 거리는 잠시 나중에 처리하자
 
         float[] tmpT = pose.getTranslation();
         float[] tmpR = pose.getRotationQuaternion();
@@ -169,6 +172,13 @@ public class PoseManager {
         );
 
         Vector3 rotatedVector = vertorRotate(vector3, degree);
+
+        //카메라 벡터 반대 방향으로 하고 벡터 더함
+        //카메라 벡터를 사용가능한 상태로 바꿔줘야함
+//        cameravector.x = -cameravector.x;
+//        cameravector.y = -cameravector.y;
+//        cameravector.z = -cameravector.z;
+//        rotatedVector = Vector3.add(rotatedVector, cameravector);
 
         Pose resolvePose = new Pose(
                 new float[]{rotatedVector.x, rotatedVector.y, rotatedVector.z},
