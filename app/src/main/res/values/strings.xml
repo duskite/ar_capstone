@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ar_capstone</string>
+
+    <string-array name="channel_array">
+        <item>base_channel</item>
+        <item>test_ysy</item>
+    </string-array>
 </resources>
