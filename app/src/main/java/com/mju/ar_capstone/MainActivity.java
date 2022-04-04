@@ -47,7 +47,7 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private Button btnMap, btnArSf;
+    private Button btnMap, btnArSf, btnAnchorList;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private TextView tvNorth, tvNorthNomalized;
     private Spinner spinner;
-    private String[] channelNames = {"base_channel", "test_ysy"};
+    private String[] channelNames = {"test_ysy", "base_channel"};
     private String selectedChannel = "base_channel";
 
 
@@ -119,6 +119,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
+            }
+        });
+
+        btnAnchorList = (Button) findViewById(R.id.btnAnchorList);
+        btnAnchorList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AnchorListDialog anchorListDialog = new AnchorListDialog(MainActivity.this, selectedChannel);
+                anchorListDialog.show();
             }
         });
 

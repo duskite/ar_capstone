@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class FirebaseManager {
@@ -62,9 +63,24 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
+    //사용자가 생성한 앵커 리스트만 리턴
+    public ArrayList<WrappedAnchor> getWrappedAnchorList(String userID){
+
+        ArrayList<WrappedAnchor> list = new ArrayList<>();
+
+        Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
+        while (iterator.hasNext()) {
+            WrappedAnchor wrappedAnchor = iterator.next();
+            if((wrappedAnchor.getUserID()).equals(userID)){
+                list.add(wrappedAnchor);
+            }
+        }
+
+        return list;
+    }
     // 데이터를 다른 곳에서 한번 가져간후 호출하면 리스트 비워줌
     public void clearWrappedAnchorList(){
-        wrappedAnchorList.clear();
+//        wrappedAnchorList.clear();
     }
 
 
