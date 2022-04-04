@@ -33,7 +33,6 @@ public class CustomDialog extends Dialog {
     }
     AnchorType anchorType;
 
-
     public EditText dialogEdt;
     public ImageView dialogImg;
     private TextView textView;

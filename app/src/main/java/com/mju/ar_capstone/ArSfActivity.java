@@ -124,6 +124,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private final int LOAD_DISTANCE = 30;
 
     private int azimuth = 0;
+    private String channel;
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
@@ -160,15 +161,19 @@ public class ArSfActivity extends AppCompatActivity implements
         Intent intent = getIntent();
         azimuth = intent.getIntExtra("azimuth", 0);
         Log.d("방위각 불러오기 인텐트", String.valueOf(azimuth));
+        channel = intent.getStringExtra("channel");
+        Log.d("채널", "받아온거" + channel);
 
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
-        firebaseManager = new FirebaseManager("base_channel");
+        firebaseManager = new FirebaseManager(channel);
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
+        cloudManager.setFirebaseManager(firebaseManager);
+        fireStorageManager.setFirebaseManager(firebaseManager);
 
         poseManager = new PoseManager();
         //gps는 ar화면이 불러와지는 순간으로만 체크
@@ -204,9 +209,6 @@ public class ArSfActivity extends AppCompatActivity implements
             config.setDepthMode(Config.DepthMode.AUTOMATIC);
         }
         session.configure(config);
-
-        cloudManager.setFirebaseManager(firebaseManager);
-        fireStorageManager.setFirebaseManager(firebaseManager);
     }
 
 
