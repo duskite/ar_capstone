@@ -13,6 +13,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -70,15 +72,19 @@ import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.PoseManager;
 import com.mju.ar_capstone.helpers.SensorAllManager;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
         BaseArFragment.OnTapArPlaneListener,
         BaseArFragment.OnSessionConfigurationListener,
-        ArFragment.OnViewCreatedListener{
+        ArFragment.OnViewCreatedListener {
 
     private ArFragment arFragment;
     private ViewRenderable selectRenderable;
@@ -106,7 +112,27 @@ public class ArSfActivity extends AppCompatActivity implements
     private ImageView tmpImageView;
     private Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
-    private MediaPlayer mediaPlayer;
+
+
+    //xml 변수
+    ImageButton audioRecordImageBtn;
+    TextView audioRecordText;
+
+    // 오디오 파일관련 변수
+    // 오디오 권한
+    private String recordPermission = Manifest.permission.RECORD_AUDIO;
+    private int PERMISSION_CODE = 21;
+
+    // 오디오 파일 녹음 관련 변수
+    private MediaRecorder mediaRecorder;
+    private String audioFileName; // 오디오 녹음 생성 파일 이름
+    private boolean isRecording = false;    // 현재 녹음 상태를 확인하기 위함.
+    private Uri audioUri = null; // 오디오 파일 uri
+
+    // 오디오 파일 재생 관련 변수
+    private MediaPlayer mediaPlayer = null;
+    private Boolean isPlaying = false;
+    ImageView playIcon;
 
 
     // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
@@ -133,11 +159,11 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        if(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
             //화면 세로
             Log.d("화면 전환", "세로");
             DEVICE_LANDSCAPE = false;
-        }else if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+        } else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             Log.d("화면 전환", "가로");
             DEVICE_LANDSCAPE = true;
         }
@@ -198,6 +224,7 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러올때 좀 미리할 좋은 방법을 고민해야함
         preLoadModels();
     }
+
     @Override
     public void onSessionConfiguration(Session session, Config config) {
         if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
@@ -210,13 +237,13 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-    public void preLoadModels(){
+    public void preLoadModels() {
 
         //모델 로드, 미리 만들어놓는거임
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
         makePreModels(MP3_MODEL);
-        for(int i=0; i<30; i++){
+        for (int i = 0; i < 30; i++) {
             makePreModels(TEXT_MODEL);
             makePreModels(IMAGE_MODEL);
 
@@ -225,12 +252,12 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-    //미리 렌더러블을 만들어 놓기
-    public void makePreModels(int type){
+    //미리 렌더러블을 만들어 놓기..
+    public void makePreModels(int type) {
         WeakReference<ArSfActivity> weakActivity = new WeakReference<>(this);
 
         Log.d("불러오기", "makePreModels 시작");
-        if (type == TEXT_MODEL){
+        if (type == TEXT_MODEL) {
             Log.d("불러오기", "텍스트 모델 미리 만들러옴");
             //텍스트 모델 생성
             ViewRenderable.builder()
@@ -246,7 +273,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == IMAGE_MODEL){
+        } else if (type == IMAGE_MODEL) {
             // 이미지 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_image)
@@ -261,7 +288,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == SELECT_MODEL){
+        } else if (type == SELECT_MODEL) {
             //선택 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_select)
@@ -276,7 +303,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else if(type == MP3_MODEL){
+        } else if (type == MP3_MODEL) {
             //mp3 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_mp3)
@@ -297,10 +324,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
     }
 
-
     // 한번 만들어 놓은 렌더러블은 수정가능함
     // 각각 다른 글자 띄우려면 매번 빌드해야한다고 함...
-    public ViewRenderable makeTextModels(String text){
+    public ViewRenderable makeTextModels(String text) {
 
         Log.d("불러오기", "makeTextModels");
         Log.d("불러오기", "makeTextModels 가져온 텍스트: " + text);
@@ -311,76 +337,173 @@ public class ArSfActivity extends AppCompatActivity implements
 
         return textRenderableList.get(cntTextRenderable);
     }
-    public ViewRenderable makeImageModels(){
+
+    public ViewRenderable makeImageModels() {
 
         Log.d("이미지", "makeImageModels");
 
         ImageView imageView = (ImageView) imageRenderableList.get(cntImageRenderable).getView().findViewById(R.id.imgView);
 
         // 사용자가 다이얼로그에서 선택한 이미지가 tmpImage에 Uri로 들어가는거임
-        if (tmpImageUri != null){
+        if (tmpImageUri != null) {
             Log.d("이미지", "이미지 변경 성공");
             Glide.with(this).load(tmpImageUri).into(imageView);
-        }else{ //이미지가 선택 오류일때
+        } else { //이미지가 선택 오류일때
             Log.d("이미지", "tmpImageUri가 비어있음");
             Glide.with(this).load(R.drawable.ic_launcher).into(imageView);
         }
 
         return imageRenderableList.get(cntImageRenderable);
     }
-    public ViewRenderable makeMp3Models(){
-        Button buttonPlay = (Button) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);
-        Button buttonStop = (Button) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3stop);
-        buttonPlay.setOnClickListener(new View.OnClickListener() {
+
+    public ViewRenderable makeMp3Models() {
+        audioRecordImageBtn = findViewById(R.id.audioRecordImageBtn);
+        audioRecordText = findViewById(R.id.audioRecordText);
+
+        audioRecordImageBtn.setOnClickListener(new Button.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.test);
-                mediaPlayer.start();
+            public void onClick(View view) {
+                if (isRecording) {
+                    // 현재 녹음 중 O
+                    // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
+                    isRecording = false; // 녹음 상태 값
+                    audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_record, null)); // 녹음 상태 아이콘 변경
+                    audioRecordText.setText("녹음 시작"); // 녹음 상태 텍스트 변경
+                    stopRecording();
+                    // 녹화 이미지 버튼 변경 및 리코딩 상태 변수값 변경
+                } else {
+                    // 현재 녹음 중 X
+                    /*절차
+                     *       1. Audio 권한 체크
+                     *       2. 처음으로 녹음 실행한건지 여부 확인
+                     * */
+                    if (checkAudioPermission()) {
+                        // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
+                        isRecording = true; // 녹음 상태 값
+                        audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_recording_red, null)); // 녹음 상태 아이콘 변경
+                        audioRecordText.setText("녹음 중"); // 녹음 상태 텍스트 변경
+                        startRecording();
+                    }
+                }
             }
-        });
-        buttonStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+
+
+            // 오디오 파일 권한 체크
+            private boolean checkAudioPermission() {
+                if (ActivityCompat.checkSelfPermission(getApplicationContext(), recordPermission) == PackageManager.PERMISSION_GRANTED) {
+                    return true;
+                } else {
+                    ActivityCompat.requestPermissions(this, new String[]{recordPermission}, PERMISSION_CODE);
+                    return false;
+                }
+            }
+
+            // 녹음 시작
+            private void startRecording() {
+                //파일의 외부 경로 확인
+                String recordPath = getExternalFilesDir("/").getAbsolutePath();
+                // 파일 이름 변수를 현재 날짜가 들어가도록 초기화. 그 이유는 중복된 이름으로 기존에 있던 파일이 덮어 쓰여지는 것을 방지하고자 함.
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                audioFileName = recordPath + "/" + "RecordExample_" + timeStamp + "_" + "audio.mp4";
+
+                //Media Recorder 생성 및 설정
+                mediaRecorder = new MediaRecorder();
+                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                mediaRecorder.setOutputFile(audioFileName);
+                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+                try {
+                    mediaRecorder.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                //녹음 시작
+                mediaRecorder.start();
+            }
+
+            // 녹음 종료
+            private void stopRecording() {
+                // 녹음 종료 종료
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+
+                // 파일 경로(String) 값을 Uri로 변환해서 저장
+                //      - Why? : 리사이클러뷰에 들어가는 ArrayList가 Uri를 가지기 때문
+                //      - File Path를 알면 File을  인스턴스를 만들어 사용할 수 있기 때문
+                audioUri = Uri.parse(audioFileName);
+
+            }
+
+            // 녹음 파일 재생
+            private void playAudio(File file) {
+                mediaPlayer = new MediaPlayer();
+
+                try {
+                    mediaPlayer.setDataSource(file.getAbsolutePath());
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                playIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_audio_pause, null));
+                isPlaying = true;
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        stopAudio();
+                    }
+                });
+
+            }
+
+            // 녹음 파일 중지
+            private void stopAudio() {
+                playIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_audio_play, null));
+                isPlaying = false;
                 mediaPlayer.stop();
             }
         });
-
         return mp3RenderableList.get(cntMp3Renderable);
     }
 
 
-    //현재 위치 가져오기
-    public void checkGPS(boolean gpsCheck) {
-        Log.d("순서", "checkGPS");
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Task<Location> currentLocationTask = fusedLocationProviderClient.getCurrentLocation(
-                100,
-                cancellationTokenSource.getToken()
-        );
-        currentLocationTask.addOnCompleteListener(new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                if(task.isSuccessful()){
-                    if(gpsCheck){
-                        Location location = task.getResult();
-                        lat = location.getLatitude();
-                        lng = location.getLongitude();
-                    }
-                    Log.d("정밀 위치", "lat: " + lat + ", lng: " + lng);
-                }
+        //현재 위치 가져오기
+        public void checkGPS ( boolean gpsCheck) {
+            Log.d("순서", "checkGPS");
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
             }
-        });
-        Log.d("순서", "checkGPS end");
-    }
+            Task<Location> currentLocationTask = fusedLocationProviderClient.getCurrentLocation(
+                    100,
+                    cancellationTokenSource.getToken()
+            );
+            currentLocationTask.addOnCompleteListener(new OnCompleteListener<Location>() {
+                @Override
+                public void onComplete(@NonNull Task<Location> task) {
+                    if (task.isSuccessful()) {
+                        if (gpsCheck) {
+                            Location location = task.getResult();
+                            lat = location.getLatitude();
+                            lng = location.getLongitude();
+                        }
+                        Log.d("정밀 위치", "lat: " + lat + ", lng: " + lng);
+                    }
+                }
+            });
+            Log.d("순서", "checkGPS end");
+        }
+
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
@@ -494,6 +617,7 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseManager.clearWrappedAnchorList();
     }
 
+
     //임시 앵커 생성 후 실제 앵커까지
     public void createSelectAnchor(HitResult hitResult, Vector3 cameraVector){
 
@@ -577,7 +701,7 @@ public class ArSfActivity extends AppCompatActivity implements
             cntTextRenderable += 1;
 
 
-        }else if(anchorType == CustomDialog.AnchorType.image){
+        }else if(anchorType == CustomDialog.AnchorType.image) {
             //여기는 사용자가 이미지를 등록할때 처리되는 부분임
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
@@ -590,37 +714,39 @@ public class ArSfActivity extends AppCompatActivity implements
 
             cntImageRenderable += 1;
 
-
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-            model.setRenderable(makeMp3Models());
+                model.setRenderable(makeMp3Models());
 
-            makePreModels(MP3_MODEL);
+                makePreModels(MP3_MODEL);
 
-            cntMp3Renderable += 1;
+                cntMp3Renderable += 1;
+            }
+
         }
-    }
+
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose,Vector3 cameraVector, String text, CustomDialog.AnchorType anchorType){
+    public String saveAnchor(Pose pose,Vector3 cameraVector, String text, CustomDialog.AnchorType anchorType) {
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
-        if(anchorType == CustomDialog.AnchorType.text){
+        if (anchorType == CustomDialog.AnchorType.text) {
             cloudManager.hostCloudAnchor(pose, cameraVector, text, userId, lat, lng, azimuth, "text");
-        }else if(anchorType == CustomDialog.AnchorType.image){
+        } else if (anchorType == CustomDialog.AnchorType.image) {
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, cameraVector, path, userId, lat, lng, azimuth,"image");
+            cloudManager.hostCloudAnchor(pose, cameraVector, path, userId, lat, lng, azimuth, "image");
 
 
             fireStorageManager.uploadImage(tmpImageUri);
-        }else if(anchorType == CustomDialog.AnchorType.mp3){
-            cloudManager.hostCloudAnchor(pose, cameraVector,"mp3", userId, lat, lng, azimuth, "mp3");
+        } else if (anchorType == CustomDialog.AnchorType.mp3) {
+            cloudManager.hostCloudAnchor(pose, cameraVector, "mp3", userId, lat, lng, azimuth, "mp3");
         }
         cloudManager.onUpdate();
 
         writeMode = false; // 모든 동작이 이 부분에서 read 모드라고 판단되기 시작함
         return cloudManager.getCurrentAnchorID();
     }
+
 
 
     @Override
@@ -664,7 +790,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     //앵커 방향과 위치 테스트용 삭제 금지
-    public void test_ysy(){
+    public void test_ysy() {
 
 //        Vector3 vector3 = new Vector3(
 //                0,
