@@ -706,7 +706,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         }else if(anchorType == CustomDialog.AnchorType.image) {
-            //여기는 사용자가 이미지를 등록할때 처리되는 부분임
+            //여기는 사용자가 이미지를 등록할때 처리되는 부분임..
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
             Log.d("불러오기", "changeAnchor 앵커 이미지 타입");
