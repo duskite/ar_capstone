@@ -87,7 +87,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager("test_ysy");
-        firebaseManager.registerGPSValueListner();
+        firebaseManager.registerContentsValueListner();
 
 
 
@@ -95,7 +95,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     public void updateAnchors(NaverMap naverMap){
-        List<Marker> listMarker = new ArrayList<Marker>();
+        //List<Marker> listMarker = new ArrayList<Marker>();
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
             //(루프 한번 돌 때 마다 marker객체 생성)
@@ -113,7 +113,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             //마커 클릭 리스너
             marker.setOnClickListener(this);
             //마커에 앵커 타입을 태그로 설정
-            marker.setTag(wrappedAnchor.getAnchorType());
+            marker.setTag(wrappedAnchor.getAnchorType()+"앵커");
         }
 
         firebaseManager.clearWrappedAnchorList();
