@@ -22,6 +22,7 @@ public class FirebaseAuthManager {
     public FirebaseAuthManager(){
         firebaseAuth = FirebaseAuth.getInstance();
         singInAnonymously();
+
     }
 
     //익명 로그인 처리

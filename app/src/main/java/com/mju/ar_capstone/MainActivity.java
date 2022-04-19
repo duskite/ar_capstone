@@ -18,10 +18,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +47,7 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private Button btnMap, btnArSf;
+    private Button btnMap, btnArSf, btnAnchorList;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
@@ -57,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int azimuth;
 
     private TextView tvNorth, tvNorthNomalized;
+    private Spinner spinner;
+    private String[] channelNames = {"test_ysy", "base_channel"};
+    private String selectedChannel = "base_channel";
 
 
     @Override
@@ -76,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
                 intent.putExtra("azimuth", getAzimuth());
+                intent.putExtra("channel", selectedChannel);
+                Log.d("채널", "넘길때" + selectedChannel);
                 startActivity(intent);
             }
         });
@@ -94,6 +102,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 startActivity(intent);
             }
         });
+
+
+        //채널 선택 스피너
+        spinner = (Spinner) findViewById(R.id.spinner_channel);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, channelNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedChannel = channelNames[position];
+                Log.d("채널", "선택" + selectedChannel);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        btnAnchorList = (Button) findViewById(R.id.btnAnchorList);
+        btnAnchorList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AnchorListDialog anchorListDialog = new AnchorListDialog(MainActivity.this, selectedChannel);
+                anchorListDialog.show();
+            }
+        });
+
 
         permisionCheck();
     }

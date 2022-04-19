@@ -114,9 +114,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private FireStorageManager fireStorageManager;
 
 
-    //xml 변수
-    ImageButton audioRecordImageBtn;
-    TextView audioRecordText;
+
 
     // 오디오 파일관련 변수
     // 오디오 권한
@@ -132,7 +130,7 @@ public class ArSfActivity extends AppCompatActivity implements
     // 오디오 파일 재생 관련 변수
     private MediaPlayer mediaPlayer = null;
     private Boolean isPlaying = false;
-    ImageView playIcon;
+    private ImageView playIcon;
 
 
     // 내가 데이터를 쓰는 상황인지 불러오는 상황인지 체크해야할꺼 같음. 이미지를 내가 등록하는 상황인지
@@ -150,6 +148,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private final int LOAD_DISTANCE = 30;
 
     private int azimuth = 0;
+    private String channel;
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
@@ -186,15 +185,19 @@ public class ArSfActivity extends AppCompatActivity implements
         Intent intent = getIntent();
         azimuth = intent.getIntExtra("azimuth", 0);
         Log.d("방위각 불러오기 인텐트", String.valueOf(azimuth));
+        channel = intent.getStringExtra("channel");
+        Log.d("채널", "받아온거" + channel);
 
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
-        firebaseManager = new FirebaseManager("base_channel");
+        firebaseManager = new FirebaseManager(channel);
         firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager();
+        cloudManager.setFirebaseManager(firebaseManager);
+        fireStorageManager.setFirebaseManager(firebaseManager);
 
         poseManager = new PoseManager();
         //gps는 ar화면이 불러와지는 순간으로만 체크
@@ -231,9 +234,6 @@ public class ArSfActivity extends AppCompatActivity implements
             config.setDepthMode(Config.DepthMode.AUTOMATIC);
         }
         session.configure(config);
-
-        cloudManager.setFirebaseManager(firebaseManager);
-        fireStorageManager.setFirebaseManager(firebaseManager);
     }
 
 
@@ -357,8 +357,17 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
     public ViewRenderable makeMp3Models() {
-        audioRecordImageBtn = findViewById(R.id.audioRecordImageBtn);
-        audioRecordText = findViewById(R.id.audioRecordText);
+
+        ImageButton audioRecordImageBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordImageBtn);;
+        TextView audioRecordText = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordText);
+        ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);;
+
+        mp3playBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playAudio(audioUri);
+            }
+        });
 
         audioRecordImageBtn.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -405,17 +414,18 @@ public class ArSfActivity extends AppCompatActivity implements
     // 녹음 시작
     private void startRecording() {
         //파일의 외부 경로 확인
-        String recordPath = getExternalFilesDir("/").getAbsolutePath();
+        String recordPath = getExternalCacheDir().getAbsolutePath();
         // 파일 이름 변수를 현재 날짜가 들어가도록 초기화. 그 이유는 중복된 이름으로 기존에 있던 파일이 덮어 쓰여지는 것을 방지하고자 함.
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        audioFileName = recordPath + "/" + "RecordExample_" + timeStamp + "_" + "audio.mp4";
+        audioFileName = recordPath + "/" + "RecordExample_" + timeStamp + "_" + "audio.3gp";
 
         //Media Recorder 생성 및 설정
         mediaRecorder = new MediaRecorder();
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mediaRecorder.setOutputFile(audioFileName);
+        mediaRecorder.setAudioSamplingRate(44100);
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mediaRecorder.setOutputFile(audioFileName);
 
         try {
             mediaRecorder.prepare();
@@ -431,27 +441,39 @@ public class ArSfActivity extends AppCompatActivity implements
         // 녹음 종료 종료
         mediaRecorder.stop();
         mediaRecorder.release();
+
         mediaRecorder = null;
 
         // 파일 경로(String) 값을 Uri로 변환해서 저장
         //      - Why? : 리사이클러뷰에 들어가는 ArrayList가 Uri를 가지기 때문
         //      - File Path를 알면 File을  인스턴스를 만들어 사용할 수 있기 때문
         audioUri = Uri.parse(audioFileName);
+        Log.d("mp3", audioUri.toString());
+        fireStorageManager.uploadMp3(audioFileName);
 
     }
 
+
+
     // 녹음 파일 재생
-    private void playAudio(File file) {
+    private void playAudio(Uri uri) {
+        // null 값이면 리턴
+        if(uri == null){
+            return;
+        }
+
         mediaPlayer = new MediaPlayer();
 
         try {
-            mediaPlayer.setDataSource(file.getAbsolutePath());
+            mediaPlayer.setDataSource(getApplicationContext(), uri);
+//            mediaPlayer.setDataSource(file.getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        // 여기 변수 선언후 초기화를 한 적이 없어서 null 뜸
         playIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_audio_pause, null));
         isPlaying = true;
 
@@ -466,6 +488,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     // 녹음 파일 중지
     private void stopAudio() {
+        // 여기 변수 선언후 초기화를 한 적이 없어서 null 뜸
         playIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_audio_play, null));
         isPlaying = false;
         mediaPlayer.stop();
@@ -475,38 +498,39 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
 
-        //현재 위치 가져오기
-        public void checkGPS ( boolean gpsCheck) {
-            Log.d("순서", "checkGPS");
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            Task<Location> currentLocationTask = fusedLocationProviderClient.getCurrentLocation(
-                    100,
-                    cancellationTokenSource.getToken()
-            );
-            currentLocationTask.addOnCompleteListener(new OnCompleteListener<Location>() {
-                @Override
-                public void onComplete(@NonNull Task<Location> task) {
-                    if (task.isSuccessful()) {
-                        if (gpsCheck) {
-                            Location location = task.getResult();
-                            lat = location.getLatitude();
-                            lng = location.getLongitude();
-                        }
-                        Log.d("정밀 위치", "lat: " + lat + ", lng: " + lng);
-                    }
-                }
-            });
-            Log.d("순서", "checkGPS end");
+
+    //현재 위치 가져오기
+    public void checkGPS ( boolean gpsCheck) {
+        Log.d("순서", "checkGPS");
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
         }
+        Task<Location> currentLocationTask = fusedLocationProviderClient.getCurrentLocation(
+                100,
+                cancellationTokenSource.getToken()
+        );
+        currentLocationTask.addOnCompleteListener(new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                if (task.isSuccessful()) {
+                    if (gpsCheck) {
+                        Location location = task.getResult();
+                        lat = location.getLatitude();
+                        lng = location.getLongitude();
+                    }
+                    Log.d("정밀 위치", "lat: " + lat + ", lng: " + lng);
+                }
+            }
+        });
+        Log.d("순서", "checkGPS end");
+    }
 
 
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
@@ -706,7 +730,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         }else if(anchorType == CustomDialog.AnchorType.image) {
-            //여기는 사용자가 이미지를 등록할때 처리되는 부분임..
+            //여기는 사용자가 이미지를 등록할때 처리되는 부분임
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
             Log.d("불러오기", "changeAnchor 앵커 이미지 타입");
@@ -719,14 +743,14 @@ public class ArSfActivity extends AppCompatActivity implements
             cntImageRenderable += 1;
 
         }else if(anchorType == CustomDialog.AnchorType.mp3){
-                model.setRenderable(makeMp3Models());
+            model.setRenderable(makeMp3Models());
 
-                makePreModels(MP3_MODEL);
+            makePreModels(MP3_MODEL);
 
-                cntMp3Renderable += 1;
-            }
-
+            cntMp3Renderable += 1;
         }
+
+    }
 
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
@@ -751,7 +775,7 @@ public class ArSfActivity extends AppCompatActivity implements
         return cloudManager.getCurrentAnchorID();
     }
 
-
+//.
 
     @Override
     public void onAttachFragment(@NonNull FragmentManager fragmentManager, @NonNull Fragment fragment) {
@@ -871,7 +895,6 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 }
-
 
 
 
