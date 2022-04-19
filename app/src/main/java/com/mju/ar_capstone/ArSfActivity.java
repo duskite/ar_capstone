@@ -345,10 +345,8 @@ public class ArSfActivity extends AppCompatActivity implements
     public ViewRenderable makeMp3Models() {
 
         ImageButton audioRecordImageBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordImageBtn);
-        ;
         TextView audioRecordText = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordText);
         ImageButton mp3playBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);
-        ;
 
         mp3playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -357,89 +355,8 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         });
 
-        audioRecordImageBtn.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isRecording) {
-                    // 현재 녹음 중 O
-                    // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
-                    isRecording = false; // 녹음 상태 값
-                    audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_record, null)); // 녹음 상태 아이콘 변경
-                    audioRecordText.setText("녹음 시작"); // 녹음 상태 텍스트 변경
-                    stopRecording();
-                    // 녹화 이미지 버튼 변경 및 리코딩 상태 변수값 변경
-                } else {
-                    // 현재 녹음 중 X
-                    /*절차
-                     *       1. Audio 권한 체크
-                     *       2. 처음으로 녹음 실행한건지 여부 확인
-                     * */
-                    if (checkAudioPermission()) {
-                        // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
-                        isRecording = true; // 녹음 상태 값
-                        audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_recording_red, null)); // 녹음 상태 아이콘 변경
-                        audioRecordText.setText("녹음 중"); // 녹음 상태 텍스트 변경
-                        startRecording();
-                    }
-                }
-            }
-        });
         return mp3RenderableList.get(cntMp3Renderable);
     }
-
-
-        // 오디오 파일 권한 체크
-        private boolean checkAudioPermission () {
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(), recordPermission) == PackageManager.PERMISSION_GRANTED)
-                return true;
-            else {
-                ActivityCompat.requestPermissions(this, new String[]{recordPermission}, PERMISSION_CODE);
-                return false;
-            }
-        }
-
-        // 녹음 시작
-        private void startRecording () {
-            //파일의 외부 경로 확인
-            String recordPath = getExternalCacheDir().getAbsolutePath();
-            // 파일 이름 변수를 현재 날짜가 들어가도록 초기화. 그 이유는 중복된 이름으로 기존에 있던 파일이 덮어 쓰여지는 것을 방지하고자 함.
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            audioFileName = recordPath + "/" + "RecordExample_" + timeStamp + "_" + "audio.3gp";
-
-            //Media Recorder 생성 및 설정
-            mediaRecorder = new MediaRecorder();
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            mediaRecorder.setAudioSamplingRate(44100);
-            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mediaRecorder.setOutputFile(audioFileName);
-
-            try {
-                mediaRecorder.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            //녹음 시작
-            mediaRecorder.start();
-        }
-
-        // 녹음 종료
-        private void stopRecording () {
-            // 녹음 종료 종료
-            mediaRecorder.stop();
-            mediaRecorder.release();
-
-            mediaRecorder = null;
-
-            // 파일 경로(String) 값을 Uri로 변환해서 저장
-            //      - Why? : 리사이클러뷰에 들어가는 ArrayList가 Uri를 가지기 때문
-            //      - File Path를 알면 File을  인스턴스를 만들어 사용할 수 있기 때문
-            audioUri = Uri.parse(audioFileName);
-            Log.d("mp3", audioUri.toString());
-            fireStorageManager.uploadMp3(audioFileName);
-
-        }
-
 
         // 녹음 파일 재생
         private void playAudio (Uri uri){
@@ -479,9 +396,6 @@ public class ArSfActivity extends AppCompatActivity implements
             isPlaying = false;
             mediaPlayer.stop();
         }
-
-
-
 
 
 
@@ -584,8 +498,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
                             Log.d("순서", "예스 클릭됨");
                             changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(),cameraVector, tmpText, anchorType);
+                            saveAnchor(anchor.getPose(), cameraVector, tmpText, anchorType);
                         }
+
                         @Override
                         public void onNegativeClick() {
                             firebaseManager.deleteContent(cloudAnchorID);
@@ -602,7 +517,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         }
 
                         @Override
-                        public void onImageButtonClick(ImageButton audioRecordImageBtn){
+                        public void onImageButtonClick(ImageButton audioRecordImageBtn) {
                             writeMode = true;
 
                             if (isRecording) {
@@ -630,10 +545,12 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         }
                     });
-                    customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+                    customDialog.getWindow().
+                    setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                     customDialog.show();
-                }
+            }
             });
 
 
@@ -721,6 +638,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     @Override
                     public void onImageButtonClick(ImageButton audioRecordImageBtn){
+
                         writeMode = true;
 
                         if (isRecording) {
@@ -753,6 +671,58 @@ public class ArSfActivity extends AppCompatActivity implements
                 customDialog.show();
             }
         });
+    }
+
+    // 오디오 파일 권한 체크
+    private boolean checkAudioPermission () {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), recordPermission) == PackageManager.PERMISSION_GRANTED)
+            return true;
+        else {
+            ActivityCompat.requestPermissions(this, new String[]{recordPermission}, PERMISSION_CODE);
+            return false;
+        }
+    }
+
+    // 녹음 시작
+    private void startRecording () {
+        //파일의 외부 경로 확인
+        String recordPath = getExternalCacheDir().getAbsolutePath();
+        // 파일 이름 변수를 현재 날짜가 들어가도록 초기화. 그 이유는 중복된 이름으로 기존에 있던 파일이 덮어 쓰여지는 것을 방지하고자 함.
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        audioFileName = recordPath + "/" + "RecordExample_" + timeStamp + "_" + "audio.3gp";
+
+        //Media Recorder 생성 및 설정
+        mediaRecorder = new MediaRecorder();
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mediaRecorder.setAudioSamplingRate(44100);
+        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mediaRecorder.setOutputFile(audioFileName);
+
+        try {
+            mediaRecorder.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //녹음 시작
+        mediaRecorder.start();
+    }
+
+    // 녹음 종료
+    private void stopRecording () {
+        // 녹음 종료
+        mediaRecorder.stop();
+        mediaRecorder.release();
+
+        mediaRecorder = null;
+
+        // 파일 경로(String) 값을 Uri로 변환해서 저장
+        //      - Why? : 리사이클러뷰에 들어가는 ArrayList가 Uri를 가지기 때문
+        //      - File Path를 알면 File을  인스턴스를 만들어 사용할 수 있기 때문
+        audioUri = Uri.parse(audioFileName);
+        Log.d("mp3", audioUri.toString());
+        fireStorageManager.uploadMp3(audioFileName);
+
     }
 
 
