@@ -341,7 +341,6 @@ public class ArSfActivity extends AppCompatActivity implements
     public ViewRenderable makeImageModels() {
 
         Log.d("이미지", "makeImageModels");
-
         ImageView imageView = (ImageView) imageRenderableList.get(cntImageRenderable).getView().findViewById(R.id.imgView);
 
         // 사용자가 다이얼로그에서 선택한 이미지가 tmpImage에 Uri로 들어가는거임
@@ -358,9 +357,9 @@ public class ArSfActivity extends AppCompatActivity implements
 
     public ViewRenderable makeMp3Models() {
 
-        ImageButton audioRecordImageBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordImageBtn);;
+        ImageButton audioRecordImageBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordImageBtn);
         TextView audioRecordText = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordText);
-        ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);;
+        ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);
 
         mp3playBtn.setOnClickListener(new View.OnClickListener() {
             @Override

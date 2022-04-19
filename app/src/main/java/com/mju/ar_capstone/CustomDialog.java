@@ -1,12 +1,14 @@
 package com.mju.ar_capstone;
 
 import android.app.Dialog;
+import android.app.MediaRouteButton;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -33,9 +35,10 @@ public class CustomDialog extends Dialog {
     }
     AnchorType anchorType;
 
+    public ImageButton audioRecordImageBtn;
     public EditText dialogEdt;
     public ImageView dialogImg;
-    private TextView textView;
+    private TextView textView, audioRecordText;
 
     public CustomDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
         super(context);
@@ -62,6 +65,8 @@ public class CustomDialog extends Dialog {
         dialogRdBtnMp3 = (RadioButton) findViewById(R.id.dialog_rdbtn_mp3);
         dialogEdt = (EditText) findViewById(R.id.dialog_edt);
         dialogImg = (ImageView) findViewById(R.id.dialog_img);
+        audioRecordImageBtn = (ImageButton) findViewById(R.id.audioRecordImageBtn);
+        audioRecordText = (TextView) findViewById(R.id.audioRecordText);
 
         textView = (TextView) findViewById(R.id.dialog_tv_test);
 
@@ -72,6 +77,8 @@ public class CustomDialog extends Dialog {
                     textView.setText("텍스트 모드");
                     dialogEdt.setVisibility(View.VISIBLE);
                     dialogImg.setVisibility(View.GONE);
+                    audioRecordImageBtn.setVisibility(View.GONE);
+                    audioRecordText.setVisibility(View.GONE);
                     anchorType = anchorType.text;
 
 
@@ -81,16 +88,22 @@ public class CustomDialog extends Dialog {
                     textView.setText("이미지 모드");
                     dialogImg.setVisibility(View.VISIBLE);
                     dialogEdt.setVisibility(View.GONE);
+                    audioRecordImageBtn.setVisibility(View.GONE);
+                    audioRecordText.setVisibility(View.GONE);
                     anchorType = anchorType.image;
 
                     Log.d("순서", "이미지 모드 눌림");
 
 
                 }else if(checkedId == R.id.dialog_rdbtn_mp3){
-
-                    dialogImg.setVisibility(View.GONE);
+                    textView.setText("음성 모드");
+                    audioRecordImageBtn.setVisibility(View.VISIBLE);
+                    audioRecordText.setVisibility(View.VISIBLE);
                     dialogEdt.setVisibility(View.GONE);
+                    dialogImg.setVisibility(View.GONE);
                     anchorType = anchorType.mp3;
+
+                    Log.d("순서", "음성 모드 눌림");
 
                 }
             }
@@ -114,6 +127,11 @@ public class CustomDialog extends Dialog {
             this.customDialogClickListener.onImageClick(dialogImg);
         });
     }
+
+
+
+
+
 
     public interface CustomDialogClickListener{
         void onPositiveClick(String tmpText, AnchorType anchorType);
