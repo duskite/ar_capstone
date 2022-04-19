@@ -38,7 +38,8 @@ public class CustomDialog extends Dialog {
     public ImageButton audioRecordImageBtn;
     public EditText dialogEdt;
     public ImageView dialogImg;
-    private TextView textView, audioRecordText;
+    private TextView textView;
+    public TextView audioRecordText;
 
     public CustomDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
         super(context);
@@ -126,17 +127,17 @@ public class CustomDialog extends Dialog {
         dialogImg.setOnClickListener(v -> {
             this.customDialogClickListener.onImageClick(dialogImg);
         });
+
+        audioRecordImageBtn.setOnClickListener(v -> {
+            this.customDialogClickListener.onImageButtonClick(audioRecordImageBtn);
+        });
     }
-
-
-
-
 
 
     public interface CustomDialogClickListener{
         void onPositiveClick(String tmpText, AnchorType anchorType);
         void onNegativeClick();
-
         void onImageClick(ImageView dialogImg);
+        void onImageButtonClick(ImageButton audioRecordImageBtn);
     }
 }
