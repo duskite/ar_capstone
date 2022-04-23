@@ -226,7 +226,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     public void preLoadModels() {
 
-        //모델 로드, 미리 만들어놓는거임
+        //모델 로드, 미리 만들어놓는거임//
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
         makePreModels(MP3_MODEL);
