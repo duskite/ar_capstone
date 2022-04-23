@@ -8,6 +8,18 @@
     android:orientation="vertical"
     android:background="#1A2933"
     >
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        >
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnAnchorList"
+            android:text="내가 남긴 앵커"
+            />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,6 +53,12 @@
             android:gravity="center"
             android:textColor="@color/white"
             android:textSize="40dp"
+            />
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/spinner_channel"
             />
 
         <Button

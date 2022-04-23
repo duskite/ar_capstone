@@ -22,25 +22,31 @@ import com.google.firebase.storage.UploadTask;
 import com.mju.ar_capstone.ArSfActivity;
 import com.mju.ar_capstone.R;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.URI;
 
 public class FireStorageManager {
 
     private FirebaseManager firebaseManager;
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference;
-    private StorageReference tmpReferece;
+    private StorageReference imgReferece;
+    private StorageReference mp3Reference;
 
     //이미지 파일명 동적 생성
     private static final String strImageID = "imageID_";
-    private static final String FILE_TYPE = ".jpg";
+    private static final String JPG_TYPE = ".jpg";
     private String currentImageID;
 
     public FireStorageManager(){
         firebaseStorage = FirebaseStorage.getInstance();
         storageReference = firebaseStorage.getReference();
-        tmpReferece = storageReference.child("image");
+        imgReferece = storageReference.child("image");
+        mp3Reference = storageReference.child("mp3");
     }
 
     public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
@@ -58,7 +64,7 @@ public class FireStorageManager {
     public void downloadImage(Context context, String path, TransformableNode model, ViewRenderable viewRenderable){
         Log.d("다운로드", "이미지 다운로드 시작");
 
-        tmpReferece.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        imgReferece.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 Log.d("다운로드", "이미지 다운로드 성공");
@@ -86,7 +92,7 @@ public class FireStorageManager {
 
     //액티비티에서 Uri 넘겨줘야함
     public void uploadImage(Uri file){
-        UploadTask uploadTask = tmpReferece.child(currentImageID + FILE_TYPE).putFile(file);
+        UploadTask uploadTask = imgReferece.child(currentImageID + JPG_TYPE).putFile(file);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -97,6 +103,32 @@ public class FireStorageManager {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Log.d("순서 업로드", "업로드 성공");
+            }
+        });
+    }
+
+    //액티비티에서 Uri 넘겨줘야함
+    public void uploadMp3(String fileName) {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(fileName);
+        }catch (FileNotFoundException e){
+            Log.d("mp3", "파일이 없음");
+        }
+
+        String[] names = fileName.split("/");
+        // Record ... 어쩌구 하는 부분으로만 저장
+        UploadTask uploadTask = mp3Reference.child(names[8]).putStream(inputStream);
+
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("mp3", "업로드 실패");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Log.d("mp3", "업로드 성공");
             }
         });
     }
