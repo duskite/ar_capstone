@@ -53,6 +53,15 @@
         </LinearLayout>
 
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/userId"
+            android:gravity="center"
+            android:text="로그인 실패"
+            />
+
+
         <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

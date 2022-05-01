@@ -52,17 +52,24 @@ public class MainActivity extends AppCompatActivity {
     private RadioGroup rdUserType;
     private int userType = 0;
 
+    private TextView tvUserId;
     private Spinner spinner;
-    private String[] channelNames = {"test_ysy", "base_channel"};
-    private String selectedChannel = "base_channel";
+    private String[] channelNames = {"test", "base_channel"};
+    private String selectedChannel = "test";
 
+    private FirebaseAuthManager firebaseAuthManager;
+//    private FirebaseManager firebaseManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 육성연 수정중
+        firebaseAuthManager = new FirebaseAuthManager();
+        tvUserId = (TextView) findViewById(R.id.userId);
+        tvUserId.setText("로그인 성공\n" + "익명ID: " + firebaseAuthManager.getUID());
+
+
         // 입장하기 인벤토리로 이동
         rdUserType = (RadioGroup) findViewById(R.id.userType);
         rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -88,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
                 intent.putExtra("channel", selectedChannel);
                 intent.putExtra("userType", userType);
+                Log.d("채널넘기는거 메인", selectedChannel);
                 startActivity(intent);
             }
         });

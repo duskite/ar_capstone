@@ -1,0 +1,12 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"
+    android:layout_height="100dp"
+    android:layout_weight="1"
+    android:background="@drawable/rounded_bg"
+    android:textColor="@color/black"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="6dp"
+    android:text="참가자는 앵커를 생성할 수 없습니다."
+    android:textAlignment="center"
+    android:id="@+id/tvDeny"/>

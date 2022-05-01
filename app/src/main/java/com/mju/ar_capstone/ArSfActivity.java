@@ -1,16 +1,14 @@
 package com.mju.ar_capstone;
 
 import android.Manifest;
-import android.content.Context;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -18,15 +16,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,7 +32,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentOnAttachListener;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -51,16 +45,12 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
-import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.ArSceneView;
-import com.google.ar.sceneform.Camera;
 import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.PlaneRenderer;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -71,7 +61,6 @@ import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.PoseManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -90,6 +79,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArrayList<ViewRenderable> textRenderableList = new ArrayList<>();
     private ArrayList<ViewRenderable> imageRenderableList = new ArrayList<>();
     private ArrayList<ViewRenderable> mp3RenderableList = new ArrayList<>();
+    private ViewRenderable denyRenderable;
 
     private static int cntTextRenderable = 0;
     private static int cntImageRenderable = 0;
@@ -97,6 +87,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //모델 종류 상수 선언
     private static final int SELECT_MODEL = -1;
+
     private static final int TEXT_MODEL = 0;
     private static final int IMAGE_MODEL = 1;
     private static final int MP3_MODEL = 2;
@@ -105,7 +96,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
 
-    private Button btnAnchorLoad, btnMapApp;
+    private Button btnAnchorLoad;
 
     private final int GALLERY_CODE = 10;
     private ImageView tmpImageView;
@@ -189,6 +180,8 @@ public class ArSfActivity extends AppCompatActivity implements
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
+        Log.d("채널넘기는거 ar", channel);
+
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
@@ -230,11 +223,11 @@ public class ArSfActivity extends AppCompatActivity implements
         //모델 로드, 미리 만들어놓는거임
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
+        makePreModels(-99);
         makePreModels(MP3_MODEL);
         for (int i = 0; i < 30; i++) {
             makePreModels(TEXT_MODEL);
             makePreModels(IMAGE_MODEL);
-
         }
 
     }
@@ -300,6 +293,21 @@ public class ArSfActivity extends AppCompatActivity implements
                         ArSfActivity activity = weakActivity.get();
                         if (activity != null) {
                             activity.mp3RenderableList.add(renderable);
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
+                        return null;
+                    });
+        }else{
+            //선택 모델 생성
+            ViewRenderable.builder()
+                    .setView(this, R.layout.view_model_deny)
+                    .build()
+                    .thenAccept(renderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.denyRenderable = renderable;
                         }
                     })
                     .exceptionally(throwable -> {
@@ -483,8 +491,6 @@ public class ArSfActivity extends AppCompatActivity implements
     }
 
 
-
-
         //현재 위치 가져오기
         public void checkGPS ( boolean gpsCheck) {
             Log.d("순서", "checkGPS");
@@ -523,10 +529,6 @@ public class ArSfActivity extends AppCompatActivity implements
     public void loadCloudAnchors(){
         writeMode = false;
 
-        Log.d("앵커위치", "loadCloudAnchors");
-
-        Log.d("차이 azimuth", "밖 체크");
-
         ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
         Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
         while (iterator.hasNext()){
@@ -542,28 +544,30 @@ public class ArSfActivity extends AppCompatActivity implements
             }
             Log.d("거리", "앵커 생성");
 
-            CustomDialog.AnchorType anchorType = null;
+            hostDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getTextOrPath();
-            String stringAnchorType = wrappedAnchor.getAnchorType();
-
+            int intAnchorType = wrappedAnchor.getAnchorType();
 
             // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
-            if(stringAnchorType.equals("text")){
-                anchorType = CustomDialog.AnchorType.text;
-            }else if(stringAnchorType.equals("image")){
-                anchorType = CustomDialog.AnchorType.image;
-            }else if(stringAnchorType.equals("mp3")){
-                anchorType = CustomDialog.AnchorType.mp3;
+            if(intAnchorType == 0){
+                anchorType = hostDialog.AnchorType.text;
+            }else if(intAnchorType == 1){
+                anchorType = hostDialog.AnchorType.image;
+            }else if(intAnchorType == 2){
+                anchorType = hostDialog.AnchorType.mp3;
             }
 
-            Vector3 cameraVector = wrappedAnchor.getCameraVector();
             //나와 앵커가 남겨졌던 방위각 차이 계산
             int degree = poseManager.azimuthDifference(azimuth, wrappedAnchor.getAzimuth());
-            Log.d("차이 azimuth", "안 체크");
-            Log.d("차이 azimuth", String.valueOf(degree));
-            Pose realPose = poseManager.resolveRealPose(pose, degree, cameraVector);
+
+            try{
+                Log.d("포즈 null", pose.getTranslation().toString());
+            }catch (NullPointerException e){
+                Log.d("포즈 null", "널 뜸");
+            }
+            Pose realPose = poseManager.resolveRealPose(pose, degree);
             Log.d("앵커위치", "포즈생성");
 
             Anchor anchor = arFragment.getArSceneView().getSession().createAnchor(realPose);
@@ -573,48 +577,39 @@ public class ArSfActivity extends AppCompatActivity implements
 
             TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
             model.setParent(anchorNode);
+            model.setName(cloudAnchorID);
             model.select();
-            model.setOnTapListener(new Node.OnTapListener() {
-                @Override
-                public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                    CustomDialog customDialog = new CustomDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new CustomDialog.CustomDialogClickListener() {
-                        @Override
-                        public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
-                            writeMode = true;
+            if(userType == 1){
+                //주최자면 앵커 삭제 기능 지원
+                model.setOnTapListener(new Node.OnTapListener() {
+                    @Override
+                    public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
 
-                            Log.d("순서", "예스 클릭됨");
-                            changeAnchor(model, tmpText, anchorType);
-                            saveAnchor(anchor.getPose(),cameraVector, tmpText, anchorType);
-                        }
-                        @Override
-                        public void onNegativeClick() {
-                            firebaseManager.deleteContent(cloudAnchorID);
-                            anchor.detach();
-                            model.setRenderable(null);
-                        }
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(ArSfActivity.this);
+                        dialog.setMessage("앵커를 삭제하시겠습니까?");
+                        dialog.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                firebaseManager.deleteContent(model.getName());
+                                anchor.detach();
+                                model.setRenderable(null);
+                            }
+                        });
+                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
 
-                        @Override
-                        public void onImageClick(ImageView dialogImg) {
-                            writeMode = true;
+                        dialog.show();
 
-                            tmpImageView = dialogImg;
-                            loadAlbum();
-                        }
-
-                        @Override
-                        public void onRecordClick() {
-
-                        }
-                    });
-                    customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                    customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                    customDialog.show();
-                }
-            });
-
+                    }
+                });
+            }
 
             //현재 작업중
-            if(anchorType != CustomDialog.AnchorType.image){ //텍스트랑 mp3 이거 실행
+            if(anchorType != hostDialog.AnchorType.image){ //텍스트랑 mp3 이거 실행
                 changeAnchor(model, text_or_path, anchorType);
             }else{ //이미지는 여기 실행
                 Log.d("다운로드", "서버에서 불러온게 이미지앵커임");
@@ -638,7 +633,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     //임시 앵커 생성 후 실제 앵커까지
-    public void createSelectAnchor(HitResult hitResult, Vector3 cameraVector){
+    public void createSelectAnchor(HitResult hitResult){
 
         Log.d("순서", "createSelectAnchor");
 
@@ -655,16 +650,16 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                CustomDialog customDialog = new CustomDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new CustomDialog.CustomDialogClickListener() {
+                hostDialog hostDialog = new hostDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new hostDialog.CustomDialogClickListener() {
                     @Override
-                    public void onPositiveClick(String tmpText, CustomDialog.AnchorType anchorType) {
+                    public void onPositiveClick(String tmpText, hostDialog.AnchorType anchorType) {
                         Log.d("순서", "onTap/onPositiveClick");
 
                         writeMode = true;
 
                         changeAnchor(model, tmpText, anchorType);
                         //앵커 아이디 리턴함. 지울때 판단하는 용도
-                        String tmpAnchorID = saveAnchor(pose, cameraVector, tmpText, anchorType);
+                        String tmpAnchorID = saveAnchor(pose, tmpText, anchorType);
                         if(tmpAnchorID != null){
                             model.setName(tmpAnchorID);
                         }else{
@@ -700,20 +695,20 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     }
                 });
-                customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                customDialog.show();
+                hostDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                hostDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                hostDialog.show();
             }
         });
     }
 
 
     //화면상에 보여지는 앵커를 우선 바꿈
-    public void changeAnchor(TransformableNode model, String text_or_path, CustomDialog.AnchorType anchorType){
+    public void changeAnchor(TransformableNode model, String text_or_path, hostDialog.AnchorType anchorType){
         Log.d("순서", "changeAnchor");
         Log.d("불러오기", "changeAnchor 들어옴");
 
-        if(anchorType == CustomDialog.AnchorType.text){
+        if(anchorType == hostDialog.AnchorType.text){
             Log.d("불러오기", "changeAnchor 앵커 텍스트 타입");
             model.setRenderable(makeTextModels(text_or_path));
 
@@ -725,7 +720,7 @@ public class ArSfActivity extends AppCompatActivity implements
             cntTextRenderable += 1;
 
 
-        }else if(anchorType == CustomDialog.AnchorType.image) {
+        }else if(anchorType == hostDialog.AnchorType.image) {
             //여기는 사용자가 이미지를 등록할때 처리되는 부분임
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
@@ -738,7 +733,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
             cntImageRenderable += 1;
 
-        }else if(anchorType == CustomDialog.AnchorType.mp3){
+        }else if(anchorType == hostDialog.AnchorType.mp3){
                 model.setRenderable(makeMp3Models());
 
                 makePreModels(MP3_MODEL);
@@ -750,20 +745,18 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose,Vector3 cameraVector, String text, CustomDialog.AnchorType anchorType) {
+    public String saveAnchor(Pose pose, String text, hostDialog.AnchorType anchorType) {
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
-        if (anchorType == CustomDialog.AnchorType.text) {
-            cloudManager.hostCloudAnchor(pose, cameraVector, text, userId, lat, lng, azimuth, "text");
-        } else if (anchorType == CustomDialog.AnchorType.image) {
+        if (anchorType == hostDialog.AnchorType.text) {
+            cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, 0);
+        } else if (anchorType == hostDialog.AnchorType.image) {
             String path = fireStorageManager.getImagePath();
-            cloudManager.hostCloudAnchor(pose, cameraVector, path, userId, lat, lng, azimuth, "image");
-
-
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, 1);
             fireStorageManager.uploadImage(tmpImageUri);
-        } else if (anchorType == CustomDialog.AnchorType.mp3) {
-            cloudManager.hostCloudAnchor(pose, cameraVector, "mp3", userId, lat, lng, azimuth, "mp3");
+        } else if (anchorType == hostDialog.AnchorType.mp3) {
+            cloudManager.hostCloudAnchor(pose,"mp3", userId, lat, lng, azimuth, 2);
         }
         cloudManager.onUpdate();
 
@@ -812,49 +805,24 @@ public class ArSfActivity extends AppCompatActivity implements
         return distance;
     }
 
-
-    //앵커 방향과 위치 테스트용 삭제 금지
-    public void test_ysy() {
-
-//        Vector3 vector3 = new Vector3(
-//                0,
-//                0,
-//                -1
-//        );
-//
-//        Log.d("회전 v", "x: "+ vector3.x + ", y: " + vector3.y + ", z:" + vector3.z);
-
-//
-//
-//        int degree = -30;
-//
-//        Vector3 rotatedVector = new Vector3(
-//                (float) (vector3.x * Math.cos(Math.toRadians(degree)) - vector3.z * Math.sin(Math.toRadians(degree))),
-//                vector3.y,
-//                (float) (vector3.x * Math.sin(Math.toRadians(degree)) + vector3.z * Math.cos(Math.toRadians(degree)))
-//
-//        );
-//        Log.d("회전 rotated", "x: "+ rotatedVector.x + ", y: " + rotatedVector.y + ", z:" + rotatedVector.z);
-//
-//        AnchorNode anchorNode90 = new AnchorNode();
-//
-//        anchorNode90.setParent(arFragment.getArSceneView().getScene());
-//
-//        anchorNode90.setRenderable(this.selectRenderable);
-//        anchorNode90.setWorldPosition(rotatedVector);
-
-    }
-
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
-        Camera camera = arFragment.getArSceneView().getScene().getCamera();
-        Vector3 cameraVector = camera.getWorldPosition();
-
         Log.d("순서", "onTapPlane");
-        createSelectAnchor(hitResult, cameraVector);
+        if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
+            createSelectAnchor(hitResult);
+        }else{
+            Anchor anchor = hitResult.createAnchor();
+            Pose pose = anchor.getPose();
+            AnchorNode anchorNode = new AnchorNode(anchor);
+            anchorNode.setParent(arFragment.getArSceneView().getScene());
 
-//        test_ysy();
+            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+            model.setRenderable(this.denyRenderable);
+            model.setParent(anchorNode);
+            model.select();
+        }
+
     }
 
     @Override

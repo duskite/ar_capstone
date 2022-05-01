@@ -60,7 +60,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     //서버랑 연결
     private FirebaseManager firebaseManager;
 
-
     //테스트용
     private TextView testView;
 
@@ -79,6 +78,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         Intent intent = getIntent();
         userType = intent.getIntExtra("userType", 0);
         selectedChannel = intent.getStringExtra("channel");
+        Log.d("채널넘기는거 인벤", selectedChannel);
 
         testView = (TextView) findViewById(R.id.userTypeTest);
         testView.setText(String.valueOf(userType));
@@ -101,9 +101,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
-        firebaseManager.registerGPSValueListner();
-
-
+        firebaseManager.registerContentsValueListner();
 
 
         // ar화면으로 넘어가기
@@ -122,11 +120,15 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 
-
-
-
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
 
     //방위각 구해서 넘기는 부분
     public void registerListener(){

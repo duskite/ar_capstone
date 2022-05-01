@@ -130,7 +130,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         zoomControlView.setMap(mNaverMap);
         LocationButtonView locationButtonView = findViewById(R.id.location);
         locationButtonView.setMap(mNaverMap);
-
     }
 
     @Override
