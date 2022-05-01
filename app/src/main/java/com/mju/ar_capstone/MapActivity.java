@@ -131,7 +131,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LocationButtonView locationButtonView = findViewById(R.id.location);
         locationButtonView.setMap(mNaverMap);
 
-
     }
 
     @Override

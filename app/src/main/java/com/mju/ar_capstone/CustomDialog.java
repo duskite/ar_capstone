@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -36,6 +37,7 @@ public class CustomDialog extends Dialog {
     public EditText dialogEdt;
     public ImageView dialogImg;
     private TextView textView;
+    private ImageButton recordImgBtn;
 
     public CustomDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
         super(context);
@@ -53,7 +55,6 @@ public class CustomDialog extends Dialog {
             setContentView(R.layout.dialog_select_landscape);
         }
 
-
         dialogBtnOk = (Button) findViewById(R.id.dialog_btn_ok);
         dialogBtnDelete = (Button) findViewById(R.id.dialog_btn_delete);
         dialogRdGroup = (RadioGroup) findViewById(R.id.dialog_rd_group);
@@ -64,6 +65,8 @@ public class CustomDialog extends Dialog {
         dialogImg = (ImageView) findViewById(R.id.dialog_img);
 
         textView = (TextView) findViewById(R.id.dialog_tv_test);
+
+        recordImgBtn = (ImageButton) findViewById(R.id.audioRecordBtn);
 
         dialogRdGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -113,6 +116,10 @@ public class CustomDialog extends Dialog {
         dialogImg.setOnClickListener(v -> {
             this.customDialogClickListener.onImageClick(dialogImg);
         });
+
+        recordImgBtn.setOnClickListener(v ->{
+            this.customDialogClickListener.onRecordClick();
+        });
     }
 
     public interface CustomDialogClickListener{
@@ -120,5 +127,6 @@ public class CustomDialog extends Dialog {
         void onNegativeClick();
 
         void onImageClick(ImageView dialogImg);
+        void onRecordClick();
     }
 }

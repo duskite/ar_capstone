@@ -70,7 +70,6 @@ import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.PoseManager;
-import com.mju.ar_capstone.helpers.SensorAllManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,8 +113,6 @@ public class ArSfActivity extends AppCompatActivity implements
     private FireStorageManager fireStorageManager;
 
 
-
-
     // 오디오 파일관련 변수
     // 오디오 권한
     private String recordPermission = Manifest.permission.RECORD_AUDIO;
@@ -147,6 +144,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private PoseManager poseManager;
     private final int LOAD_DISTANCE = 30;
 
+    //주최자인지 참가자인지 구분하는 변수
+    private int userType;
     private int azimuth = 0;
     private String channel;
 
@@ -181,12 +180,11 @@ public class ArSfActivity extends AppCompatActivity implements
             }
         }
 
-        // 메인에서 넘겨준 방위각 값 한 번만 저장
+        // 인벤토리 액티비티에서 가져온 값들
         Intent intent = getIntent();
         azimuth = intent.getIntExtra("azimuth", 0);
-        Log.d("방위각 불러오기 인텐트", String.valueOf(azimuth));
         channel = intent.getStringExtra("channel");
-        Log.d("채널", "받아온거" + channel);
+        userType = intent.getIntExtra("userType",0);
 
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -208,16 +206,6 @@ public class ArSfActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 loadCloudAnchors();
-            }
-        });
-
-        //여기서 MapActivity로 넘어가도록함
-        btnMapApp = findViewById(R.id.btnMapApp);
-        btnMapApp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MapActivity.class);
-                startActivity(intent);
             }
         });
 
@@ -497,8 +485,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
 
-
-
         //현재 위치 가져오기
         public void checkGPS ( boolean gpsCheck) {
             Log.d("순서", "checkGPS");
@@ -614,6 +600,11 @@ public class ArSfActivity extends AppCompatActivity implements
                             tmpImageView = dialogImg;
                             loadAlbum();
                         }
+
+                        @Override
+                        public void onRecordClick() {
+
+                        }
                     });
                     customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -702,6 +693,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
                         tmpImageView = dialogImg;
                         loadAlbum();
+                    }
+
+                    @Override
+                    public void onRecordClick() {
+
                     }
                 });
                 customDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
