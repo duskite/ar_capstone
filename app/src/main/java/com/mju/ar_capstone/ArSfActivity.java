@@ -374,7 +374,7 @@ public class ArSfActivity extends AppCompatActivity implements
             public void onClick(View view) {
                 if (isRecording) {
                     // 현재 녹음 중 O
-                    // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
+                    // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경 ../
                     isRecording = false; // 녹음 상태 값
                     audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_record, null)); // 녹음 상태 아이콘 변경
                     audioRecordText.setText("녹음 시작"); // 녹음 상태 텍스트 변경
