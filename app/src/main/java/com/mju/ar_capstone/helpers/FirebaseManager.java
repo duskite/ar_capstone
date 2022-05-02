@@ -35,6 +35,8 @@ public class FirebaseManager {
     private DatabaseReference mp3NumDatabase;
     private DatabaseReference gpsDatabase;
 
+    private DatabaseReference channelDatabase;
+
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
 
     //값 불러오는 리스너
@@ -43,14 +45,73 @@ public class FirebaseManager {
     private ValueEventListener imageNumListener = null;
     private ValueEventListener mp3NumListener = null;
     private ValueEventListener gpsListener = null;
+    //채널 리스트 불러오기
+    private ValueEventListener channelListListener = null;
 
     private static int nextAnchorNum;
     private static int nextImageNum;
     private static int nextMp3Num;
 
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
+
+    //채널 이름 넣을 변수
+    public static ArrayList<String> channelList = new ArrayList<>();
+
+    public FirebaseManager(){
+        channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+        registerChannelListListener();
+    }
+
+    public ArrayList<String> getChannelList(){
+
+        return channelList;
+    }
+
+    public void registerChannelListListener(){
+
+        channelListListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
+                    String channelName = tmpSnapshot.getKey();
+                    Log.d("채널이름", channelName);
+
+                    channelList.add(channelName);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+        channelDatabase.addValueEventListener(channelListListener);
+
+    }
+
+    //채널리스트에 채널 추가함
+    public void addChannelList(String channel){
+        channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+        //우선 의미없는 값 넣어서 디비 만들음
+        channelDatabase.child(channel).child("created").setValue("생성됨");
+    }
+    //채널 기본 정보 입력
+    public void setChannelInfo(String channel, int channelType, String hostID){
+        channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+        channelDatabase.child(channel).child("hostID").setValue(hostID);
+        channelDatabase.child(channel).child("channelType").setValue(channelType);
+    }
+
+    //참가자가 채널에 참가할때
+    public void joinChannel(String channel, String userID){
+        channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+        channelDatabase.child(channel).child("users").child(userID).setValue("참가");
+    }
     
     public FirebaseManager(String channel){
+        addChannelList(channel);
+
         mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
 
         //앵커 넘버, 이미지 넘버 가져오기
@@ -60,7 +121,6 @@ public class FirebaseManager {
 
         DatabaseReference.goOnline();
     }
-
 
     // ar에서 가져가서 처리하는게 나을듯
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){

@@ -23,8 +23,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="사용자 유형을 선택해주세요."
+                android:gravity="center"
+                />
             <RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -61,12 +67,81 @@
             android:text="로그인 실패"
             />
 
+        <CheckBox
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:id="@+id/check_create"
+            android:text="채널 생성을 원하시면 체크해주세요."
+            android:visibility="gone"
+            />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="채널명을 입력해주세요."
+            android:id="@+id/edtChannelName"
+            android:gravity="center"
+            android:enabled="false"
+            />
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="공개된 채널 중에서 고르기"/>
 
         <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/spinner_channel"
+            android:gravity="center"
             />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:id="@+id/layout_channel_type"
+            >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="채널 공개 여부를 선택해주세요"
+                android:gravity="center"
+                />
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:padding="5dp"
+                android:gravity="center"
+                android:id="@+id/channelType"
+                >
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="공개"
+                    android:id="@+id/channelPublic"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    android:checked="true"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="비공개"
+                    android:id="@+id/channelSecret"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+            </RadioGroup>
+        </LinearLayout>
+
+
 
         <Button
             android:id="@+id/btnInven"
@@ -80,7 +155,6 @@
             android:enabled="false"
             android:text="입장하기" />
 
-    </LinearLayout>
-
-
 </LinearLayout>
+</LinearLayout>
+
