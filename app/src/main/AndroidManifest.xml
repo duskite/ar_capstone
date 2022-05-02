@@ -35,6 +35,10 @@
             android:exported="true"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity
+            android:name=".InventoryActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.NoActionBar" >

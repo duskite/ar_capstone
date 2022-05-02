@@ -8,23 +8,7 @@
     android:orientation="vertical"
     android:background="#1A2933"
     >
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        >
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/btnAnchorList"
-            android:text="내가 남긴 앵커"
-            />
-    </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,27 +17,50 @@
         android:layout_marginBottom="80dp"
         android:orientation="vertical">
 
-        <TextView
+
+<!--        주최자 참가자 체크 부분-->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
-            android:layout_marginBottom="50dp"
-            android:id="@+id/tvNorth"
+            android:layout_height="wrap_content"
             android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="40dp"
-            />
+            android:orientation="horizontal"
+            >
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:padding="5dp"
+                android:gravity="center"
+                android:id="@+id/userType"
+                >
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="주최자"
+                    android:id="@+id/host"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="참가자"
+                    android:id="@+id/participant"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+            </RadioGroup>
+        </LinearLayout>
+
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
-            android:layout_marginBottom="50dp"
-            android:id="@+id/tvNorthNomalized"
+            android:layout_height="wrap_content"
+            android:id="@+id/userId"
             android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="40dp"
+            android:text="로그인 실패"
             />
+
 
         <Spinner
             android:layout_width="wrap_content"
@@ -62,7 +69,7 @@
             />
 
         <Button
-            android:id="@+id/btnMap"
+            android:id="@+id/btnInven"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
@@ -70,18 +77,8 @@
             android:layout_marginRight="50dp"
             android:layout_marginLeft="50dp"
             android:background="@drawable/btn_shape"
-            android:text="지도" />
-
-        <Button
-            android:id="@+id/btnArSf"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="30dp"
-            android:layout_marginRight="50dp"
-            android:layout_marginLeft="50dp"
-            android:background="@drawable/btn_shape"
-            android:text="AR" />
+            android:enabled="false"
+            android:text="입장하기" />
 
     </LinearLayout>
 

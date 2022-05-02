@@ -194,12 +194,20 @@ public class PoseManager {
     }
 
 
-    // 방위각에 따라 돌리는 코드는 이상이 없음
-    // 문제가 있다면 방위각을 가져오는 소스코드 문제일듯
-    public Pose resolveRealPose(Pose pose, int degree, Vector3 cameravector){ //좌표간 거리는 잠시 나중에 처리하자
+    public Pose resolveRealPose(Pose pose, int degree){ //좌표간 거리는 잠시 나중에 처리하자
 
-        float[] tmpT = pose.getTranslation();
-        float[] tmpR = pose.getRotationQuaternion();
+        float[] tmpT;
+        float[] tmpR;
+
+        try {
+            tmpT = pose.getTranslation();
+            tmpR = pose.getRotationQuaternion();
+        }catch (NullPointerException e){
+            tmpT = new float[]{0, 0, 0};
+            tmpR = new float[]{0, 0, 0, 0};
+            Log.d("포즈 null", "null 뜸");
+        }
+
 
         //불러온 포즈를 가지고 벡터를 만들음
         Vector3 vector3 = new Vector3(

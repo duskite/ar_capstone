@@ -24,6 +24,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,24 +46,18 @@ import com.mju.ar_capstone.helpers.SensorAllManager;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity {
 
-    private Button btnMap, btnArSf, btnAnchorList;
+    private Button btnInven;
+    private RadioGroup rdUserType;
+    private int userType = 0;
 
-    private SensorManager sensorManager;
-    private Sensor accelerometer;
-    private Sensor magneticField;
-
-    private final float[] accelerometerReading = new float[3];
-    private final float[] magnetometerReading = new float[3];
-    private final float[] rotationMatrix = new float[9];
-    private final float[] orientationAngles = new float[3];
-    private int azimuth;
-
-    private TextView tvNorth, tvNorthNomalized;
+    private TextView tvUserId;
     private Spinner spinner;
-    private String[] channelNames = {"test_ysy", "base_channel"};
-    private String selectedChannel = "base_channel";
+    private String[] channelNames = {"test", "base_channel"};
+    private String selectedChannel = "test";
+
+    private FirebaseAuthManager firebaseAuthManager;
 
 
     @Override
@@ -70,38 +65,44 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        registerListener();
+        firebaseAuthManager = new FirebaseAuthManager();
+        tvUserId = (TextView) findViewById(R.id.userId);
+        tvUserId.setText("로그인 성공\n" + "익명ID: " + firebaseAuthManager.getUID());
+        btnInven = findViewById(R.id.btnInven);
 
-        btnArSf = (Button) findViewById(R.id.btnArSf);
 
-        btnArSf.setOnClickListener(new View.OnClickListener() {
+        // 입장하기 인벤토리로 이동
+        rdUserType = (RadioGroup) findViewById(R.id.userType);
+        rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+                btnInven.setEnabled(true);
+
+                switch (checkedId){
+                    case R.id.host:
+                        userType = 1;
+                        break;
+                    case R.id.participant:
+                        userType = 2;
+                        break;
+                }
+                Log.d("유저타입", String.valueOf(userType));
+            }
+        });
+
+
+        btnInven.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
-                intent.putExtra("azimuth", getAzimuth());
+                Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
                 intent.putExtra("channel", selectedChannel);
-                Log.d("채널", "넘길때" + selectedChannel);
+                intent.putExtra("userType", userType);
+                Log.d("채널넘기는거 메인", selectedChannel);
                 startActivity(intent);
             }
         });
 
-        tvNorth = (TextView)findViewById(R.id.tvNorth);
-        tvNorthNomalized = (TextView)findViewById(R.id.tvNorthNomalized);
-
-
-        // 지도로 이동
-        btnMap = findViewById(R.id.btnMap);
-
-        btnMap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MapActivity.class);
-                startActivity(intent);
-            }
-        });
 
 
         //채널 선택 스피너
@@ -119,15 +120,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
-            }
-        });
-
-        btnAnchorList = (Button) findViewById(R.id.btnAnchorList);
-        btnAnchorList.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AnchorListDialog anchorListDialog = new AnchorListDialog(MainActivity.this, selectedChannel);
-                anchorListDialog.show();
             }
         });
 
@@ -166,19 +158,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    public void unRegisterListener(){
-        sensorManager.unregisterListener(this);
-    }
-    public void registerListener(){
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
-        }
-        if (magneticField != null) {
-            sensorManager.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
-        }
-    }
+
 
     @Override
     protected void onResume() {
@@ -189,58 +169,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
-//        sensorManager.unregisterListener(this);
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            System.arraycopy(event.values, 0, accelerometerReading,
-                    0, accelerometerReading.length);
-        }
-        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            System.arraycopy(event.values, 0, magnetometerReading,
-                    0, magnetometerReading.length);
-        }
 
-        // Update rotation matrix, which is needed to update orientation angles.
-        SensorManager.getRotationMatrix(rotationMatrix, null,
-                accelerometerReading, magnetometerReading);
-        SensorManager.getOrientation(rotationMatrix, orientationAngles);
-
-        //센서 바뀌는 순간마다 우선 방위각 구하도록 함
-        azimuth = (int) (Math.toDegrees(orientationAngles[0]) + 360 ) % 360;
-        Log.d("방위각", "방위각 계산됨: " + azimuth);
-
-        tvNorth.setText("현재 방위각: " + Float.toString(azimuth));
-        tvNorthNomalized.setText("방위각: " + Float.toString(getAzimuth()));
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    public int getAzimuth(){
-//        if(ORIENTATION){ // 만약 화면이 눕혀져있는 상태로 앵커를 남겼다면 실제 방위각만큼 보정해줘야함
-//            azimuth += 90;
-//        }
-        return sectionDegree(azimuth);
-    }
-
-    public int sectionDegree(int degree){
-
-        int section = 0;
-
-        if(degree > 357 || degree < 3){
-            //이정도 범위는 그냥 0이라고 보기
-        }else {
-            section = degree / 3;
-            section *= 3;
-        }
-
-        return section;
-
-    }
 
 }

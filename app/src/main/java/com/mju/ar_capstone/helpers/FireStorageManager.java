@@ -42,6 +42,11 @@ public class FireStorageManager {
     private static final String JPG_TYPE = ".jpg";
     private String currentImageID;
 
+    //mp3 파일명 동적 생성
+    private static final String strMp3ID = "mp3ID_";
+    private static final String MP3_TYPE = ".3gp";
+    private String currentMp3ID;
+
     public FireStorageManager(){
         firebaseStorage = FirebaseStorage.getInstance();
         storageReference = firebaseStorage.getReference();
@@ -58,6 +63,14 @@ public class FireStorageManager {
 
     public String getImagePath(){
         return makeImageFileID();
+    }
+
+    public String makeMp3FileID(){
+        currentMp3ID = strMp3ID + String.valueOf(firebaseManager.getNextMp3Num());
+        return currentMp3ID;
+    }
+    public String getMp3Path(){
+        return makeMp3FileID();
     }
 
     // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
