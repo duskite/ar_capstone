@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvUserId;
     private Spinner spinner;
+    private Button btnSpinnerLoad;
 
     private String selectedChannel = "base_channel"; //기본 채널
     private EditText edtChannelName;
@@ -82,14 +83,18 @@ public class MainActivity extends AppCompatActivity {
 
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
+        //채널 리스트 가져옴
+        channelList = firebaseManager.getChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("로그인 성공\n" + "익명ID: " + firebaseAuthManager.getUID());
         btnInven = findViewById(R.id.btnInven);
         edtChannelName = findViewById(R.id.edtChannelName);
+        btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
+        spinner = (Spinner) findViewById(R.id.spinner_channel);
+        spinner.setVisibility(View.GONE);
 
-        //채널 리스트 가져옴
-        channelList = firebaseManager.getChannelList();
+
         checkCreate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -164,24 +169,40 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        //채널리스트로 선택 스피너 생성
-        spinner = (Spinner) findViewById(R.id.spinner_channel);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, channelList);
-        adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
-        spinner.setAdapter(adapter);
-        spinner.setSelection(0);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        btnSpinnerLoad.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedChannel = channelList.get(position);
-                Log.d("채널", "선택" + selectedChannel);
-            }
+            public void onClick(View v) {
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedChannel = "base_channel";
+                int arraySize = channelList.size();
+                Log.d("채널 사이즈", String.valueOf(arraySize));
+                String[] spinnerList = new String[arraySize];
+                for(int i=0; i<arraySize; i++){
+                    spinnerList[i] = channelList.get(i);
+                    Log.d("채널 순서" + i, spinnerList[i]);
+                }
+                Log.d("채널", "선택" + selectedChannel);
+
+                //채널리스트로 선택 스피너 생성
+                spinner.setVisibility(View.VISIBLE);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, spinnerList);
+                adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+                spinner.setAdapter(adapter);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        selectedChannel = spinnerList[position];
+                        Log.d("채널", "선택" + selectedChannel);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                });
+
             }
         });
+
+
 
 
         permisionCheck();

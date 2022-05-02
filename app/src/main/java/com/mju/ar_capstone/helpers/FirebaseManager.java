@@ -55,7 +55,7 @@ public class FirebaseManager {
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
     //채널 이름 넣을 변수
-    public static ArrayList<String> channelList = new ArrayList<>();
+    public ArrayList<String> channelList = new ArrayList<>();
 
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
@@ -74,7 +74,7 @@ public class FirebaseManager {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
                     String channelName = tmpSnapshot.getKey();
-                    Log.d("채널이름", channelName);
+                    Log.d("채널이름 파이어베이스 리스너", channelName);
 
                     channelList.add(channelName);
                 }
