@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PointF;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -28,13 +30,16 @@ import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
+import com.naver.maps.map.overlay.InfoWindow;
 import com.naver.maps.map.overlay.Marker;
+import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.util.FusedLocationSource;
+import com.naver.maps.map.util.MarkerIcons;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class InventoryActivity extends AppCompatActivity implements SensorEventListener, OnMapReadyCallback {
+public class InventoryActivity extends AppCompatActivity implements SensorEventListener, OnMapReadyCallback, Overlay.OnClickListener,NaverMap.OnMapClickListener {
 
     private int userType;
     private Button btnArSf;
@@ -59,6 +64,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
+    private InfoWindow infoWindow;
+    private List<Marker> listMarker = new ArrayList<Marker>();
 
     //서버랑 연결
     private FirebaseManager firebaseManager;
@@ -207,16 +214,50 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
         mNaverMap = naverMap;
         mNaverMap.setLocationSource(mLocationSource);
+        mNaverMap.setOnMapClickListener(this);
         mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int i, boolean b) {
                 updateAnchors(mNaverMap);
             }
         });
+        // 정보창의 값을 listInforWindow에 저장
+        //listInfoWindow.add(infoWindow);
+        infoWindow = new InfoWindow();
+        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                //Marker marker = infoWindow.getMarker();
+                // 마커에 setTag된 정보를 infoWindow에서 불러옴
+                return (CharSequence)infoWindow.getMarker().getTag();
+            }
+        });
 
     }
+    // 마커 클릭하면 정보창 나오기
+    @Override
+    public boolean onClick(@NonNull Overlay overlay) {
+        if (overlay instanceof Marker) {
+            Marker marker = (Marker) overlay;
+            if (marker.getInfoWindow() != null) {
+                infoWindow.close();
+            } else {
+                infoWindow.open(marker);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // 맵 누르면 정보창 끄게하기
+    @Override
+    public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
+        if (infoWindow.getMarker() != null) {
+            infoWindow.close();
+        }
+    }
     public void updateAnchors(NaverMap naverMap){
-        List<Marker> listMarker = new ArrayList<Marker>();
 
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
             //(루프 한번 돌 때 마다 marker객체 생성)
@@ -227,6 +268,15 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
             //위치 정보를 넣은 marker값을 listMarker에 저장
             listMarker.add(marker);
+            //마커 크기 및 색상 설정
+            marker.setWidth(75);
+            marker.setHeight(100);
+            marker.setIcon(MarkerIcons.BLACK);
+            marker.setIconTintColor(Color.RED);
+            //마커 클릭 리스너
+            marker.setOnClickListener(this);
+            //마커에 앵커 타입을 태그로 설정
+            marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
         }
 
         firebaseManager.clearWrappedAnchorList();
