@@ -4,12 +4,8 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.SensorEventListener2;
 import android.hardware.SensorManager;
 import android.util.Log;
-import android.widget.ImageView;
-
-import com.mju.ar_capstone.CustomDialog;
 
 
 public class SensorAllManager implements SensorEventListener {

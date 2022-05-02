@@ -159,6 +159,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         locationButtonView.setMap(mNaverMap);
 
 
+
         // 정보창의 값을 listInforWindow에 저장
         //listInfoWindow.add(infoWindow);
         infoWindow = new InfoWindow();

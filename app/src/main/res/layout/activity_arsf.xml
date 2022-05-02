@@ -20,22 +20,4 @@
         android:background="@drawable/ic_refresh"
         />
 
-    <Button
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/ic_map"
-        android:id="@+id/btnMapApp"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:id="@+id/northCheckLayout"
-        android:orientation="vertical">
-
-    </LinearLayout>
-
 </FrameLayout>

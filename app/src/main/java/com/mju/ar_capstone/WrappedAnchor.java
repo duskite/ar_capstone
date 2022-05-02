@@ -11,7 +11,7 @@ public class WrappedAnchor {
     private String cloudAnchorId;
     private String textOrPath;
     private String userID;
-    private String anchorType;
+    private int anchorType;
 
     private int azimuth;
 
@@ -20,7 +20,6 @@ public class WrappedAnchor {
 
     private Pose pose;
 
-    private Vector3 cameraVector;
 
     public WrappedAnchor(){
 
@@ -34,7 +33,7 @@ public class WrappedAnchor {
     }
 
     // ar에서 사용하는 객체
-    public WrappedAnchor(String cloudAnchorId, Pose pose, Vector3 cameraVector, String text, String userID, double lat, double lng, int azimuth, String anchorType){
+    public WrappedAnchor(String cloudAnchorId, Pose pose,  String text, String userID, double lat, double lng, int azimuth, int anchorType){
         this.cloudAnchorId = cloudAnchorId;
         this.textOrPath = text;
         this.userID = userID;
@@ -43,7 +42,6 @@ public class WrappedAnchor {
         this.lat = lat;
         this.lng = lng;
         this.azimuth = azimuth;
-        this.cameraVector = cameraVector;
     }
 
     public String getCloudAnchorId() {
@@ -70,11 +68,11 @@ public class WrappedAnchor {
         this.userID = userID;
     }
 
-    public String getAnchorType() {
+    public int getAnchorType() {
         return anchorType;
     }
 
-    public void setAnchorType(String anchorType) {
+    public void setAnchorType(int anchorType) {
         this.anchorType = anchorType;
     }
 
@@ -110,11 +108,5 @@ public class WrappedAnchor {
         this.azimuth = azimuth;
     }
 
-    public Vector3 getCameraVector(){
-        return cameraVector;
-    }
-    public void setCameraVector(Vector3 vector3){
-        this.cameraVector = vector3;
-    }
 
 }

@@ -32,19 +32,21 @@ public class FirebaseManager {
     private DatabaseReference contentsDatabase;
     private DatabaseReference anchorNumDatabase;
     private DatabaseReference imageNumDatabase;
+    private DatabaseReference mp3NumDatabase;
     private DatabaseReference gpsDatabase;
 
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
-    private static final String KEY_ROOT_DIR = "test_channel";
 
     //값 불러오는 리스너
     private ValueEventListener contentsListener = null;
     private ValueEventListener anchorNumListener = null;
     private ValueEventListener imageNumListener = null;
+    private ValueEventListener mp3NumListener = null;
     private ValueEventListener gpsListener = null;
 
     private static int nextAnchorNum;
     private static int nextImageNum;
+    private static int nextMp3Num;
 
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
     
@@ -54,6 +56,7 @@ public class FirebaseManager {
         //앵커 넘버, 이미지 넘버 가져오기
         registerAnchorNumValueLisner();
         registerImageNumValueLisner();
+        registerMp3NumValueLisner();
 
         DatabaseReference.goOnline();
     }
@@ -63,24 +66,9 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
-    //사용자가 생성한 앵커 리스트만 리턴
-    public ArrayList<WrappedAnchor> getWrappedAnchorList(String userID){
-
-        ArrayList<WrappedAnchor> list = new ArrayList<>();
-
-        Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
-        while (iterator.hasNext()) {
-            WrappedAnchor wrappedAnchor = iterator.next();
-            if((wrappedAnchor.getUserID()).equals(userID)){
-                list.add(wrappedAnchor);
-            }
-        }
-
-        return list;
-    }
     // 데이터를 다른 곳에서 한번 가져간후 호출하면 리스트 비워줌
     public void clearWrappedAnchorList(){
-//        wrappedAnchorList.clear();
+        wrappedAnchorList.clear();
     }
 
 
@@ -120,16 +108,19 @@ public class FirebaseManager {
         HashMap<String, String> contents = new HashMap<String, String>();
         contents.put("created", createdTimeOfContent());
         contents.put("userID", wrappedAnchor.getUserID());
-        contents.put("type", wrappedAnchor.getAnchorType());
 
-        if(contents.get("type").equals("image")){
+        if(wrappedAnchor.getAnchorType() == 1){ //이미지
             contents.put("text_or_path", wrappedAnchor.getTextOrPath() + ".jpg");
             imageNumDatabase.setValue(nextImageNum + 1);
-        }else {
+        }else if(wrappedAnchor.getAnchorType() == 2){ //음성
+
+        }else { //텍스트
             contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
         contentDB.setValue(contents);
         contentDB.child("azimuth").setValue(wrappedAnchor.getAzimuth());
+        contentDB.child("type").setValue(wrappedAnchor.getAnchorType());
+
 
         //앵커 포즈
         DatabaseReference poseDB = contentDB.child("pose");
@@ -137,7 +128,6 @@ public class FirebaseManager {
         Pose pose = wrappedAnchor.getPose();
         float[] poseT = pose.getTranslation();
         float[] poseR = pose.getRotationQuaternion();
-        Vector3 cameraVector = wrappedAnchor.getCameraVector();
         poses.put("Tx", poseT[0]);
         poses.put("Ty", poseT[1]);
         poses.put("Tz", poseT[2]);
@@ -146,10 +136,6 @@ public class FirebaseManager {
         poses.put("Ry", poseR[1]);
         poses.put("Rz", poseR[2]);
         poses.put("Rw", poseR[3]);
-
-        poses.put("Cx", cameraVector.x);
-        poses.put("Cy", cameraVector.y);
-        poses.put("Cz", cameraVector.z);
 
         poseDB.setValue(poses);
 
@@ -166,6 +152,7 @@ public class FirebaseManager {
         return nextAnchorNum;
     }
     public int getNextImageNum() {return nextImageNum;}
+    public int getNextMp3Num(){return nextMp3Num;}
 
     //앵커 게시글 수 업뎃용
     public void registerAnchorNumValueLisner(){
@@ -214,6 +201,29 @@ public class FirebaseManager {
         imageNumDatabase.addValueEventListener(imageNumListener);
 
     }
+    //이미지 파일 수 업뎃용
+    public void registerMp3NumValueLisner(){
+        mp3NumDatabase = mDatabase.child("nextMp3Num");
+        mp3NumListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                try{
+                    nextMp3Num = snapshot.getValue(int.class);
+                }catch (NullPointerException e){
+                    //이미지 파일은 한번 업로드 되고 삭제하지 않으면 그대로이니까 잠시 보류
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+        mp3NumDatabase.addValueEventListener(mp3NumListener);
+
+    }
 
 
     public void registerContentsValueListner() {
@@ -239,11 +249,6 @@ public class FirebaseManager {
                                 ((Double) poses.get("Rz")).floatValue(),
                                 ((Double) poses.get("Rw")).floatValue(),
                         };
-                        Vector3 cameraVector = new Vector3(
-                                ((Double) poses.get("Cx")).floatValue(),
-                                ((Double) poses.get("Cy")).floatValue(),
-                                ((Double) poses.get("Cz")).floatValue()
-                        );
                         Pose pose = new Pose(poseT, poseR);
 
                         //gps정보 불러오기
@@ -252,13 +257,12 @@ public class FirebaseManager {
                         wrappedAnchorList.add(new WrappedAnchor(
                                 anchorID,
                                 pose,
-                                cameraVector,
                                 tmpSnapshot.child("text_or_path").getValue(String.class),
                                 tmpSnapshot.child("userID").getValue(String.class),
                                 gps.get("lat"),
                                 gps.get("lng"),
                                 tmpSnapshot.child("azimuth").getValue(int.class),
-                                tmpSnapshot.child("type").getValue(String.class)
+                                tmpSnapshot.child("type").getValue(int.class)
                         ));
                     }catch (NullPointerException e){
                         Log.d("순서", "리스너 데이터 null 예외 발생");
