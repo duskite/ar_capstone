@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
 import com.mju.ar_capstone.invenfragments.UserInvenFragment;
@@ -41,7 +42,7 @@ import java.util.List;
 
 public class InventoryActivity extends AppCompatActivity implements SensorEventListener, OnMapReadyCallback, Overlay.OnClickListener,NaverMap.OnMapClickListener {
 
-    private int userType;
+    private int userType, channelType;
     private Button btnArSf;
     private String selectedChannel;
 
@@ -69,6 +70,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
     //서버랑 연결
     private FirebaseManager firebaseManager;
+    private FirebaseAuthManager firebaseAuthManager;
 
     //하단부 주최자 혹은 참가자에 따른 프래그먼트 변경
     private FragmentManager fragmentManager;
@@ -89,7 +91,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
         // 메인에서 정보 가져옴
         Intent intent = getIntent();
-        userType = intent.getIntExtra("userType", 0);
+        //디폴트는 참가자로
+        userType = intent.getIntExtra("userType", 2);
+
+        //디폴트는 공개로
+        channelType = intent.getIntExtra("channelType", 1);
         selectedChannel = intent.getStringExtra("channel");
         Log.d("채널넘기는거 인벤", selectedChannel);
 
@@ -122,6 +128,16 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
         firebaseManager.registerContentsValueListner();
+
+        firebaseAuthManager = new FirebaseAuthManager();
+        //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
+        if(userType == 1){
+            firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
+        }else{
+            //참가자일때
+            firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
+        }
+
 
 
         // ar화면으로 넘어가기
