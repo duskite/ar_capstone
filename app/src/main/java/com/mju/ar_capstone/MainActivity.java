@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedChannel = "test";
 
     private FirebaseAuthManager firebaseAuthManager;
-//    private FirebaseManager firebaseManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         firebaseAuthManager = new FirebaseAuthManager();
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("로그인 성공\n" + "익명ID: " + firebaseAuthManager.getUID());
+        btnInven = findViewById(R.id.btnInven);
 
 
         // 입장하기 인벤토리로 이동
@@ -75,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+                btnInven.setEnabled(true);
 
                 switch (checkedId){
                     case R.id.host:
@@ -87,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("유저타입", String.valueOf(userType));
             }
         });
-        btnInven = findViewById(R.id.btnInven);
+
 
         btnInven.setOnClickListener(new View.OnClickListener() {
             @Override

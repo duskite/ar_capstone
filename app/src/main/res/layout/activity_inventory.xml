@@ -10,22 +10,21 @@
         android:id="@+id/map"
         android:name="com.naver.maps.map.MapFragment" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/userTypeTest"
-        />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/host_or_user_frame"
+        >
 
-    <Button
-        android:id="@+id/btnArSf"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="30dp"
-        android:layout_marginRight="50dp"
-        android:layout_marginLeft="50dp"
-        android:background="@drawable/btn_shape"
-        android:text="AR켜기" />
+        <Button
+            android:id="@+id/btnArSf"
+            android:layout_gravity="bottom|center"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/btn_shape"
+            android:text="AR켜기" />
+    </FrameLayout>
+
 
 </LinearLayout>

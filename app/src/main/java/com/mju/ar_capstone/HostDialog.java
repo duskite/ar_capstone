@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -16,7 +17,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 
-public class hostDialog extends Dialog {
+public class HostDialog extends Dialog {
 
     private Context context;
     private CustomDialogClickListener customDialogClickListener;
@@ -37,11 +38,15 @@ public class hostDialog extends Dialog {
     public EditText dialogEdt;
     public ImageView dialogImg;
     private TextView textView;
-    private ImageButton recordImgBtn;
+
+    private LinearLayout dialogMp3;
+    private ImageButton audioRecordImageBtn, mp3play;
+    private TextView audioRecordText;
+
 
     private int userType;
 
-    public hostDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
+    public HostDialog(@NonNull Context context, boolean orientation, CustomDialogClickListener customDialogClickListener) {
         super(context);
         this.ORIENTATION = orientation;
         this.context = context;
@@ -63,12 +68,18 @@ public class hostDialog extends Dialog {
             dialogRdBtnText = (RadioButton) findViewById(R.id.dialog_rdbtn_text);
             dialogRdBtnImg = (RadioButton) findViewById(R.id.dialog_rdbtn_img);
             dialogRdBtnMp3 = (RadioButton) findViewById(R.id.dialog_rdbtn_mp3);
+
             dialogEdt = (EditText) findViewById(R.id.dialog_edt);
             dialogImg = (ImageView) findViewById(R.id.dialog_img);
+            dialogMp3 = (LinearLayout) findViewById(R.id.dialog_mp3);
+
+            audioRecordImageBtn = (ImageButton) findViewById(R.id.audioRecordImageBtn);
+            mp3play = (ImageButton) findViewById(R.id.mp3play);
+            audioRecordText = (TextView) findViewById(R.id.audioRecordText);
 
             textView = (TextView) findViewById(R.id.dialog_tv_test);
 
-            recordImgBtn = (ImageButton) findViewById(R.id.audioRecordBtn);
+
 
             dialogRdGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
@@ -77,6 +88,7 @@ public class hostDialog extends Dialog {
                         textView.setText("텍스트 모드");
                         dialogEdt.setVisibility(View.VISIBLE);
                         dialogImg.setVisibility(View.GONE);
+                        dialogMp3.setVisibility(View.GONE);
                         anchorType = anchorType.text;
 
 
@@ -86,17 +98,18 @@ public class hostDialog extends Dialog {
                         textView.setText("이미지 모드");
                         dialogImg.setVisibility(View.VISIBLE);
                         dialogEdt.setVisibility(View.GONE);
+                        dialogMp3.setVisibility(View.GONE);
                         anchorType = anchorType.image;
 
                         Log.d("순서", "이미지 모드 눌림");
 
 
                     } else if (checkedId == R.id.dialog_rdbtn_mp3) {
-
+                        textView.setText("음성 녹음 모드");
                         dialogImg.setVisibility(View.GONE);
                         dialogEdt.setVisibility(View.GONE);
+                        dialogMp3.setVisibility(View.VISIBLE);
                         anchorType = anchorType.mp3;
-
                     }
                 }
             });
@@ -119,9 +132,15 @@ public class hostDialog extends Dialog {
                 this.customDialogClickListener.onImageClick(dialogImg);
             });
 
-            recordImgBtn.setOnClickListener(v -> {
-                this.customDialogClickListener.onRecordClick();
+
+            //음성 녹음
+            audioRecordImageBtn.setOnClickListener(v -> {
+                this.customDialogClickListener.onRecordClick(audioRecordText, audioRecordImageBtn);
             });
+            mp3play.setOnClickListener(v->{
+                this.customDialogClickListener.onPlayClick();
+            });
+
     }
 
     public interface CustomDialogClickListener{
@@ -129,6 +148,8 @@ public class hostDialog extends Dialog {
         void onNegativeClick();
 
         void onImageClick(ImageView dialogImg);
-        void onRecordClick();
+
+        void onRecordClick(TextView audioRecordText, ImageButton audioRecordImageBtn);
+        void onPlayClick();
     }
 }

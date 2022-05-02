@@ -2,7 +2,6 @@ package com.mju.ar_capstone;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -224,10 +223,10 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
         makePreModels(-99);
-        makePreModels(MP3_MODEL);
         for (int i = 0; i < 30; i++) {
             makePreModels(TEXT_MODEL);
             makePreModels(IMAGE_MODEL);
+            makePreModels(MP3_MODEL);
         }
 
     }
@@ -354,42 +353,12 @@ public class ArSfActivity extends AppCompatActivity implements
 
     public ViewRenderable makeMp3Models() {
 
-        ImageButton audioRecordImageBtn = (ImageButton) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordImageBtn);;
-        TextView audioRecordText = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.audioRecordText);
         ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);;
 
         mp3playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 playAudio(audioUri);
-            }
-        });
-
-        audioRecordImageBtn.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isRecording) {
-                    // 현재 녹음 중 O
-                    // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
-                    isRecording = false; // 녹음 상태 값
-                    audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_record, null)); // 녹음 상태 아이콘 변경
-                    audioRecordText.setText("녹음 시작"); // 녹음 상태 텍스트 변경
-                    stopRecording();
-                    // 녹화 이미지 버튼 변경 및 리코딩 상태 변수값 변경
-                } else {
-                    // 현재 녹음 중 X
-                    /*절차
-                     *       1. Audio 권한 체크
-                     *       2. 처음으로 녹음 실행한건지 여부 확인
-                     * */
-                    if (checkAudioPermission()) {
-                        // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
-                        isRecording = true; // 녹음 상태 값
-                        audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_recording_red, null)); // 녹음 상태 아이콘 변경
-                        audioRecordText.setText("녹음 중"); // 녹음 상태 텍스트 변경
-                        startRecording();
-                    }
-                }
             }
         });
         return mp3RenderableList.get(cntMp3Renderable);
@@ -544,7 +513,7 @@ public class ArSfActivity extends AppCompatActivity implements
             }
             Log.d("거리", "앵커 생성");
 
-            hostDialog.AnchorType anchorType = null;
+            HostDialog.AnchorType anchorType = null;
             Pose pose = wrappedAnchor.getPose();
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getTextOrPath();
@@ -552,11 +521,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
             // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
             if(intAnchorType == 0){
-                anchorType = hostDialog.AnchorType.text;
+                anchorType = HostDialog.AnchorType.text;
             }else if(intAnchorType == 1){
-                anchorType = hostDialog.AnchorType.image;
+                anchorType = HostDialog.AnchorType.image;
             }else if(intAnchorType == 2){
-                anchorType = hostDialog.AnchorType.mp3;
+                anchorType = HostDialog.AnchorType.mp3;
             }
 
             //나와 앵커가 남겨졌던 방위각 차이 계산
@@ -609,7 +578,7 @@ public class ArSfActivity extends AppCompatActivity implements
             }
 
             //현재 작업중
-            if(anchorType != hostDialog.AnchorType.image){ //텍스트랑 mp3 이거 실행
+            if(anchorType != HostDialog.AnchorType.image){ //텍스트랑 mp3 이거 실행
                 changeAnchor(model, text_or_path, anchorType);
             }else{ //이미지는 여기 실행
                 Log.d("다운로드", "서버에서 불러온게 이미지앵커임");
@@ -650,9 +619,9 @@ public class ArSfActivity extends AppCompatActivity implements
         model.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                hostDialog hostDialog = new hostDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new hostDialog.CustomDialogClickListener() {
+                HostDialog hostDialog = new HostDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new HostDialog.CustomDialogClickListener() {
                     @Override
-                    public void onPositiveClick(String tmpText, hostDialog.AnchorType anchorType) {
+                    public void onPositiveClick(String tmpText, HostDialog.AnchorType anchorType) {
                         Log.d("순서", "onTap/onPositiveClick");
 
                         writeMode = true;
@@ -691,8 +660,36 @@ public class ArSfActivity extends AppCompatActivity implements
                     }
 
                     @Override
-                    public void onRecordClick() {
+                    public void onRecordClick(TextView audioRecordText, ImageButton audioRecordImageBtn) {
 
+                        if (isRecording) {
+                            // 현재 녹음 중 O
+                            // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
+                            isRecording = false; // 녹음 상태 값
+                            audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_record, null)); // 녹음 상태 아이콘 변경
+                            audioRecordText.setText("녹음 시작"); // 녹음 상태 텍스트 변경
+                            stopRecording();
+                            // 녹화 이미지 버튼 변경 및 리코딩 상태 변수값 변경
+                        } else {
+                            // 현재 녹음 중 X
+                            /*절차
+                             *       1. Audio 권한 체크
+                             *       2. 처음으로 녹음 실행한건지 여부 확인
+                             * */
+                            if (checkAudioPermission()) {
+                                // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
+                                isRecording = true; // 녹음 상태 값
+                                audioRecordImageBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_recording_red, null)); // 녹음 상태 아이콘 변경
+                                audioRecordText.setText("녹음 중"); // 녹음 상태 텍스트 변경
+                                startRecording();
+                            }
+                        }
+
+                    }
+
+                    @Override
+                    public void onPlayClick() {
+                        playAudio(audioUri);
                     }
                 });
                 hostDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -704,11 +701,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     //화면상에 보여지는 앵커를 우선 바꿈
-    public void changeAnchor(TransformableNode model, String text_or_path, hostDialog.AnchorType anchorType){
+    public void changeAnchor(TransformableNode model, String text_or_path, HostDialog.AnchorType anchorType){
         Log.d("순서", "changeAnchor");
         Log.d("불러오기", "changeAnchor 들어옴");
 
-        if(anchorType == hostDialog.AnchorType.text){
+        if(anchorType == HostDialog.AnchorType.text){
             Log.d("불러오기", "changeAnchor 앵커 텍스트 타입");
             model.setRenderable(makeTextModels(text_or_path));
 
@@ -720,7 +717,7 @@ public class ArSfActivity extends AppCompatActivity implements
             cntTextRenderable += 1;
 
 
-        }else if(anchorType == hostDialog.AnchorType.image) {
+        }else if(anchorType == HostDialog.AnchorType.image) {
             //여기는 사용자가 이미지를 등록할때 처리되는 부분임
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
@@ -733,7 +730,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
             cntImageRenderable += 1;
 
-        }else if(anchorType == hostDialog.AnchorType.mp3){
+        }else if(anchorType == HostDialog.AnchorType.mp3){
                 model.setRenderable(makeMp3Models());
 
                 makePreModels(MP3_MODEL);
@@ -745,18 +742,20 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
-    public String saveAnchor(Pose pose, String text, hostDialog.AnchorType anchorType) {
+    public String saveAnchor(Pose pose, String text, HostDialog.AnchorType anchorType) {
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
-        if (anchorType == hostDialog.AnchorType.text) {
+        if (anchorType == HostDialog.AnchorType.text) {
             cloudManager.hostCloudAnchor(pose, text, userId, lat, lng, azimuth, 0);
-        } else if (anchorType == hostDialog.AnchorType.image) {
+        } else if (anchorType == HostDialog.AnchorType.image) {
             String path = fireStorageManager.getImagePath();
             cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, 1);
             fireStorageManager.uploadImage(tmpImageUri);
-        } else if (anchorType == hostDialog.AnchorType.mp3) {
-            cloudManager.hostCloudAnchor(pose,"mp3", userId, lat, lng, azimuth, 2);
+        } else if (anchorType == HostDialog.AnchorType.mp3) {
+            String path = fireStorageManager.getMp3Path();
+            cloudManager.hostCloudAnchor(pose,path, userId, lat, lng, azimuth, 2);
+            fireStorageManager.uploadMp3(audioFileName);
         }
         cloudManager.onUpdate();
 
@@ -776,8 +775,6 @@ public class ArSfActivity extends AppCompatActivity implements
             arFragment.setOnTapArPlaneListener(this);
         }
     }
-
-
 
     @Override
     public void onViewCreated(ArSceneView arSceneView) {

@@ -18,8 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.invenfragments.HostListFragment;
+import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
@@ -60,8 +63,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     //서버랑 연결
     private FirebaseManager firebaseManager;
 
-    //테스트용
-    private TextView testView;
+    //하단부 주최자 혹은 참가자에 따른 프래그먼트 변경
+    private FragmentManager fragmentManager;
+    private HostListFragment hostListFragment;
+    private UserInvenFragment userInvenFragment;
+    private FragmentTransaction fragmentTransaction;
 
 
     @Override
@@ -80,9 +86,16 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         selectedChannel = intent.getStringExtra("channel");
         Log.d("채널넘기는거 인벤", selectedChannel);
 
-        testView = (TextView) findViewById(R.id.userTypeTest);
-        testView.setText(String.valueOf(userType));
-
+        fragmentManager = getSupportFragmentManager();
+        if (userType == 1){ //주최자 일 때
+            hostListFragment = new HostListFragment();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+        }else{ //참가자 일 때
+            userInvenFragment = new UserInvenFragment();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+        }
 
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();

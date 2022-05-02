@@ -85,14 +85,34 @@
             android:gravity="center"
             android:padding="3dp"
             />
-        <ImageButton
-            android:id="@+id/audioRecordBtn"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/dialog_mp3"
             android:visibility="gone"
             android:gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:src="@drawable/ic_record"/>
+            android:orientation="vertical"
+            >
+            <ImageButton
+                android:id="@+id/audioRecordImageBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:src="@drawable/ic_record"/>
+            <TextView
+                android:id="@+id/audioRecordText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="녹음 시작"
+                android:textSize="24dp" />
+            <ImageButton
+                android:gravity="center"
+                android:id="@+id/mp3play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:src="@drawable/ic_audio_play" />
+        </LinearLayout>
     </LinearLayout>
 
 
