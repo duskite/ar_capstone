@@ -185,7 +185,7 @@ public class ArSfActivity extends AppCompatActivity implements
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
-        firebaseManager.registerContentsValueListner();
+//        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
@@ -198,6 +198,7 @@ public class ArSfActivity extends AppCompatActivity implements
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                firebaseManager.getContents();
                 loadCloudAnchors();
             }
         });

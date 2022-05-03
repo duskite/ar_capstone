@@ -2,36 +2,25 @@ package com.mju.ar_capstone;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
@@ -73,8 +62,11 @@ public class MainActivity extends AppCompatActivity {
         firebaseManager = new FirebaseManager();
         firebaseManager.setAuth(firebaseAuthManager.getUID().toString());
         //채널 리스트 가져옴
+        firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
         allChannelList = firebaseManager.getAllChannelList();
+
+
 
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
@@ -187,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         btnSpinnerLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 int arraySize = 0;
                 ArrayList<String> selectedChannelList = new ArrayList<>();
                 if(userType == 1){

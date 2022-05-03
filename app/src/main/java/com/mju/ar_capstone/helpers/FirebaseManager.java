@@ -6,6 +6,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Pose;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -44,7 +46,6 @@ public class FirebaseManager {
     private ValueEventListener anchorNumListener = null;
     private ValueEventListener imageNumListener = null;
     private ValueEventListener mp3NumListener = null;
-    private ValueEventListener gpsListener = null;
     //채널 리스트 불러오기
     private ValueEventListener channelListListener = null;
 
@@ -62,7 +63,7 @@ public class FirebaseManager {
 
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
-        registerChannelListListener();
+//        registerChannelListListener();
     }
 
     public ArrayList<String> getPublicChannelList(){
@@ -76,12 +77,16 @@ public class FirebaseManager {
         this.myID = myID;
     }
 
-    public void registerChannelListListener(){
-
-        channelListListener = new ValueEventListener() {
+    public void getChannelList(){
+        channelDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+
+                }else{
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot: dataSnapshot.getChildren()){
+                        Log.d("파베채널리스트", String.valueOf(tmpSnapshot.getKey()));
 
                     try{
                         int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
@@ -102,16 +107,51 @@ public class FirebaseManager {
                         //근데 비어있을리가 없음
                         //디폴트가 1 공개 채널임
                     }
+
+                    }
                 }
             }
+        });
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
+    }
 
-            }
-        };
+    //여기는 안쓰는쪽으로 고려중 위에 getChannelList 동작이 더 자연스러움
+    public void registerChannelListListener(){
 
-        channelDatabase.addValueEventListener(channelListListener);
+//        channelListListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
+//
+//                    try{
+//                        int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
+//                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
+//                        String channelName = tmpSnapshot.getKey();
+//                        Log.d("채널이름 파이어베이스 리스너", channelName);
+//
+//                        if(hostID.equals(myID)){ //자기가 만든 채널만 접근 가능
+//                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+//                        }
+//                        if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
+//                            publicChannelList.add(channelName);
+//                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+//                        }
+//
+//                    }catch (NullPointerException e){
+//                        //만약 비어있으면 비공개 채널이라고 생각
+//                        //근데 비어있을리가 없음
+//                        //디폴트가 1 공개 채널임
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//        };
+//
+//        channelDatabase.addValueEventListener(channelListListener);
 
     }
 
@@ -311,98 +351,116 @@ public class FirebaseManager {
 
     }
 
-
-    public void registerContentsValueListner() {
-
+    public void getContents(){
         contentsDatabase = mDatabase.child("contents");
-        contentsListener = new ValueEventListener() {
+        contentsDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot tmpSnapshot: snapshot.getChildren()){
-                    String anchorID = tmpSnapshot.getKey();
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
 
-                    try{
-                        //포즈 정보 불러오기
-                        HashMap<String, Double> poses = (HashMap<String, Double>) tmpSnapshot.child("pose").getValue();
-                        float[] poseT = {
-                                ((Double) poses.get("Tx")).floatValue(),
-                                ((Double) poses.get("Ty")).floatValue(),
-                                ((Double) poses.get("Tz")).floatValue()
-                        };
-                        float[] poseR = {
-                                ((Double) poses.get("Rx")).floatValue(),
-                                ((Double) poses.get("Ry")).floatValue(),
-                                ((Double) poses.get("Rz")).floatValue(),
-                                ((Double) poses.get("Rw")).floatValue(),
-                        };
-                        Pose pose = new Pose(poseT, poseR);
+                }else {
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot: dataSnapshot.getChildren()){
+                        String anchorID = tmpSnapshot.getKey();
 
-                        //gps정보 불러오기
-                        HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
+                        try{
+                            //포즈 정보 불러오기
+                            HashMap<String, Double> poses = (HashMap<String, Double>) tmpSnapshot.child("pose").getValue();
+                            float[] poseT = {
+                                    ((Double) poses.get("Tx")).floatValue(),
+                                    ((Double) poses.get("Ty")).floatValue(),
+                                    ((Double) poses.get("Tz")).floatValue()
+                            };
+                            float[] poseR = {
+                                    ((Double) poses.get("Rx")).floatValue(),
+                                    ((Double) poses.get("Ry")).floatValue(),
+                                    ((Double) poses.get("Rz")).floatValue(),
+                                    ((Double) poses.get("Rw")).floatValue(),
+                            };
+                            Pose pose = new Pose(poseT, poseR);
 
-                        wrappedAnchorList.add(new WrappedAnchor(
-                                anchorID,
-                                pose,
-                                tmpSnapshot.child("text_or_path").getValue(String.class),
-                                tmpSnapshot.child("userID").getValue(String.class),
-                                gps.get("lat"),
-                                gps.get("lng"),
-                                tmpSnapshot.child("azimuth").getValue(int.class),
-                                tmpSnapshot.child("type").getValue(int.class)
-                        ));
-                    }catch (NullPointerException e){
-                        Log.d("순서", "리스너 데이터 null 예외 발생");
-                    }catch (ClassCastException e){
+                            //gps정보 불러오기
+                            HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
 
+                            wrappedAnchorList.add(new WrappedAnchor(
+                                    anchorID,
+                                    pose,
+                                    tmpSnapshot.child("text_or_path").getValue(String.class),
+                                    tmpSnapshot.child("userID").getValue(String.class),
+                                    gps.get("lat"),
+                                    gps.get("lng"),
+                                    tmpSnapshot.child("azimuth").getValue(int.class),
+                                    tmpSnapshot.child("type").getValue(int.class)
+                            ));
+                        }catch (NullPointerException e){
+                            Log.d("순서", "리스너 데이터 null 예외 발생");
+                        }catch (ClassCastException e){
+
+                        }
                     }
+                    Log.d("순서", "리스너 데이터 로드 완료");
+
                 }
-                Log.d("순서", "리스너 데이터 로드 완료");
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-
-        contentsDatabase.addValueEventListener(contentsListener);
-
+        });
     }
 
 
-    public void registerGPSValueListner() {
-
-        gpsDatabase = mDatabase.child("anchorList");
-        gpsListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for(DataSnapshot tmpSnapshot: snapshot.getChildren()){
-                    String anchorID = tmpSnapshot.getKey();
-
-                    try{
-                        HashMap<String, Double> anchorList = (HashMap<String, Double>) tmpSnapshot.getValue();
-
-                        wrappedAnchorList.add(new WrappedAnchor(
-                                anchorID,
-                                anchorList.get("lat").doubleValue(),
-                                anchorList.get("lng").doubleValue()
-                        ));
-                    }catch (NullPointerException e){
-
-                    }catch (ClassCastException e){
-
-                    }
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-
-        gpsDatabase.addValueEventListener(gpsListener);
-    }
+//    public void registerContentsValueListner() {
+//
+//        contentsDatabase = mDatabase.child("contents");
+//        contentsListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                for(DataSnapshot tmpSnapshot: snapshot.getChildren()){
+//                    String anchorID = tmpSnapshot.getKey();
+//
+//                    try{
+//                        //포즈 정보 불러오기
+//                        HashMap<String, Double> poses = (HashMap<String, Double>) tmpSnapshot.child("pose").getValue();
+//                        float[] poseT = {
+//                                ((Double) poses.get("Tx")).floatValue(),
+//                                ((Double) poses.get("Ty")).floatValue(),
+//                                ((Double) poses.get("Tz")).floatValue()
+//                        };
+//                        float[] poseR = {
+//                                ((Double) poses.get("Rx")).floatValue(),
+//                                ((Double) poses.get("Ry")).floatValue(),
+//                                ((Double) poses.get("Rz")).floatValue(),
+//                                ((Double) poses.get("Rw")).floatValue(),
+//                        };
+//                        Pose pose = new Pose(poseT, poseR);
+//
+//                        //gps정보 불러오기
+//                        HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
+//
+//                        wrappedAnchorList.add(new WrappedAnchor(
+//                                anchorID,
+//                                pose,
+//                                tmpSnapshot.child("text_or_path").getValue(String.class),
+//                                tmpSnapshot.child("userID").getValue(String.class),
+//                                gps.get("lat"),
+//                                gps.get("lng"),
+//                                tmpSnapshot.child("azimuth").getValue(int.class),
+//                                tmpSnapshot.child("type").getValue(int.class)
+//                        ));
+//                    }catch (NullPointerException e){
+//                        Log.d("순서", "리스너 데이터 null 예외 발생");
+//                    }catch (ClassCastException e){
+//
+//                    }
+//                }
+//                Log.d("순서", "리스너 데이터 로드 완료");
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//        };
+//
+//        contentsDatabase.addValueEventListener(contentsListener);
+//
+//    }
 
 }

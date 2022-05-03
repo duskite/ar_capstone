@@ -133,8 +133,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
-        firebaseManager.registerContentsValueListner();
-
+        firebaseManager.getContents();
         firebaseAuthManager = new FirebaseAuthManager();
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
         if(userType == 1){
