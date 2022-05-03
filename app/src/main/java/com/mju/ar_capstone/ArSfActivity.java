@@ -134,7 +134,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private FusedLocationProviderClient fusedLocationProviderClient;
     private final CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private PoseManager poseManager;
-    private final int LOAD_DISTANCE = 30;
+    private final int LOAD_DISTANCE = 20;
 
     //주최자인지 참가자인지 구분하는 변수
     private int userType;
@@ -185,7 +185,7 @@ public class ArSfActivity extends AppCompatActivity implements
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
-        firebaseManager.registerContentsValueListner();
+//        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
@@ -198,6 +198,7 @@ public class ArSfActivity extends AppCompatActivity implements
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                firebaseManager.getContents();
                 loadCloudAnchors();
             }
         });
@@ -373,7 +374,10 @@ public class ArSfActivity extends AppCompatActivity implements
 
                 Log.d("음성다운", String.valueOf(audioUri));
 
-                playAudio(audioUri);
+                //여기 부분 아직 고민중
+                if(audioUri != null){
+                    playAudio(audioUri);
+                }
             }
         });
         return mp3RenderableList.get(cntMp3Renderable);
@@ -517,6 +521,7 @@ public class ArSfActivity extends AppCompatActivity implements
         writeMode = false;
 
         ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
+
         Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
         while (iterator.hasNext()){
             WrappedAnchor wrappedAnchor = iterator.next();
@@ -527,6 +532,7 @@ public class ArSfActivity extends AppCompatActivity implements
             double[] distanceArray = getDistance(anchorlat, anchorlng);
             if(distanceArray[0] > LOAD_DISTANCE){ //둘 사이의 거리
                 Log.d("거리", "거리가 너무 멈!!!");
+                iterator.remove();
                 continue;
             }
             Log.d("거리", "앵커 생성");
@@ -617,8 +623,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
             iterator.remove();
         }
-        //여러번 불러오기 호출로 똑같은 앵커가 계속 쌓이는거 방지
-        firebaseManager.clearWrappedAnchorList();
+
     }
 
 
