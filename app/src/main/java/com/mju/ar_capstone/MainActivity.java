@@ -2,52 +2,29 @@ package com.mju.ar_capstone;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
-import com.mju.ar_capstone.helpers.SensorAllManager;
-
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private int channelType = 1;
     private LinearLayout layoutChannelType;
 
-    private TextView tvUserId;
+    private TextView tvUserId, tvChannelLoad;
     private Spinner spinner;
     private Button btnSpinnerLoad;
 
@@ -83,15 +60,20 @@ public class MainActivity extends AppCompatActivity {
 
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
+        firebaseManager.setAuth(firebaseAuthManager.getUID().toString());
         //채널 리스트 가져옴
+        firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
         allChannelList = firebaseManager.getAllChannelList();
+
+
 
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
         btnInven = findViewById(R.id.btnInven);
         edtChannelName = findViewById(R.id.edtChannelName);
         btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
+        tvChannelLoad = findViewById(R.id.tvChannelLoad);
         spinner = (Spinner) findViewById(R.id.spinner_channel);
         spinner.setVisibility(View.INVISIBLE);
 
@@ -141,14 +123,18 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.host:
                         edtChannelName.setEnabled(false);
                         edtChannelName.setHint("위 버튼 체크시 생성가능");
+                        tvChannelLoad.setText("접근가능한 채널 불러오기");
+                        btnSpinnerLoad.setEnabled(true);
                         userType = 1;
                         break;
                     case R.id.participant:
                         userType = 2;
                         checkCreate.setVisibility(View.GONE);
                         edtChannelName.setEnabled(true);
+                        tvChannelLoad.setText("공개된 채널 불러오기");
                         edtChannelName.setHint("입장할 채널명을 입력해주세요");
                         btnInven.setText("입장하기");
+                        btnSpinnerLoad.setEnabled(true);
                         rdChannelType.setVisibility(View.INVISIBLE);
                         break;
                 }
@@ -165,7 +151,15 @@ public class MainActivity extends AppCompatActivity {
                 // 공용 채널에 이 이름이 있는지 체크
                 if(!allChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
                     if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
-                        Toast.makeText(getApplicationContext(), "해당하는 채널이 없습니다.", Toast.LENGTH_LONG);
+                        android.app.AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                        dialog.setMessage("존재하지 않는 채널입니다.");
+                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        dialog.show();
                         return;
                     }
                 }
@@ -186,14 +180,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                int arraySize = publicChannelList.size();
+                int arraySize = 0;
+                ArrayList<String> selectedChannelList = new ArrayList<>();
+                if(userType == 1){
+                    selectedChannelList = allChannelList;
+                }else if(userType == 2){
+                    selectedChannelList = publicChannelList;
+                }
+                arraySize = selectedChannelList.size();
                 Log.d("채널 사이즈", String.valueOf(arraySize));
                 String[] spinnerList = new String[arraySize];
                 for(int i=0; i<arraySize; i++){
-                    spinnerList[i] = publicChannelList.get(i);
+                    spinnerList[i] = selectedChannelList.get(i);
                     Log.d("채널 순서" + i, spinnerList[i]);
                 }
-                Log.d("채널", "선택" + selectedChannel);
 
                 //채널리스트로 선택 스피너 생성
                 spinner.setVisibility(View.VISIBLE);
@@ -265,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 }
