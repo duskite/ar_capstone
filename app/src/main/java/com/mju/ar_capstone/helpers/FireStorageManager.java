@@ -129,19 +129,37 @@ public class FireStorageManager {
             Log.d("mp3", "파일이 없음");
         }
 
-        String[] names = fileName.split("/");
-        // Record ... 어쩌구 하는 부분으로만 저장
-        UploadTask uploadTask = mp3Reference.child(names[8]).putStream(inputStream);
+//        String[] names = fileName.split("/");
+//         Record ... 어쩌구 하는 부분으로만 저장
+        UploadTask uploadTask = mp3Reference.child(currentMp3ID + MP3_TYPE).putStream(inputStream);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.d("mp3", "업로드 실패");
+                Log.d("3gp", "업로드 실패");
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Log.d("mp3", "업로드 성공");
+                Log.d("3gp", "업로드 성공");
+            }
+        });
+    }
+
+    // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
+    public void downloadMp3(Context context, String path){
+        Log.d("음성다운", "음성 다운로드 시작");
+
+        mp3Reference.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Log.d("음성다운", String.valueOf(uri));
+                Log.d("음성다운", "다운 성공");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("음성다운", "다운 실패");
             }
         });
     }
