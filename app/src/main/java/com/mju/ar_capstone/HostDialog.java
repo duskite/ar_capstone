@@ -1,7 +1,9 @@
 package com.mju.ar_capstone;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -21,7 +23,7 @@ public class HostDialog extends Dialog {
 
     private Context context;
     private CustomDialogClickListener customDialogClickListener;
-    private Button dialogBtnOk, dialogBtnDelete;
+    private Button dialogBtnOk, dialogBtnDelete, btnImgMakePuzzle;
     private RadioGroup dialogRdGroup;
     private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnMp3;
 
@@ -79,7 +81,7 @@ public class HostDialog extends Dialog {
 
             textView = (TextView) findViewById(R.id.dialog_tv_test);
 
-
+            btnImgMakePuzzle = (Button) findViewById(R.id.btnMakeImgPuzzle);
 
             dialogRdGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
@@ -88,9 +90,9 @@ public class HostDialog extends Dialog {
                         textView.setText("텍스트 모드");
                         dialogEdt.setVisibility(View.VISIBLE);
                         dialogImg.setVisibility(View.GONE);
+                        btnImgMakePuzzle.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
                         anchorType = anchorType.text;
-
 
                         Log.d("순서", "텍스트 모드 눌림");
 
@@ -99,6 +101,7 @@ public class HostDialog extends Dialog {
                         dialogImg.setVisibility(View.VISIBLE);
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
+                        btnImgMakePuzzle.setVisibility(View.VISIBLE);
                         anchorType = anchorType.image;
 
                         Log.d("순서", "이미지 모드 눌림");
@@ -109,6 +112,7 @@ public class HostDialog extends Dialog {
                         dialogImg.setVisibility(View.GONE);
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.VISIBLE);
+                        btnImgMakePuzzle.setVisibility(View.GONE);
                         anchorType = anchorType.mp3;
                     }
                 }
@@ -141,6 +145,11 @@ public class HostDialog extends Dialog {
                 this.customDialogClickListener.onPlayClick();
             });
 
+            //이미지 퍼즐
+            btnImgMakePuzzle.setOnClickListener(v ->{
+                this.customDialogClickListener.onImgPuzzleClick(btnImgMakePuzzle);
+            });
+
     }
 
     public interface CustomDialogClickListener{
@@ -151,5 +160,6 @@ public class HostDialog extends Dialog {
 
         void onRecordClick(TextView audioRecordText, ImageButton audioRecordImageBtn);
         void onPlayClick();
+        void onImgPuzzleClick(Button btnImgMakePuzzle);
     }
 }

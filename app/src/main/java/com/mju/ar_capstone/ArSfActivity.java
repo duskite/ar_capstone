@@ -2,16 +2,20 @@ package com.mju.ar_capstone;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -60,6 +64,8 @@ import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.PoseManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -717,12 +723,122 @@ public class ArSfActivity extends AppCompatActivity implements
                     public void onPlayClick() {
                         playAudio(audioUri);
                     }
+
+                    @Override
+                    public void onImgPuzzleClick(Button btnImgMakePuzzle) {
+                        btnImgMakePuzzle.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                if(tmpImageUri != null){
+
+                                    ArrayList<Bitmap> tmpBitmap = cropBitmapList(tmpImageUri);
+                                    ImgPuzzleDialog imgPuzzleDialog = new ImgPuzzleDialog(ArSfActivity.this, tmpBitmap, new ImgPuzzleDialog.PuzzleDialogClickListener() {
+                                        @Override
+                                        public void onImgBtn0Click(Bitmap bitmap) {
+                                            Uri uri = getImageUri(getApplicationContext(), bitmap);
+                                            tmpImageUri = uri;
+                                            Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
+                                        }
+
+                                        @Override
+                                        public void onImgBtn1Click(Bitmap bitmap) {
+                                            Uri uri = getImageUri(getApplicationContext(), bitmap);
+                                            tmpImageUri = uri;
+                                            Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
+                                        }
+
+                                        @Override
+                                        public void onImgBtn2Click(Bitmap bitmap) {
+                                            Uri uri = getImageUri(getApplicationContext(), bitmap);
+                                            tmpImageUri = uri;
+                                            Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
+                                        }
+
+                                        @Override
+                                        public void onImgBtn3Click(Bitmap bitmap) {
+                                            Uri uri = getImageUri(getApplicationContext(), bitmap);
+                                            tmpImageUri = uri;
+                                            Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
+                                        }
+                                    });
+
+                                    imgPuzzleDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                                    imgPuzzleDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                                    imgPuzzleDialog.show();
+                                }else {
+                                    //선택된 이미지가 없을 때
+                                }
+                            }
+                        });
+                    }
                 });
                 hostDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 hostDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 hostDialog.show();
             }
         });
+    }
+    private Uri getImageUri(Context context, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+    public Bitmap uriToBitmap(Uri uri){
+        Bitmap bitmap = null;
+        try{
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P){
+                bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), uri));
+            }else {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+            }
+        }catch (IOException e){
+
+        }
+
+        return bitmap;
+    }
+
+    public ArrayList<Bitmap> cropBitmapList(Uri uri) {
+        Bitmap src = null;
+        try {
+            src = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        if(src == null)
+            return null;
+
+        ArrayList<Bitmap> bitmapArrayList = new ArrayList<>();
+
+        // 이미지의 크기 구함
+        int width = src.getWidth();
+        int height = src.getHeight();
+
+        //시작점
+        int x = 0;
+        int y = 0;
+
+        //반절 크기
+        int hw = width / 2;
+        int hh = height / 2;
+
+        //0번째 0 -> hw, 0-> hh
+        //1번째 hw -> w, 0 -> hh
+        //2번째 0 -> hw, hh -> h
+        //3번째 hw -> w, hh -> h
+        bitmapArrayList.add(Bitmap.createBitmap(src, x, y, hw, hh));
+        bitmapArrayList.add(Bitmap.createBitmap(src, hw, y, hw, hh));
+        bitmapArrayList.add(Bitmap.createBitmap(src, x, hh, hw, hh));
+        bitmapArrayList.add(Bitmap.createBitmap(src, hw, hh, hw, hh));
+
+        return bitmapArrayList;
     }
 
 

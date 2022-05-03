@@ -68,7 +68,7 @@
             />
         <EditText
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:hint="내용을 입력해주세요."
             android:visibility="gone"
             android:id="@+id/dialog_edt"
@@ -84,6 +84,15 @@
             android:id="@+id/dialog_img"
             android:gravity="center"
             android:padding="3dp"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:id="@+id/btnMakeImgPuzzle"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:text="이미지 퍼즐 만들기"
             />
         <LinearLayout
             android:layout_width="match_parent"
