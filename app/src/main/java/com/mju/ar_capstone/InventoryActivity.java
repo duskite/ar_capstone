@@ -99,15 +99,21 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         selectedChannel = intent.getStringExtra("channel");
         Log.d("채널넘기는거 인벤", selectedChannel);
 
+        //프래그먼트에 값 넘길 번들 객체
+        Bundle bundle = new Bundle();
+        bundle.putString("selectedChannel", selectedChannel);
+
         fragmentManager = getSupportFragmentManager();
         if (userType == 1){ //주최자 일 때
             hostListFragment = new HostListFragment();
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+            hostListFragment.setArguments(bundle);
         }else{ //참가자 일 때
             userInvenFragment = new UserInvenFragment();
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+            userInvenFragment.setArguments(bundle);
         }
 
         // 지도 객체 생성
@@ -137,7 +143,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             //참가자일때
             firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
         }
-
 
 
         // ar화면으로 넘어가기

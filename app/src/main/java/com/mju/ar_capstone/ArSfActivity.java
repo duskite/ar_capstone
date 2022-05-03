@@ -80,6 +80,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArrayList<ViewRenderable> mp3RenderableList = new ArrayList<>();
     private ViewRenderable denyRenderable;
 
+    private ArrayList<Uri> audioUriList = new ArrayList<>();
+
     private static int cntTextRenderable = 0;
     private static int cntImageRenderable = 0;
     private static int cntMp3Renderable = 0;
@@ -141,7 +143,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
-
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -354,10 +355,19 @@ public class ArSfActivity extends AppCompatActivity implements
     public ViewRenderable makeMp3Models() {
 
         ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);;
+        TextView mp3index = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3index);
+        mp3index.setText(Integer.toString(cntMp3Renderable));
 
         mp3playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                int index = Integer.parseInt(mp3index.getText().toString());
+                audioUriList = fireStorageManager.getMp3ListUri();
+                audioUri = audioUriList.get(index);
+
+                Log.d("음성다운", String.valueOf(audioUri));
+
                 playAudio(audioUri);
             }
         });
@@ -431,7 +441,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
         try {
             mediaPlayer.setDataSource(getApplicationContext(), uri);
-//            mediaPlayer.setDataSource(file.getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (IOException e) {
@@ -578,9 +587,9 @@ public class ArSfActivity extends AppCompatActivity implements
             }
 
             //현재 작업중
-            if(anchorType != HostDialog.AnchorType.image){ //텍스트랑 mp3 이거 실행
+            if(anchorType == HostDialog.AnchorType.text){ //텍스트 이거 실행
                 changeAnchor(model, text_or_path, anchorType);
-            }else{ //이미지는 여기 실행
+            }else if(anchorType == HostDialog.AnchorType.image){ //이미지는 여기 실행
                 Log.d("다운로드", "서버에서 불러온게 이미지앵커임");
 
                 //서버에서 불러오는거는 여기서 다운로드하고 change까지 모두 함
@@ -592,6 +601,9 @@ public class ArSfActivity extends AppCompatActivity implements
                 makePreModels(IMAGE_MODEL); //추가로 미리 모델 만드는 용도
 
                 cntImageRenderable++;
+            }else if(anchorType == HostDialog.AnchorType.mp3){
+                fireStorageManager.downloadMp3(getApplicationContext(), text_or_path);
+                changeAnchor(model, text_or_path, anchorType);
             }
 
             iterator.remove();
@@ -718,7 +730,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
 
         }else if(anchorType == HostDialog.AnchorType.image) {
-            //여기는 사용자가 이미지를 등록할때 처리되는 부분임
+            //여기는 주최자가 이미지를 등록할때 처리되는 부분임
             //서버에서 가져오는거는 firestorageManager가 책임짐
 
             Log.d("불러오기", "changeAnchor 앵커 이미지 타입");
@@ -754,7 +766,7 @@ public class ArSfActivity extends AppCompatActivity implements
             fireStorageManager.uploadImage(tmpImageUri);
         } else if (anchorType == HostDialog.AnchorType.mp3) {
             String path = fireStorageManager.getMp3Path();
-            cloudManager.hostCloudAnchor(pose,path, userId, lat, lng, azimuth, 2);
+            cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, 2);
             fireStorageManager.uploadMp3(audioFileName);
         }
         cloudManager.onUpdate();

@@ -19,8 +19,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="몇번째인지"
+            android:id="@+id/mp3index"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="남겨진 음성"
             />
+
 
         <ImageButton
             android:gravity="center"

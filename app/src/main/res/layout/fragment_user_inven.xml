@@ -8,7 +8,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="참가자로 접속 됨"
+        android:text="접속"
+        android:id="@+id/userTv"
         />
 
 </LinearLayout>

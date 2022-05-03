@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.ArrayList;
 
 public class FireStorageManager {
 
@@ -46,6 +47,7 @@ public class FireStorageManager {
     private static final String strMp3ID = "mp3ID_";
     private static final String MP3_TYPE = ".3gp";
     private String currentMp3ID;
+    private ArrayList<Uri> mp3UriList = new ArrayList<>();
 
     public FireStorageManager(){
         firebaseStorage = FirebaseStorage.getInstance();
@@ -71,6 +73,9 @@ public class FireStorageManager {
     }
     public String getMp3Path(){
         return makeMp3FileID();
+    }
+    public ArrayList<Uri> getMp3ListUri(){
+        return mp3UriList;
     }
 
     // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
@@ -129,19 +134,38 @@ public class FireStorageManager {
             Log.d("mp3", "파일이 없음");
         }
 
-        String[] names = fileName.split("/");
-        // Record ... 어쩌구 하는 부분으로만 저장
-        UploadTask uploadTask = mp3Reference.child(names[8]).putStream(inputStream);
+//        String[] names = fileName.split("/");
+//         Record ... 어쩌구 하는 부분으로만 저장
+        UploadTask uploadTask = mp3Reference.child(currentMp3ID + MP3_TYPE).putStream(inputStream);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.d("mp3", "업로드 실패");
+                Log.d("3gp", "업로드 실패");
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Log.d("mp3", "업로드 성공");
+                Log.d("3gp", "업로드 성공");
+            }
+        });
+    }
+
+    // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
+    public void downloadMp3(Context context, String path){
+        Log.d("음성다운", "음성 다운로드 시작");
+
+        mp3Reference.child(path).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Log.d("음성다운", String.valueOf(uri));
+                Log.d("음성다운", "다운 성공");
+                mp3UriList.add(uri);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("음성다운", "다운 실패");
             }
         });
     }
