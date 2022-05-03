@@ -15,7 +15,8 @@ import com.mju.ar_capstone.R;
 public class HostListFragment extends Fragment {
 
     ViewGroup viewGroup;
-    TextView hostTv;
+    View hostlist0, hostlist1, hostlist2;
+    TextView hostTv, hostText, hostImage, hostMp3;
 
     @Nullable
     @Override
@@ -23,6 +24,12 @@ public class HostListFragment extends Fragment {
 
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_host_list, container, false);
         hostTv = viewGroup.findViewById(R.id.hostTv);
+        hostlist0 = viewGroup.findViewById(R.id.hostlist0);
+        hostlist1 = viewGroup.findViewById(R.id.hostlist1);
+        hostlist2 = viewGroup.findViewById(R.id.hostlist2);
+        hostText = viewGroup.findViewById(R.id.hostText);
+        hostImage = viewGroup.findViewById(R.id.hostImage);
+        hostMp3 = viewGroup.findViewById(R.id.hostMp3);
 
         Bundle bundle = getArguments();
         String selectedChannel = bundle.getString("selectedChannel");

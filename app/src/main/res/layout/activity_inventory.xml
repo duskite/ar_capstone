@@ -17,6 +17,7 @@
         android:layout_height="match_parent"
         android:id="@+id/host_or_user_frame"
         >
+
         <Button
             android:id="@+id/btnArSf"
             android:layout_gravity="bottom|center"
