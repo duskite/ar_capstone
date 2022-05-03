@@ -55,16 +55,19 @@ public class FirebaseManager {
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
     //채널 이름 넣을 변수
-    public ArrayList<String> channelList = new ArrayList<>();
+    public ArrayList<String> publicChannelList = new ArrayList<>();
+    public ArrayList<String> allChannelList = new ArrayList<>();
 
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         registerChannelListListener();
     }
 
-    public ArrayList<String> getChannelList(){
-
-        return channelList;
+    public ArrayList<String> getPublicChannelList(){
+        return publicChannelList;
+    }
+    public ArrayList<String> getAllChannelList(){
+        return allChannelList;
     }
 
     public void registerChannelListListener(){
@@ -73,10 +76,21 @@ public class FirebaseManager {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
-                    String channelName = tmpSnapshot.getKey();
-                    Log.d("채널이름 파이어베이스 리스너", channelName);
 
-                    channelList.add(channelName);
+                    try{
+                        int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
+                        String channelName = tmpSnapshot.getKey();
+                        Log.d("채널이름 파이어베이스 리스너", channelName);
+                        allChannelList.add(channelName); //모든 채널이름 리스트에 넣는 부분
+                        if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
+                            publicChannelList.add(channelName);
+                        }
+
+                    }catch (NullPointerException e){
+                        //만약 비어있으면 비공개 채널이라고 생각
+                        //근데 비어있을리가 없음
+                        //디폴트가 1 공개 채널임
+                    }
                 }
             }
 

@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnInven;
     private RadioGroup rdUserType, rdChannelType;
     private int userType = 0;
-    private int channelType = 0;
+    private int channelType = 1;
     private LinearLayout layoutChannelType;
 
     private TextView tvUserId;
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedChannel = "base_channel"; //기본 채널
     private EditText edtChannelName;
 
-    private ArrayList<String> channelList;
+    private ArrayList<String> publicChannelList, allChannelList;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -84,15 +84,16 @@ public class MainActivity extends AppCompatActivity {
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
         //채널 리스트 가져옴
-        channelList = firebaseManager.getChannelList();
+        publicChannelList = firebaseManager.getPublicChannelList();
+        allChannelList = firebaseManager.getAllChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
-        tvUserId.setText("로그인 성공\n" + "익명ID: " + firebaseAuthManager.getUID());
+        tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
         btnInven = findViewById(R.id.btnInven);
         edtChannelName = findViewById(R.id.edtChannelName);
         btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
         spinner = (Spinner) findViewById(R.id.spinner_channel);
-        spinner.setVisibility(View.GONE);
+        spinner.setVisibility(View.INVISIBLE);
 
 
         checkCreate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (checkedId){
                     case R.id.host:
                         edtChannelName.setEnabled(false);
+                        edtChannelName.setHint("위 버튼 체크시 생성가능");
                         userType = 1;
                         break;
                     case R.id.participant:
@@ -147,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
                         edtChannelName.setEnabled(true);
                         edtChannelName.setHint("입장할 채널명을 입력해주세요");
                         btnInven.setText("입장하기");
+                        rdChannelType.setVisibility(View.INVISIBLE);
                         break;
                 }
                 Log.d("유저타입", String.valueOf(userType));
@@ -158,6 +161,16 @@ public class MainActivity extends AppCompatActivity {
                 if(!edtChannelName.getText().toString().equals("")){
                     selectedChannel = edtChannelName.getText().toString();
                 }
+
+                // 공용 채널에 이 이름이 있는지 체크
+                if(!allChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
+                    if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
+                        Toast.makeText(getApplicationContext(), "해당하는 채널이 없습니다.", Toast.LENGTH_LONG);
+                        return;
+                    }
+                }
+
+                //채널이 있을때
                 Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
                 intent.putExtra("channel", selectedChannel);
                 intent.putExtra("userType", userType);
@@ -173,11 +186,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                int arraySize = channelList.size();
+                int arraySize = publicChannelList.size();
                 Log.d("채널 사이즈", String.valueOf(arraySize));
                 String[] spinnerList = new String[arraySize];
                 for(int i=0; i<arraySize; i++){
-                    spinnerList[i] = channelList.get(i);
+                    spinnerList[i] = publicChannelList.get(i);
                     Log.d("채널 순서" + i, spinnerList[i]);
                 }
                 Log.d("채널", "선택" + selectedChannel);
