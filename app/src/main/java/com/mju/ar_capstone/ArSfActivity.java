@@ -80,6 +80,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArrayList<ViewRenderable> mp3RenderableList = new ArrayList<>();
     private ViewRenderable denyRenderable;
 
+    private ArrayList<Uri> audioUriList = new ArrayList<>();
+
     private static int cntTextRenderable = 0;
     private static int cntImageRenderable = 0;
     private static int cntMp3Renderable = 0;
@@ -141,7 +143,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
     public static int TO_GRID = 0;
     public static int TO_GPS = 1;
-
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -354,10 +355,19 @@ public class ArSfActivity extends AppCompatActivity implements
     public ViewRenderable makeMp3Models() {
 
         ImageButton mp3playBtn = (ImageButton)  mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3play);;
+        TextView mp3index = (TextView) mp3RenderableList.get(cntMp3Renderable).getView().findViewById(R.id.mp3index);
+        mp3index.setText(Integer.toString(cntMp3Renderable));
 
         mp3playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                int index = Integer.parseInt(mp3index.getText().toString());
+                audioUriList = fireStorageManager.getMp3ListUri();
+                audioUri = audioUriList.get(index);
+
+                Log.d("음성다운", String.valueOf(audioUri));
+
                 playAudio(audioUri);
             }
         });
@@ -431,7 +441,6 @@ public class ArSfActivity extends AppCompatActivity implements
 
         try {
             mediaPlayer.setDataSource(getApplicationContext(), uri);
-//            mediaPlayer.setDataSource(file.getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (IOException e) {

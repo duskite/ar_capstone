@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.ArrayList;
 
 public class FireStorageManager {
 
@@ -46,6 +47,7 @@ public class FireStorageManager {
     private static final String strMp3ID = "mp3ID_";
     private static final String MP3_TYPE = ".3gp";
     private String currentMp3ID;
+    private ArrayList<Uri> mp3UriList = new ArrayList<>();
 
     public FireStorageManager(){
         firebaseStorage = FirebaseStorage.getInstance();
@@ -71,6 +73,9 @@ public class FireStorageManager {
     }
     public String getMp3Path(){
         return makeMp3FileID();
+    }
+    public ArrayList<Uri> getMp3ListUri(){
+        return mp3UriList;
     }
 
     // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴
@@ -155,6 +160,7 @@ public class FireStorageManager {
             public void onSuccess(Uri uri) {
                 Log.d("음성다운", String.valueOf(uri));
                 Log.d("음성다운", "다운 성공");
+                mp3UriList.add(uri);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
