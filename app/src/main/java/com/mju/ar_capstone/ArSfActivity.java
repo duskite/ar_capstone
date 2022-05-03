@@ -732,7 +732,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
             Log.d("불러오기", "model 렌더러블까지 끝남");
 
-            //미리 모델 만들기
+            //미리 모델 만들기..
             makePreModels(TEXT_MODEL);
 
             cntTextRenderable += 1;
