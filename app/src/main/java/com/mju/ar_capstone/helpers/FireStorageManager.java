@@ -142,9 +142,6 @@ public class FireStorageManager {
         }catch (FileNotFoundException e){
             Log.d("mp3", "파일이 없음");
         }
-
-//        String[] names = fileName.split("/");
-//         Record ... 어쩌구 하는 부분으로만 저장
         UploadTask uploadTask = mp3Reference.child(currentMp3ID + MP3_TYPE).putStream(inputStream);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {

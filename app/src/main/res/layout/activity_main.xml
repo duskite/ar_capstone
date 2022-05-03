@@ -114,12 +114,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="공개된 채널 불러오기" />
+                android:text="채널 불러오기"
+                android:id="@+id/tvChannelLoad"
+                />
 
             <Button
                 android:id="@+id/btnSpinnerLoad"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:text="LOAD" />
         </LinearLayout>
 

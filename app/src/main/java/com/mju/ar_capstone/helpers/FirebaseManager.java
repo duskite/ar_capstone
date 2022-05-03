@@ -54,6 +54,8 @@ public class FirebaseManager {
 
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
+    private String myID;
+
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
     public ArrayList<String> allChannelList = new ArrayList<>();
@@ -70,6 +72,10 @@ public class FirebaseManager {
         return allChannelList;
     }
 
+    public void setAuth(String myID){
+        this.myID = myID;
+    }
+
     public void registerChannelListListener(){
 
         channelListListener = new ValueEventListener() {
@@ -79,11 +85,16 @@ public class FirebaseManager {
 
                     try{
                         int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
+                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
                         String channelName = tmpSnapshot.getKey();
                         Log.d("채널이름 파이어베이스 리스너", channelName);
-                        allChannelList.add(channelName); //모든 채널이름 리스트에 넣는 부분
+
+                        if(hostID.equals(myID)){ //자기가 만든 채널만 접근 가능
+                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+                        }
                         if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
                             publicChannelList.add(channelName);
+                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
                         }
 
                     }catch (NullPointerException e){

@@ -171,6 +171,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         super.onPause();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
     //방위각 구해서 넘기는 부분
     public void registerListener(){
         if (accelerometer != null) {
@@ -299,8 +304,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             //마커에 앵커 타입을 태그로 설정
             marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
         }
-
-        firebaseManager.clearWrappedAnchorList();
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
