@@ -55,6 +55,12 @@ public class FireStorageManager {
         imgReferece = storageReference.child("image");
         mp3Reference = storageReference.child("mp3");
     }
+    public FireStorageManager(String channel){
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
+        imgReferece = storageReference.child("image").child(channel);
+        mp3Reference = storageReference.child("mp3").child(channel);
+    }
 
     public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
@@ -76,6 +82,9 @@ public class FireStorageManager {
     }
     public ArrayList<Uri> getMp3ListUri(){
         return mp3UriList;
+    }
+    public void clearMp3UriList(){
+        mp3UriList.clear();
     }
 
     // 적용할 모델과 로딩된 뷰렌더러블 하나 들고옴

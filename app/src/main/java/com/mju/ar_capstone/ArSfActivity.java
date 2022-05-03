@@ -186,7 +186,7 @@ public class ArSfActivity extends AppCompatActivity implements
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
         firebaseManager.registerContentsValueListner();
-        fireStorageManager = new FireStorageManager();
+        fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
 
@@ -363,7 +363,12 @@ public class ArSfActivity extends AppCompatActivity implements
             public void onClick(View v) {
 
                 int index = Integer.parseInt(mp3index.getText().toString());
-                audioUriList = fireStorageManager.getMp3ListUri();
+
+                if(userType == 2){ //참가자일때는 항상 불러오는 경우만 있음
+                    audioUriList = fireStorageManager.getMp3ListUri();
+                }else { //주최자일때는 내가 만든 음성앵커와 불러온 음성 앵커를 합쳐줘야함
+                    audioUriList.addAll(fireStorageManager.getMp3ListUri());
+                }
                 audioUri = audioUriList.get(index);
 
                 Log.d("음성다운", String.valueOf(audioUri));
@@ -423,6 +428,10 @@ public class ArSfActivity extends AppCompatActivity implements
         //      - Why? : 리사이클러뷰에 들어가는 ArrayList가 Uri를 가지기 때문
         //      - File Path를 알면 File을  인스턴스를 만들어 사용할 수 있기 때문
         audioUri = Uri.parse(audioFileName);
+
+        //음성 앵커 오류 확인중
+        audioUriList.add(Uri.parse(audioFileName));
+
         Log.d("mp3", audioUri.toString());
         fireStorageManager.uploadMp3(audioFileName);
 
