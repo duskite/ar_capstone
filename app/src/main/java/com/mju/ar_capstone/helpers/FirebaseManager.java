@@ -187,7 +187,8 @@ public class FirebaseManager {
             contents.put("text_or_path", wrappedAnchor.getTextOrPath() + ".jpg");
             imageNumDatabase.setValue(nextImageNum + 1);
         }else if(wrappedAnchor.getAnchorType() == 2){ //음성
-
+            contents.put("text_or_path", wrappedAnchor.getTextOrPath() + ".3gp");
+            mp3NumDatabase.setValue(nextMp3Num + 1);
         }else { //텍스트
             contents.put("text_or_path", wrappedAnchor.getTextOrPath());
         }
