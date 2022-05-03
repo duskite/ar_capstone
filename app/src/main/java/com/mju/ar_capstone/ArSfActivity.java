@@ -673,7 +673,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         } else {
                             // 현재 녹음 중 X
                             /*절차
-                             *       1. Audio 권한 체크
+                             *       1. Audio 권한 체크//
                              *       2. 처음으로 녹음 실행한건지 여부 확인//
                              * */
                             if (checkAudioPermission()) {
