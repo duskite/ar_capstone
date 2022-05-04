@@ -54,6 +54,8 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
+import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.BaseArFragment;
@@ -86,6 +88,8 @@ public class ArSfActivity extends AppCompatActivity implements
     private ArrayList<ViewRenderable> imageRenderableList = new ArrayList<>();
     private ArrayList<ViewRenderable> mp3RenderableList = new ArrayList<>();
     private ViewRenderable denyRenderable;
+    private ModelRenderable keyRenderable, boxRenderable;
+
 
     private ArrayList<Uri> audioUriList = new ArrayList<>();
 
@@ -99,6 +103,9 @@ public class ArSfActivity extends AppCompatActivity implements
     private static final int TEXT_MODEL = 0;
     private static final int IMAGE_MODEL = 1;
     private static final int MP3_MODEL = 2;
+    private static final int DENY_MODEL = -99;
+    private static final int KEY_MODEL = 3;
+    private static final int BOX_MODEL = 4;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -232,6 +239,9 @@ public class ArSfActivity extends AppCompatActivity implements
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         makePreModels(SELECT_MODEL);
         makePreModels(-99);
+        makePreModels(DENY_MODEL);
+        makePreModels(KEY_MODEL);
+        makePreModels(BOX_MODEL);
         for (int i = 0; i < 30; i++) {
             makePreModels(TEXT_MODEL);
             makePreModels(IMAGE_MODEL);
@@ -307,7 +317,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
-        }else{
+        }else if(type == DENY_MODEL){
             //선택 모델 생성
             ViewRenderable.builder()
                     .setView(this, R.layout.view_model_deny)
@@ -322,6 +332,40 @@ public class ArSfActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Unable to load model", Toast.LENGTH_LONG).show();
                         return null;
                     });
+        }else if(type == KEY_MODEL){
+            ModelRenderable.builder()
+                    .setSource(this, Uri.parse("file://models/key/scene.gltf"))
+                    .setIsFilamentGltf(true)
+                    .build()
+                    .thenAccept(modelRenderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.keyRenderable = modelRenderable;
+                        }
+                        Log.d("모델렌더러블", "로드 성공");
+                    }).exceptionally(throwable -> {
+                        throwable.getStackTrace();
+                        Log.d("모델렌더러블", throwable.getMessage());
+                        Log.d("모델렌더러블", "로드 실패");
+                        return null;
+                    });
+        }else if(type == BOX_MODEL){
+            ModelRenderable.builder()
+                    .setSource(this, Uri.parse("file://models/lockedbox/scene.gltf"))
+                    .setIsFilamentGltf(true)
+                    .build()
+                    .thenAccept(modelRenderable -> {
+                        ArSfActivity activity = weakActivity.get();
+                        if (activity != null) {
+                            activity.boxRenderable = modelRenderable;
+                        }
+                        Log.d("모델렌더러블", "로드 성공");
+                    }).exceptionally(throwable -> {
+                throwable.getStackTrace();
+                Log.d("모델렌더러블", throwable.getMessage());
+                Log.d("모델렌더러블", "로드 실패");
+                return null;
+            });
         }
 
         Log.d("불러오기", "makePreModels 끝");
@@ -561,6 +605,10 @@ public class ArSfActivity extends AppCompatActivity implements
                 anchorType = HostDialog.AnchorType.image;
             }else if(intAnchorType == 2){
                 anchorType = HostDialog.AnchorType.mp3;
+            }else if(intAnchorType == 3){
+                anchorType = HostDialog.AnchorType.key;
+            }else if(intAnchorType == 4){
+                anchorType = HostDialog.AnchorType.box;
             }
 
             //나와 앵커가 남겨졌던 방위각 차이 계산
@@ -661,8 +709,11 @@ public class ArSfActivity extends AppCompatActivity implements
             }else if(anchorType == HostDialog.AnchorType.mp3){
                 fireStorageManager.downloadMp3(getApplicationContext(), text_or_path);
                 changeAnchor(model, text_or_path, anchorType);
+            }else if(anchorType == HostDialog.AnchorType.key){ //키 앵커 이거 실행
+                changeAnchor(model, text_or_path, anchorType);
+            }else if(anchorType == HostDialog.AnchorType.box){ //박스 앵커 이거 실행
+                changeAnchor(model, text_or_path, anchorType);
             }
-
             iterator.remove();
         }
 
@@ -925,6 +976,19 @@ public class ArSfActivity extends AppCompatActivity implements
             makePreModels(MP3_MODEL);
 
             cntMp3Renderable += 1;
+        }else if(anchorType == HostDialog.AnchorType.key){
+            model.setRenderable(keyRenderable);
+            model.getScaleController().setMinScale(0.01f);
+            model.getScaleController().setMaxScale(0.03f);
+            model.setLocalScale(new Vector3(0.02f, 0.02f, 0.02f));
+            model.select();
+
+        }else if(anchorType == HostDialog.AnchorType.box){
+            model.setRenderable(boxRenderable);
+            model.getScaleController().setMinScale(0.1f);
+            model.getScaleController().setMaxScale(0.3f);
+            model.setLocalScale(new Vector3(0.2f, 0.2f, 0.2f));
+            model.select();
         }
 
     }
@@ -946,6 +1010,10 @@ public class ArSfActivity extends AppCompatActivity implements
             String path = fireStorageManager.getMp3Path();
             cloudManager.hostCloudAnchor(pose, path, userId, lat, lng, azimuth, 2);
             fireStorageManager.uploadMp3(audioFileName);
+        } else if(anchorType == HostDialog.AnchorType.key){
+            cloudManager.hostCloudAnchor(pose, "키", userId, lat, lng, azimuth, 3);
+        }else if(anchorType == HostDialog.AnchorType.box){
+            cloudManager.hostCloudAnchor(pose, "박스", userId, lat, lng, azimuth, 4);
         }
         cloudManager.onUpdate();
 

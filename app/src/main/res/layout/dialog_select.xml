@@ -45,6 +45,22 @@
                 android:padding="1dp"
                 android:layout_margin="2dp"
                 />
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="열쇠"
+                android:id="@+id/dialog_rdbtn_key"
+                android:padding="1dp"
+                android:layout_margin="2dp"
+                />
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="잠긴 상자"
+                android:id="@+id/dialog_rdbtn_box"
+                android:padding="1dp"
+                android:layout_margin="2dp"
+                />
         </RadioGroup>
     </LinearLayout>
 
