@@ -12,7 +12,7 @@
         android:id="@+id/hostTv"
         />
 
-// 스크롤 뷰를 통해 앵커 확인..
+<!--// 스크롤 뷰를 통해 앵커 확인..-->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_marginVertical="10dp"

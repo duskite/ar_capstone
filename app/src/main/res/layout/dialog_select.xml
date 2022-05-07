@@ -10,9 +10,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2.5"
+        android:layout_weight="2"
         android:layout_gravity="center"
         >
+        <HorizontalScrollView
+            android:layout_height="match_parent"
+            android:layout_width="match_parent">
+
+
         <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -62,6 +67,8 @@
                 android:layout_margin="2dp"
                 />
         </RadioGroup>
+
+        </HorizontalScrollView>
     </LinearLayout>
 
 
