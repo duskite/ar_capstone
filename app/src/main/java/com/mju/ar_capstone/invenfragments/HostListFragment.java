@@ -11,12 +11,14 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.mju.ar_capstone.R;
+import com.mju.ar_capstone.helpers.FirebaseManager;
 
 public class HostListFragment extends Fragment {
 
     ViewGroup viewGroup;
     View hostlist0, hostlist1, hostlist2;
     TextView hostTv, hostText, hostImage, hostMp3;
+    FirebaseManager firebaseManager;
 
     @Nullable
     @Override
@@ -37,5 +39,9 @@ public class HostListFragment extends Fragment {
         hostTv.setText("주최자로 접속. 참가한 채널: " + selectedChannel);
 
         return viewGroup;
+    }
+
+    public void setFirebaseManager(FirebaseManager firebaseManager){
+        this.firebaseManager = firebaseManager;
     }
 }

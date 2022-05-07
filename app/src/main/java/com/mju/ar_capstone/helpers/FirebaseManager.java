@@ -35,7 +35,7 @@ public class FirebaseManager {
     private DatabaseReference anchorNumDatabase;
     private DatabaseReference imageNumDatabase;
     private DatabaseReference mp3NumDatabase;
-    private DatabaseReference gpsDatabase;
+    private DatabaseReference oneAnchorInfo;
 
     private DatabaseReference channelDatabase;
 
@@ -66,6 +66,11 @@ public class FirebaseManager {
 //        registerChannelListListener();
     }
 
+    // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
+    public interface GetOneAnchorInfoListener{
+        void onStringLoaded(String str);
+    }
+
     public ArrayList<String> getPublicChannelList(){
         return publicChannelList;
     }
@@ -75,6 +80,25 @@ public class FirebaseManager {
 
     public void setAuth(String myID){
         this.myID = myID;
+    }
+
+    //앵커 아이디 가지고 내용물 찾아서 콜백함
+    public void searchingContentWithAnchorID(String anchorID, GetOneAnchorInfoListener getOneAnchorInfoListener){
+        Log.d("앵커1개", "get " + anchorID);
+        oneAnchorInfo = mDatabase.child("contents").child(anchorID);
+        oneAnchorInfo.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+                    Log.d("앵커1개", "다운 실패");
+
+                }else{
+                    Log.d("앵커1개", "다운 성공");
+                    DataSnapshot dataSnapshot = task.getResult();
+                    getOneAnchorInfoListener.onStringLoaded(dataSnapshot.child("text_or_path").getValue(String.class));
+                }
+            }
+        });
     }
 
     public void getChannelList(){
@@ -112,46 +136,6 @@ public class FirebaseManager {
                 }
             }
         });
-
-    }
-
-    //여기는 안쓰는쪽으로 고려중 위에 getChannelList 동작이 더 자연스러움
-    public void registerChannelListListener(){
-
-//        channelListListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                for(DataSnapshot tmpSnapshot: snapshot.getChildren()) {
-//
-//                    try{
-//                        int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
-//                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
-//                        String channelName = tmpSnapshot.getKey();
-//                        Log.d("채널이름 파이어베이스 리스너", channelName);
-//
-//                        if(hostID.equals(myID)){ //자기가 만든 채널만 접근 가능
-//                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
-//                        }
-//                        if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
-//                            publicChannelList.add(channelName);
-//                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
-//                        }
-//
-//                    }catch (NullPointerException e){
-//                        //만약 비어있으면 비공개 채널이라고 생각
-//                        //근데 비어있을리가 없음
-//                        //디폴트가 1 공개 채널임
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        };
-//
-//        channelDatabase.addValueEventListener(channelListListener);
 
     }
 

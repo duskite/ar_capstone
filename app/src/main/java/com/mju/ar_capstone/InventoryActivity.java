@@ -101,6 +101,19 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         selectedChannel = intent.getStringExtra("channel");
         Log.d("채널넘기는거 인벤", selectedChannel);
 
+        // 액티비티 생성시 서버와 연결후 데이터 가져옴
+        firebaseManager = new FirebaseManager(selectedChannel);
+        firebaseManager.getContents();
+        firebaseAuthManager = new FirebaseAuthManager();
+        //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
+        if(userType == 1){
+            firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
+        }else{
+            //참가자일때
+            firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
+        }
+
+
         //프래그먼트에 값 넘길 번들 객체
         bundle = new Bundle();
         bundle.putString("selectedChannel", selectedChannel);
@@ -110,11 +123,13 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             hostListFragment = new HostListFragment();
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+            hostListFragment.setFirebaseManager(firebaseManager);
             hostListFragment.setArguments(bundle);
         }else{ //참가자 일 때
             userInvenFragment = new UserInvenFragment(mContext);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+            userInvenFragment.setFirebaseManager(firebaseManager);
             userInvenFragment.setArguments(bundle);
         }
 
@@ -133,17 +148,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
         // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
-        // 액티비티 생성시 서버와 연결후 데이터 가져옴
-        firebaseManager = new FirebaseManager(selectedChannel);
-        firebaseManager.getContents();
-        firebaseAuthManager = new FirebaseAuthManager();
-        //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
-        if(userType == 1){
-            firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
-        }else{
-            //참가자일때
-            firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
-        }
+
 
 
         // ar화면으로 넘어가기
@@ -171,11 +176,13 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             hostListFragment = new HostListFragment();
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+            hostListFragment.setFirebaseManager(firebaseManager);
             hostListFragment.setArguments(bundle);
         }else{ //참가자 일 때
             userInvenFragment = new UserInvenFragment(mContext);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+            userInvenFragment.setFirebaseManager(firebaseManager);
             userInvenFragment.setArguments(bundle);
         }
 

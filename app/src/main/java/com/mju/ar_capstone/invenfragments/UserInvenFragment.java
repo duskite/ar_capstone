@@ -19,8 +19,10 @@ import butterknife.ButterKnife;
 
 import com.mju.ar_capstone.Adapter;
 import com.mju.ar_capstone.R;
+import com.mju.ar_capstone.helpers.FirebaseManager;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class UserInvenFragment extends Fragment  implements Adapter.AdapterCallback{
 
@@ -29,9 +31,13 @@ public class UserInvenFragment extends Fragment  implements Adapter.AdapterCallb
     RecyclerView template_recycler;
     ViewGroup viewGroup;
     TextView userTv;
+    FirebaseManager firebaseManager;
 
     Context mContext;
+    //앵커 아이디 리스트
     public static ArrayList<String> mtitle = new ArrayList<>();
+    // 앵커 아이디로 내용물 담은 리스트
+    public static ArrayList<String> mtitleContent = new ArrayList<>();
 
     public UserInvenFragment(Context mContet) {
         // Required empty public constructor
@@ -54,7 +60,9 @@ public class UserInvenFragment extends Fragment  implements Adapter.AdapterCallb
 
         //mtitle.add("aa");
         template_recycler.setLayoutManager(new LinearLayoutManager(mContext)) ;
-        Adapter adapter = new Adapter(mtitle,this,mContext) ;
+        Adapter adapter = new Adapter(mtitleContent,this,mContext) ;
+//        Adapter adapter = new Adapter(mtitle,this,mContext);
+
         template_recycler.setAdapter(adapter) ;
 
         return viewGroup;
@@ -65,4 +73,9 @@ public class UserInvenFragment extends Fragment  implements Adapter.AdapterCallb
     public void DoSomeThing(String roomname){
 
     }
+
+    public void setFirebaseManager(FirebaseManager firebaseManager){
+        this.firebaseManager = firebaseManager;
+    }
+
 }
