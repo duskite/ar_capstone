@@ -79,6 +79,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     private FragmentTransaction fragmentTransaction;
     Context mContext;
 
+    Bundle bundle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,7 +102,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         Log.d("채널넘기는거 인벤", selectedChannel);
 
         //프래그먼트에 값 넘길 번들 객체
-        Bundle bundle = new Bundle();
+        bundle = new Bundle();
         bundle.putString("selectedChannel", selectedChannel);
 
         fragmentManager = getSupportFragmentManager();
@@ -163,6 +165,20 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onResume() {
         super.onResume();
+
+        fragmentManager = getSupportFragmentManager();
+        if (userType == 1){ //주최자 일 때
+            hostListFragment = new HostListFragment();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+            hostListFragment.setArguments(bundle);
+        }else{ //참가자 일 때
+            userInvenFragment = new UserInvenFragment(mContext);
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+            userInvenFragment.setArguments(bundle);
+        }
+
     }
 
     @Override
