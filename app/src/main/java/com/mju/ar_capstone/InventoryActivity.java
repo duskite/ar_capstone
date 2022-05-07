@@ -77,13 +77,13 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     private HostListFragment hostListFragment;
     private UserInvenFragment userInvenFragment;
     private FragmentTransaction fragmentTransaction;
-
+    Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
-
+        mContext=this;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -110,7 +110,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
             hostListFragment.setArguments(bundle);
         }else{ //참가자 일 때
-            userInvenFragment = new UserInvenFragment();
+            userInvenFragment = new UserInvenFragment(mContext);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
             userInvenFragment.setArguments(bundle);

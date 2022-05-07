@@ -63,6 +63,7 @@ import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.PoseManager;
+import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -525,7 +526,7 @@ public class ArSfActivity extends AppCompatActivity implements
     // 타입에 맞게 각각 다른 리스너 붙혀줘야함
     public void loadCloudAnchors(){
         writeMode = false;
-
+        Log.e("HAN","loadCloudAnchors");
         ArrayList<WrappedAnchor> wrappedAnchorList = firebaseManager.getWrappedAnchorList();
 
         Iterator<WrappedAnchor> iterator = wrappedAnchorList.iterator();
@@ -548,6 +549,10 @@ public class ArSfActivity extends AppCompatActivity implements
             String cloudAnchorID = wrappedAnchor.getCloudAnchorId();
             String text_or_path = wrappedAnchor.getTextOrPath();
             int intAnchorType = wrappedAnchor.getAnchorType();
+
+            Log.e("HAN","cloudAnchorID: "+cloudAnchorID);
+            Log.e("HAN","text_or_path: "+text_or_path);
+            Log.e("HAN","intAnchorType: "+intAnchorType);
 
             // null 예외 발생할 수도 있음 웬만하면 int로 처리하는게 좋을듯
             if(intAnchorType == 0){
@@ -605,6 +610,34 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     }
                 });
+            }else{
+                //주최자면 앵커 삭제 기능 지원
+                model.setOnTapListener(new Node.OnTapListener() {
+                    @Override
+                    public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(ArSfActivity.this);
+                        dialog.setMessage("앵커를 등록하시겠습니까?");
+                        dialog.setPositiveButton("등록", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+//                                firebaseManager.deleteContent(model.getName());
+//                                anchor.detach();
+//                                model.setRenderable(null);
+                                UserInvenFragment.mtitle.add(model.getName());
+                            }
+                        });
+                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                        dialog.show();
+
+                    }
+                });
             }
 
             //현재 작업중
@@ -635,7 +668,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     //임시 앵커 생성 후 실제 앵커까지
     public void createSelectAnchor(HitResult hitResult){
-
+        Log.e("HAN","createSelectAnchor");
         Log.d("순서", "createSelectAnchor");
 
         Anchor anchor = hitResult.createAnchor();
@@ -649,13 +682,16 @@ public class ArSfActivity extends AppCompatActivity implements
         model.select();
         model.setName("temp"); //모델명을 변수로 임시 사용
         model.setOnTapListener(new Node.OnTapListener() {
+
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
+                Log.e("HAN","onTap");
                 HostDialog hostDialog = new HostDialog(ArSfActivity.this, DEVICE_LANDSCAPE, new HostDialog.CustomDialogClickListener() {
+
                     @Override
                     public void onPositiveClick(String tmpText, HostDialog.AnchorType anchorType) {
                         Log.d("순서", "onTap/onPositiveClick");
-
+                        Log.e("HAN","onPositiveClick");
                         writeMode = true;
 
                         changeAnchor(model, tmpText, anchorType);
@@ -671,6 +707,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     @Override
                     public void onNegativeClick() {
                         Log.d("순서", "onTap/onNegativeClick");
+                        Log.e("HAN","onNegativeClick");
                         if(!model.getName().equals("temp")){
                             String tmpAnchorID = model.getName();
                             firebaseManager.deleteContent(tmpAnchorID);
@@ -685,6 +722,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     @Override
                     public void onImageClick(ImageView dialogImg) {
                         Log.d("순서", "onTap/onImageClick");
+                        Log.e("HAN","onImageClick");
                         writeMode = true;
 
                         tmpImageView = dialogImg;
@@ -693,7 +731,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     @Override
                     public void onRecordClick(TextView audioRecordText, ImageButton audioRecordImageBtn) {
-
+                        Log.e("HAN","onRecordClick");
                         if (isRecording) {
                             // 현재 녹음 중 O
                             // 녹음 상태에 따른 변수 아이콘 & 텍스트 변경
@@ -721,11 +759,13 @@ public class ArSfActivity extends AppCompatActivity implements
 
                     @Override
                     public void onPlayClick() {
+                        Log.e("HAN","onPlayClick");
                         playAudio(audioUri);
                     }
 
                     @Override
                     public void onImgPuzzleClick(Button btnImgMakePuzzle) {
+                        Log.e("HAN","onImgPuzzleClick");
                         btnImgMakePuzzle.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -736,6 +776,7 @@ public class ArSfActivity extends AppCompatActivity implements
                                     ImgPuzzleDialog imgPuzzleDialog = new ImgPuzzleDialog(ArSfActivity.this, tmpBitmap, new ImgPuzzleDialog.PuzzleDialogClickListener() {
                                         @Override
                                         public void onImgBtn0Click(Bitmap bitmap) {
+                                            Log.e("HAN","onImgBtn0Click");
                                             Uri uri = getImageUri(getApplicationContext(), bitmap);
                                             tmpImageUri = uri;
                                             Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
@@ -743,6 +784,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                                         @Override
                                         public void onImgBtn1Click(Bitmap bitmap) {
+                                            Log.e("HAN","onImgBtn1Click");
                                             Uri uri = getImageUri(getApplicationContext(), bitmap);
                                             tmpImageUri = uri;
                                             Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
@@ -750,6 +792,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                                         @Override
                                         public void onImgBtn2Click(Bitmap bitmap) {
+                                            Log.e("HAN","onImgBtn2Click");
                                             Uri uri = getImageUri(getApplicationContext(), bitmap);
                                             tmpImageUri = uri;
                                             Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
@@ -757,6 +800,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
                                         @Override
                                         public void onImgBtn3Click(Bitmap bitmap) {
+                                            Log.e("HAN","onImgBtn3Click");
                                             Uri uri = getImageUri(getApplicationContext(), bitmap);
                                             tmpImageUri = uri;
                                             Glide.with(getApplicationContext()).load(bitmap).into(tmpImageView);
@@ -885,6 +929,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     // 종류에 맞게 앵커 저장, 앵커 아이디 리턴
     public String saveAnchor(Pose pose, String text, HostDialog.AnchorType anchorType) {
+        Log.e("HAN","saveAnchor");
         Log.d("순서", "saveAnchor");
         String userId = firebaseAuthManager.getUID().toString();
 
@@ -949,8 +994,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
         Log.d("순서", "onTapPlane");
         if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
+        //if(true){ //주최자 일 경우만 앵커 생성 가능
             createSelectAnchor(hitResult);
+            Log.e("HAN", "onTapPlane type1");
         }else{
+            Log.e("HAN", "onTapPlane type2");
             Anchor anchor = hitResult.createAnchor();
             Pose pose = anchor.getPose();
             AnchorNode anchorNode = new AnchorNode(anchor);
