@@ -659,7 +659,7 @@ public class ArSfActivity extends AppCompatActivity implements
                     }
                 });
             }else{
-                //주최자면 앵커 삭제 기능 지원
+                //참가자는 앵커 담기 기능 지원
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
