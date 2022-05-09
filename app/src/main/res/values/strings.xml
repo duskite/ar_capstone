@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">ar_capstone</string>
+    <string name="file_none_err"> none error</string>
+    <string name="delete_msg">삭제하시겠습니까?</string>
 
     <string-array name="channel_array">
         <item>base_channel</item>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="300dp"
+    android:layout_height="200dp"
+    android:gravity="center"
+    android:background="@drawable/dialog_radius"
+    >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:padding="5dp"
+        >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/dialog_tv_test"
+            android:text="앵커 종류를 골라주세요"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:padding="3dp"
+            android:layout_marginBottom="3dp"
+            />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="bottom"
+        >
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/dialog_btn_cancel"
+            android:text="취소"
+            android:background="@drawable/btn_shape_no"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_marginLeft="3dp"
+            />
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/dialog_btn_ok"
+            android:text="확인"
+            android:background="@drawable/btn_shape_yes"
+            android:layout_marginRight="3dp"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            />
+    </LinearLayout>
+
+
+
+</LinearLayout>

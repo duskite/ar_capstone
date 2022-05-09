@@ -1,13 +1,9 @@
 package com.mju.ar_capstone;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.Pose;
-import com.google.ar.core.Trackable;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.firebase.database.Exclude;
 
 public class WrappedAnchor {
-
+    public static final int ANCHOR_TEXT = 0,ANCHOR_IMG = 1,ANCHOR_SOUND = 2;
     private String cloudAnchorId;
     private String textOrPath;
     private String userID;
@@ -19,7 +15,6 @@ public class WrappedAnchor {
     private double lng;
 
     private Pose pose;
-
 
     public WrappedAnchor(){
 

@@ -1,12 +1,9 @@
 package com.mju.ar_capstone.helpers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -15,19 +12,14 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.TransformableNode;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.mju.ar_capstone.ArSfActivity;
 import com.mju.ar_capstone.R;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
-import java.net.URI;
 import java.util.ArrayList;
 
 public class FireStorageManager {
@@ -35,8 +27,8 @@ public class FireStorageManager {
     private FirebaseManager firebaseManager;
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference;
-    private StorageReference imgReferece;
-    private StorageReference mp3Reference;
+    public StorageReference imgReferece;
+    public StorageReference mp3Reference;
 
     //이미지 파일명 동적 생성
     private static final String strImageID = "imageID_";

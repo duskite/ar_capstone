@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,11 +13,11 @@
         android:id="@+id/hostTv"
         />
 
-// 스크롤 뷰를 통해 앵커 확인..
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_marginVertical="10dp"
-        android:layout_height="130dp"
+        android:layout_height="0dp"
+        android:layout_weight="3"
         android:background="#ffffff"
         android:id="@+id/hostlist0">
         <TextView
@@ -25,45 +26,12 @@
             android:text="[텍스트 앵커]"
             android:textColor="@color/black"
             android:id="@+id/hostText"/>
-        <HorizontalScrollView
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_marginVertical="25dp"
+            android:id="@+id/recycler_text"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#ff0000"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#00ff00"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#0000ff"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#ff0000"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#00ff00"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#0000ff"/>
-
-            </LinearLayout>
-        </HorizontalScrollView>
+            android:layout_height="wrap_content"/>
     </FrameLayout>
 
 
@@ -71,7 +39,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_marginVertical="10dp"
-        android:layout_height="130dp"
+        android:layout_height="0dp"
+        android:layout_weight="3"
         android:background="#ffffff"
         android:id="@+id/hostlist1">
         <TextView
@@ -80,46 +49,13 @@
             android:text="[이미지 앵커]"
             android:textColor="@color/black"
             android:id="@+id/hostImage"/>
-        <HorizontalScrollView
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_marginVertical="25dp"
+            android:id="@+id/recycler_img"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"/>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#ff0000"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#00ff00"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#0000ff"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#ff0000"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#00ff00"/>
-
-                <TextView
-                    android:layout_width="100dp"
-                    android:layout_height="match_parent"
-                    android:background="#0000ff"/>
-
-            </LinearLayout>
-        </HorizontalScrollView>
     </FrameLayout>
 
 
@@ -127,7 +63,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_marginVertical="10dp"
-        android:layout_height="130dp"
+        android:layout_height="0dp"
+        android:layout_weight="3"
         android:background="#ffffff"
         android:id="@+id/hostlist2">
         <TextView
@@ -136,46 +73,12 @@
             android:text="[음성 앵커]"
             android:textColor="@color/black"
             android:id="@+id/hostMp3"/>
-        <HorizontalScrollView
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_marginVertical="25dp"
+            android:id="@+id/recycler_sound"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#ff0000"/>
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#00ff00"/>
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#0000ff"/>
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#ff0000"/>
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#00ff00"/>
-
-            <TextView
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:background="#0000ff"/>
-
-        </LinearLayout>
-        </HorizontalScrollView>
+            android:layout_height="wrap_content"/>
     </FrameLayout>
 
 </LinearLayout>
