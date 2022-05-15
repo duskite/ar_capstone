@@ -36,6 +36,8 @@ public class HostListFragment extends Fragment {
     FireStorageManager fireStorageManager;
     private String selectedChannel;
 
+    private static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -85,8 +87,6 @@ public class HostListFragment extends Fragment {
 
         super.onStart();
     }
-
-
 
     @Override
     public void onStop() {

@@ -72,6 +72,7 @@ import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class ArSfActivity extends AppCompatActivity implements
@@ -237,9 +238,7 @@ public class ArSfActivity extends AppCompatActivity implements
             makePreModels(IMAGE_MODEL);
             makePreModels(MP3_MODEL);
         }
-
     }
-
 
     //미리 렌더러블을 만들어 놓기..
     public void makePreModels(int type) {
@@ -624,8 +623,8 @@ public class ArSfActivity extends AppCompatActivity implements
                                 UserInvenFragment.mtitle.add(model.getName());
                                 firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
                                     @Override
-                                    public void onStringLoaded(String str) {
-                                        UserInvenFragment.mtitleContent.add(str);
+                                    public void onDataLoaded(WrappedAnchor wrappedAnchor) {
+                                        UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
                                     }
                                 });
                             }

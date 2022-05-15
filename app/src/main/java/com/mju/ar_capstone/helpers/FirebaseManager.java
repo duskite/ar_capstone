@@ -55,6 +55,7 @@ public class FirebaseManager {
 
     public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
 
+
     private String myID;
 
     //채널 이름 넣을 변수
@@ -68,7 +69,7 @@ public class FirebaseManager {
 
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
     public interface GetOneAnchorInfoListener{
-        void onStringLoaded(String str);
+        void onDataLoaded(WrappedAnchor wrappedAnchor);
     }
 
     public ArrayList<String> getPublicChannelList(){
@@ -94,8 +95,43 @@ public class FirebaseManager {
 
                 }else{
                     Log.d("앵커1개", "다운 성공");
+                    WrappedAnchor wrappedAnchor = null;
                     DataSnapshot dataSnapshot = task.getResult();
-                    getOneAnchorInfoListener.onStringLoaded(dataSnapshot.child("text_or_path").getValue(String.class));
+                    try{
+                        //포즈 정보 불러오기
+                        HashMap<String, Double> poses = (HashMap<String, Double>) dataSnapshot.child("pose").getValue();
+                        float[] poseT = {
+                                ((Double) poses.get("Tx")).floatValue(),
+                                ((Double) poses.get("Ty")).floatValue(),
+                                ((Double) poses.get("Tz")).floatValue()
+                        };
+                        float[] poseR = {
+                                ((Double) poses.get("Rx")).floatValue(),
+                                ((Double) poses.get("Ry")).floatValue(),
+                                ((Double) poses.get("Rz")).floatValue(),
+                                ((Double) poses.get("Rw")).floatValue(),
+                        };
+                        Pose pose = new Pose(poseT, poseR);
+
+                        //gps정보 불러오기
+                        HashMap<String, Double> gps = (HashMap<String, Double>) dataSnapshot.child("gps").getValue();
+
+                        wrappedAnchor = new WrappedAnchor(
+                                anchorID,
+                                pose,
+                                dataSnapshot.child("text_or_path").getValue(String.class),
+                                dataSnapshot.child("userID").getValue(String.class),
+                                gps.get("lat"),
+                                gps.get("lng"),
+                                dataSnapshot.child("azimuth").getValue(int.class),
+                                dataSnapshot.child("type").getValue(int.class)
+                        );
+                    }catch (NullPointerException e){
+                        Log.d("순서", "리스너 데이터 null 예외 발생");
+                    }catch (ClassCastException e){
+
+                    }
+                    getOneAnchorInfoListener.onDataLoaded(wrappedAnchor);
                 }
             }
         });

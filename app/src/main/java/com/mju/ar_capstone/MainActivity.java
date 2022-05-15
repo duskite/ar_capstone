@@ -66,8 +66,6 @@ public class MainActivity extends AppCompatActivity {
         publicChannelList = firebaseManager.getPublicChannelList();
         allChannelList = firebaseManager.getAllChannelList();
 
-
-
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
         btnInven = findViewById(R.id.btnInven);
@@ -214,9 +212,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-
-
 
         permisionCheck();
     }
