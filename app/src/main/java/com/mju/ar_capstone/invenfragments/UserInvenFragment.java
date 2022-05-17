@@ -32,6 +32,7 @@ import com.mju.ar_capstone.WrappedAnchor;
 import com.mju.ar_capstone.adapter.HostListAdapter;
 import com.mju.ar_capstone.adapter.UserListAdapter;
 import com.mju.ar_capstone.helpers.FireStorageManager;
+import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.ItemTouchHelperCallback;
 
@@ -45,19 +46,17 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     TextView userTv;
     FirebaseManager firebaseManager;
     FireStorageManager fireStorageManager;
+    private FirebaseAuthManager firebaseAuthManager;
     private String selectedChannel;
 
     // 드래그앤 드롭 관련 헬퍼
     private ItemTouchHelper itemTouchHelper;
-    private UserListAdapter userListAdapter;
+    private static UserListAdapter userListAdapter;
 
     Context mContext;
-    //앵커 아이디 리스트
-    public static ArrayList<String> mtitle = new ArrayList<>();
-    // 앵커 아이디로 내용물 담은 리스트
-    public static ArrayList<String> mtitleContent = new ArrayList<>();
 
     public static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
+
 
     public UserInvenFragment(Context mContet) {
         // Required empty public constructor
@@ -78,12 +77,22 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         userTv.setText("참가자로 접속. 참가한 채널: " + selectedChannel );
 
 
-//        Adapter adapter = new Adapter(mtitleContent,this,mContext) ;
-//        Adapter adapter = new Adapter(mtitle,this,mContext);
-
-//        template_recycler.setAdapter(adapter) ;
-
         return viewGroup;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -93,6 +102,7 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         ArrayList<WrappedAnchor> textList = new ArrayList<>();
         ArrayList<WrappedAnchor> imgList = new ArrayList<>();
         ArrayList<WrappedAnchor> soundList = new ArrayList<>();
+
 
         for (WrappedAnchor w: wrappedAnchorArrayList) {
             if(w.getAnchorType()==ANCHOR_TEXT){
@@ -105,9 +115,8 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
             Log.d(TAG, "onCreateView wrappedAnchorArrayList: "+new Gson().toJson(w));
         }
 
-        //mtitle.add("aa");
-
         fireStorageManager = new FireStorageManager(selectedChannel);
+
 
         recycler_text = viewGroup.findViewById(R.id.recycler_text);
         recycler_text.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
@@ -122,9 +131,12 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(userListAdapter));
         itemTouchHelper.attachToRecyclerView(recycler_img);
 
+
         recycler_sound = viewGroup.findViewById(R.id.recycler_sound);
         recycler_sound.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
         recycler_sound.setAdapter(new UserListAdapter(soundList, fireStorageManager, firebaseManager, ANCHOR_SOUND));
+
+
     }
 
     @Override
@@ -132,8 +144,24 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
 
     }
 
-    public void setFirebaseManager(FirebaseManager firebaseManager){
+    public void setFirebaseManager(FirebaseManager firebaseManager, FirebaseAuthManager firebaseAuthManager){
         this.firebaseManager = firebaseManager;
+        this.firebaseAuthManager = firebaseAuthManager;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        recycler_text.setAdapter(null);
+        recycler_text.setLayoutManager(null);
+        recycler_img.setAdapter(null);
+        recycler_img.setLayoutManager(null);
+        recycler_sound.setAdapter(null);
+        recycler_sound.setLayoutManager(null);
+    }
+
+    public void loadScrapAnchor(){
+        wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
     }
 
 }

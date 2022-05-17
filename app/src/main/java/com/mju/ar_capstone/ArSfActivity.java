@@ -620,7 +620,7 @@ public class ArSfActivity extends AppCompatActivity implements
                         dialog.setPositiveButton("등록", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                UserInvenFragment.mtitle.add(model.getName());
+                                firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
                                 firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
                                     @Override
                                     public void onDataLoaded(WrappedAnchor wrappedAnchor) {

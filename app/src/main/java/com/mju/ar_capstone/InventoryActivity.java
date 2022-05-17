@@ -31,6 +31,7 @@ import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
+import com.naver.maps.map.overlay.CircleOverlay;
 import com.naver.maps.map.overlay.InfoWindow;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
@@ -81,6 +82,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
     Bundle bundle;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,6 +105,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
+
         firebaseManager.getContents();
         firebaseAuthManager = new FirebaseAuthManager();
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
@@ -129,7 +132,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             userInvenFragment = new UserInvenFragment(mContext);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager);
+            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
+            userInvenFragment.loadScrapAnchor();
             userInvenFragment.setArguments(bundle);
         }
 
@@ -164,12 +168,20 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             }
         });
 
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("스크랩", "onResume이 몇번 호출되는지");
+
+
+        if(userType == 1){
+        }else{
+            //참가자일때
+            Log.d("스크랩", "getUserScrapAnchors onResume에서");
+            firebaseManager.getUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
+        }
 
         fragmentManager = getSupportFragmentManager();
         if (userType == 1){ //주최자 일 때
@@ -182,7 +194,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             userInvenFragment = new UserInvenFragment(mContext);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager);
+            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
+            userInvenFragment.loadScrapAnchor();
             userInvenFragment.setArguments(bundle);
         }
 
@@ -196,6 +209,12 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        firebaseManager.clearUserScrapAnchorIdList();
     }
 
     //방위각 구해서 넘기는 부분
@@ -263,6 +282,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         mNaverMap = naverMap;
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setOnMapClickListener(this);
+
         mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int i, boolean b) {
@@ -307,24 +327,46 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     }
     public void updateAnchors(NaverMap naverMap){
 
+        LatLng tmpLatLng = new LatLng(0, 0);
+
         for(WrappedAnchor wrappedAnchor: firebaseManager.wrappedAnchorList) {
-            //(루프 한번 돌 때 마다 marker객체 생성)
-            Marker marker = new Marker();
-            marker.setPosition(new LatLng(wrappedAnchor.getLat(), wrappedAnchor.getLng()));
+            LatLng latLng = new LatLng(wrappedAnchor.getLat(), wrappedAnchor.getLng());
 
-            marker.setMap(naverMap);
+            if(userType == 2){ // 참가자일때
 
-            //위치 정보를 넣은 marker값을 listMarker에 저장
-            listMarker.add(marker);
-            //마커 크기 및 색상 설정
-            marker.setWidth(75);
-            marker.setHeight(100);
-            marker.setIcon(MarkerIcons.BLACK);
-            marker.setIconTintColor(Color.RED);
-            //마커 클릭 리스너
-            marker.setOnClickListener(this);
-            //마커에 앵커 타입을 태그로 설정
-            marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
+                //너무 가까운거는 넘어감, 메모리 문제 때문에 먼것들만 써클 오버레이 찍어줘야함
+                if(latLng.distanceTo(tmpLatLng) < 20){
+                    continue;
+                }
+
+                // 마커를 보여주지 않고 부근만 찍음
+                CircleOverlay circleOverlay = new CircleOverlay(latLng, 20);
+//                circleOverlay.setColor(Color.RED);
+                circleOverlay.setOutlineColor(Color.RED);
+                circleOverlay.setOutlineWidth(10);
+                circleOverlay.setMap(naverMap);
+            }else { //주최자일때
+                //(루프 한번 돌 때 마다 marker객체 생성)
+                Marker marker = new Marker();
+                marker.setPosition(latLng);
+                marker.setMap(naverMap);
+
+                //위치 정보를 넣은 marker값을 listMarker에 저장
+                listMarker.add(marker);
+                //마커 크기 및 색상 설정
+                marker.setWidth(75);
+                marker.setHeight(100);
+                marker.setIcon(MarkerIcons.BLACK);
+
+                marker.setIconTintColor(Color.RED);
+                //마커 클릭 리스너
+                marker.setOnClickListener(this);
+                //마커에 앵커 타입을 태그로 설정
+                marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
+            }
+
+            //이전 위경도값 잠시 담아둠
+            tmpLatLng = latLng;
         }
     }
     @Override

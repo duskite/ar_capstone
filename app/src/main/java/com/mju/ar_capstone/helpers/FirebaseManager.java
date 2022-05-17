@@ -19,6 +19,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mju.ar_capstone.WrappedAnchor;
+import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -39,10 +40,11 @@ public class FirebaseManager {
 
     private DatabaseReference channelDatabase;
 
+    private DatabaseReference scrapDatabase;
+
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
 
     //값 불러오는 리스너
-    private ValueEventListener contentsListener = null;
     private ValueEventListener anchorNumListener = null;
     private ValueEventListener imageNumListener = null;
     private ValueEventListener mp3NumListener = null;
@@ -53,7 +55,9 @@ public class FirebaseManager {
     private static int nextImageNum;
     private static int nextMp3Num;
 
-    public static ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
+    public ArrayList<WrappedAnchor> wrappedAnchorList = new ArrayList<>();
+    public ArrayList<WrappedAnchor> userScrapAnchorList = new ArrayList<>();
+    public ArrayList<String> userScrapAnchorIdList = new ArrayList<>();
 
 
     private String myID;
@@ -62,14 +66,56 @@ public class FirebaseManager {
     public ArrayList<String> publicChannelList = new ArrayList<>();
     public ArrayList<String> allChannelList = new ArrayList<>();
 
+
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
-//        registerChannelListListener();
+
     }
 
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
+    }
+
+    // 참가자가 스크랩시 db에 반영
+    public void userScrapAnchor(String channel, String userID, String anchorID, int anchorType){
+        scrapDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("users").child(userID).child(channel);
+        scrapDatabase.child(anchorID).setValue(anchorType);
+    }
+    // db에서 참가자가 스크랩했던 앵커들 가져옴
+    public void getUserScrapAnchors(String channel, String userID){
+        scrapDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("users").child(userID).child(channel);
+        scrapDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+
+                }else {
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
+                        String tmpStr = tmpSnapshot.getKey().toString();
+                        userScrapAnchorIdList.add(tmpStr);
+                        Log.d("스크랩", tmpStr);
+
+                    }
+                    Log.d("스크랩", "한 번 로드 끝");
+                }
+            }
+        });
+
+    }
+    public ArrayList<WrappedAnchor> getUserScrapAnchorList(){
+
+        for(String s: userScrapAnchorIdList){
+            for(int i=0; i< wrappedAnchorList.size(); i++ )
+            if(s.equals(wrappedAnchorList.get(i).getCloudAnchorId())){
+                userScrapAnchorList.add(wrappedAnchorList.get(i));
+            }
+        }
+        return (ArrayList<WrappedAnchor>) userScrapAnchorList.clone();
+    }
+    public void clearUserScrapAnchorIdList(){
+        userScrapAnchorIdList.clear();
     }
 
     public ArrayList<String> getPublicChannelList(){
@@ -211,11 +257,6 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
-    // 데이터를 다른 곳에서 한번 가져간후 호출하면 리스트 비워줌
-    public void clearWrappedAnchorList(){
-        wrappedAnchorList.clear();
-    }
-
 
     //컨텐츠 생성 시간
     public String createdTimeOfContent(){
@@ -425,62 +466,5 @@ public class FirebaseManager {
         });
     }
 
-
-//    public void registerContentsValueListner() {
-//
-//        contentsDatabase = mDatabase.child("contents");
-//        contentsListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                for(DataSnapshot tmpSnapshot: snapshot.getChildren()){
-//                    String anchorID = tmpSnapshot.getKey();
-//
-//                    try{
-//                        //포즈 정보 불러오기
-//                        HashMap<String, Double> poses = (HashMap<String, Double>) tmpSnapshot.child("pose").getValue();
-//                        float[] poseT = {
-//                                ((Double) poses.get("Tx")).floatValue(),
-//                                ((Double) poses.get("Ty")).floatValue(),
-//                                ((Double) poses.get("Tz")).floatValue()
-//                        };
-//                        float[] poseR = {
-//                                ((Double) poses.get("Rx")).floatValue(),
-//                                ((Double) poses.get("Ry")).floatValue(),
-//                                ((Double) poses.get("Rz")).floatValue(),
-//                                ((Double) poses.get("Rw")).floatValue(),
-//                        };
-//                        Pose pose = new Pose(poseT, poseR);
-//
-//                        //gps정보 불러오기
-//                        HashMap<String, Double> gps = (HashMap<String, Double>) tmpSnapshot.child("gps").getValue();
-//
-//                        wrappedAnchorList.add(new WrappedAnchor(
-//                                anchorID,
-//                                pose,
-//                                tmpSnapshot.child("text_or_path").getValue(String.class),
-//                                tmpSnapshot.child("userID").getValue(String.class),
-//                                gps.get("lat"),
-//                                gps.get("lng"),
-//                                tmpSnapshot.child("azimuth").getValue(int.class),
-//                                tmpSnapshot.child("type").getValue(int.class)
-//                        ));
-//                    }catch (NullPointerException e){
-//                        Log.d("순서", "리스너 데이터 null 예외 발생");
-//                    }catch (ClassCastException e){
-//
-//                    }
-//                }
-//                Log.d("순서", "리스너 데이터 로드 완료");
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        };
-//
-//        contentsDatabase.addValueEventListener(contentsListener);
-//
-//    }
 
 }

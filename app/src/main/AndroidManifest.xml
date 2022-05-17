@@ -31,10 +31,6 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false" >
         <activity
-            android:name=".MapActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
-        <activity
             android:name=".InventoryActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
