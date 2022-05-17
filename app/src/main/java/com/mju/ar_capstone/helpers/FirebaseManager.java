@@ -111,7 +111,7 @@ public class FirebaseManager {
                 userScrapAnchorList.add(wrappedAnchorList.get(i));
             }
         }
-        return (ArrayList<WrappedAnchor>) userScrapAnchorList.clone();
+        return userScrapAnchorList;
     }
     public void clearUserScrapAnchorIdList(){
         userScrapAnchorIdList.clear();
