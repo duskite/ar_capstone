@@ -180,7 +180,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         }else{
             //참가자일때
             Log.d("스크랩", "getUserScrapAnchors onResume에서");
-            firebaseManager.getUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
+            firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
         }
 
         fragmentManager = getSupportFragmentManager();

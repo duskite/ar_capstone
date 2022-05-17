@@ -1029,6 +1029,11 @@ public class ArSfActivity extends AppCompatActivity implements
         super.onPause();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
     // 이미지 업로드 부분
     //사용자 갤러리 불러오기
     private void loadAlbum(){

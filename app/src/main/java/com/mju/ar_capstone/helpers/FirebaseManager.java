@@ -83,7 +83,7 @@ public class FirebaseManager {
         scrapDatabase.child(anchorID).setValue(anchorType);
     }
     // db에서 참가자가 스크랩했던 앵커들 가져옴
-    public void getUserScrapAnchors(String channel, String userID){
+    public void loadUserScrapAnchors(String channel, String userID){
         scrapDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("users").child(userID).child(channel);
         scrapDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -96,7 +96,6 @@ public class FirebaseManager {
                         String tmpStr = tmpSnapshot.getKey().toString();
                         userScrapAnchorIdList.add(tmpStr);
                         Log.d("스크랩", tmpStr);
-
                     }
                     Log.d("스크랩", "한 번 로드 끝");
                 }
