@@ -26,11 +26,12 @@ import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.WrappedAnchor;
 import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.helpers.ItemTouchHelperListner;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> {
+public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> implements ItemTouchHelperListner {
     private static String TAG = UserListAdapter.class.getSimpleName();
     private FirebaseManager firebaseManager;
     private MediaPlayer mediaPlayer = new MediaPlayer();
@@ -93,6 +94,20 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     @Override
     public int getItemCount() {
         return userItemObjs.size();
+    }
+
+    @Override
+    public boolean onItemMove(int from_position, int to_position) {
+        WrappedAnchor wrappedAnchor = userItemObjs.get(from_position);
+        userItemObjs.remove(from_position);
+        userItemObjs.add(to_position, wrappedAnchor);
+        notifyItemMoved(from_position, to_position);
+        return true;
+    }
+    @Override
+    public void onItemSwipe(int position) {
+        userItemObjs.remove(position);
+        notifyItemRemoved(position);
     }
 
     protected class ViewHolder extends RecyclerView.ViewHolder{

@@ -16,8 +16,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -29,6 +33,7 @@ import com.mju.ar_capstone.adapter.HostListAdapter;
 import com.mju.ar_capstone.adapter.UserListAdapter;
 import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.helpers.ItemTouchHelperCallback;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,6 +46,10 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     FirebaseManager firebaseManager;
     FireStorageManager fireStorageManager;
     private String selectedChannel;
+
+    // 드래그앤 드롭 관련 헬퍼
+    private ItemTouchHelper itemTouchHelper;
+    private UserListAdapter userListAdapter;
 
     Context mContext;
     //앵커 아이디 리스트
@@ -105,8 +114,13 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         recycler_text.setAdapter(new UserListAdapter(textList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_TEXT));
 
         recycler_img = viewGroup.findViewById(R.id.recycler_img);
-        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
-        recycler_img.setAdapter(new UserListAdapter(imgList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_IMG));
+        recycler_img.setLayoutManager(new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
+//        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, true));
+
+        userListAdapter = new UserListAdapter(imgList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_IMG);
+        recycler_img.setAdapter(userListAdapter);
+        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(userListAdapter));
+        itemTouchHelper.attachToRecyclerView(recycler_img);
 
         recycler_sound = viewGroup.findViewById(R.id.recycler_sound);
         recycler_sound.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
