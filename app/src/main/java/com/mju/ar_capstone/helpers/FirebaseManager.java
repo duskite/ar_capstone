@@ -66,6 +66,7 @@ public class FirebaseManager {
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
     public ArrayList<String> hostChannelList = new ArrayList<>();
+    public ArrayList<String> privateChannelList = new ArrayList<>();
 
 
     public FirebaseManager(){
@@ -159,6 +160,9 @@ public class FirebaseManager {
     public ArrayList<String> getHostChannelList(){
         return hostChannelList;
     }
+    public ArrayList<String> getPrivateChannelList(){
+        return privateChannelList;
+    }
 
     public void setAuth(String myID){
         this.myID = myID;
@@ -246,6 +250,10 @@ public class FirebaseManager {
                                 // 참가자 유형일때는 공개 채널 모두에 접근 가능 하도록 보여줘야함
                                 if(!publicChannelList.contains(channelName)){ //중복 방지
                                     publicChannelList.add(channelName);
+                                }
+                            }else if(checkChannelType == 2){
+                                if(!privateChannelList.contains(channelName)){
+                                    privateChannelList.add(channelName);
                                 }
                             }
                         }

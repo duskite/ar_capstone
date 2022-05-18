@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedChannel = "base_channel"; //기본 채널
     private EditText edtChannelName;
 
-    private ArrayList<String> publicChannelList, hostChannelList;
+    private ArrayList<String> publicChannelList, hostChannelList, privateChannelList;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
         hostChannelList = firebaseManager.getHostChannelList();
+        privateChannelList = firebaseManager.getPrivateChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("참가자ID 발급완료. 터치시 자동으로 ID가 복사됩니다.\n" + "익명ID: " + firebaseAuthManager.getUID());
@@ -149,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
                         edtChannelName.setHint("위 버튼 체크시 생성가능");
                         tvChannelLoad.setText("접근가능한 채널 불러오기");
                         btnSpinnerLoad.setEnabled(true);
+                        spinner.setVisibility(View.INVISIBLE);
                         userType = 1;
                         break;
                     case R.id.participant:
@@ -160,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
                         btnInven.setText("입장하기");
                         btnSpinnerLoad.setEnabled(true);
                         rdChannelType.setVisibility(View.INVISIBLE);
+                        spinner.setVisibility(View.INVISIBLE);
                         break;
                 }
                 Log.d("유저타입", String.valueOf(userType));
@@ -172,8 +175,8 @@ public class MainActivity extends AppCompatActivity {
                     selectedChannel = edtChannelName.getText().toString();
                 }
 
-                // 공용 채널에 이 이름이 있는지 체크
-                if(!publicChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
+                // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
+                if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
                     if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
                         android.app.AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                         dialog.setMessage("존재하지 않는 채널입니다.");
@@ -207,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                 //최신 채널리스트로 동기화 한 후 어댑터에 뜨도록
                 publicChannelList = firebaseManager.getPublicChannelList();
                 hostChannelList = firebaseManager.getHostChannelList();
+                privateChannelList = firebaseManager.getPrivateChannelList();
 
                 int arraySize = 0;
                 ArrayList<String> selectedChannelList = new ArrayList<>();
