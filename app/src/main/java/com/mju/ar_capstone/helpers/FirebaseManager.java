@@ -85,6 +85,34 @@ public class FirebaseManager {
         DatabaseReference.goOnline();
     }
 
+    //우승자 리스트 가져가기
+    public HashMap<String, String> getWinnerList(String selectedChannel){
+        HashMap<String, String> hashMap = new HashMap<>();
+        DatabaseReference winnerDB = channelDatabase.child(selectedChannel).child("winnerList");
+        winnerDB.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+
+                }else{
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
+                        String user = tmpSnapshot.getKey().toString();
+                        String time = tmpSnapshot.getValue(String.class);
+
+                        Log.d("우승자", user);
+                        Log.d("우승자", time);
+
+                        hashMap.put(user, time);
+                    }
+                }
+            }
+        });
+
+        return hashMap;
+
+    }
+
     //호스트 추가 기능
     public void addHostInChannel(String addChannel, String addHostID){
         DatabaseReference addHostDB = channelDatabase.child(addChannel).child("hostID");
