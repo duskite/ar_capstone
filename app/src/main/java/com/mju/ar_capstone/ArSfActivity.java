@@ -1084,7 +1084,24 @@ public class ArSfActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        Log.d("최적화", "onDestroy");
         super.onDestroy();
+        arFragment.onDestroy();
+        fusedLocationProviderClient = null;
+        firebaseManager = null;
+        fireStorageManager = null;
+        firebaseAuthManager = null;
+        cntTextRenderable = 0;
+        cntImageRenderable = 0;
+        cntMp3Renderable = 0;
+        poseManager = null;
+        writeMode = false;
+        selectRenderable = null;
+        imageRenderableList = null;
+        textRenderableList = null;
+        mp3RenderableList = null;
+        mediaRecorder = null;
+        mediaPlayer = null;
     }
 
     @Override

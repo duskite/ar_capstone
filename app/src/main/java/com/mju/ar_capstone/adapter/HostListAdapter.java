@@ -78,7 +78,11 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.ViewHo
             holder.item_img.setVisibility(View.VISIBLE);
             Log.d(TAG, "onBindViewHolder ANCHOR_IMG: ");
             fireStorageManager.imgReferece.child(hostItem.getTextOrPath()).getDownloadUrl().addOnSuccessListener(uri ->{
-                Glide.with(context).load(uri).into(holder.item_img);
+                try {
+                    Glide.with(context).load(uri).into(holder.item_img);
+                }catch (IllegalArgumentException e){
+
+                }
             }).addOnFailureListener(e -> {
                 e.printStackTrace();
                 Toast.makeText(context,hostItem.getTextOrPath()+context.getString(R.string.file_none_err), Toast.LENGTH_SHORT).show();

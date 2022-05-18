@@ -204,11 +204,21 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d("최적화", "onPause 인벤토리 액티비티");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d("최적화", "onDestroy 인벤토리 액티비티");
+        sensorManager = null;
+        accelerometer = null;
+        magneticField = null;
+        firebaseManager = null;
+        firebaseAuthManager = null;
+        hostListFragment = null;
+        userInvenFragment = null;
+        mNaverMap = null;
     }
 
     @Override

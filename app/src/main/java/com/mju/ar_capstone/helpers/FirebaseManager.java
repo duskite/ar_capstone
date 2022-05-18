@@ -204,7 +204,9 @@ public class FirebaseManager {
                         }
                         if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
                             publicChannelList.add(channelName);
-                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+                            if(!hostID.equals(myID)){ //중복 방지
+                                allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+                            }
                         }
 
                     }catch (NullPointerException e){
