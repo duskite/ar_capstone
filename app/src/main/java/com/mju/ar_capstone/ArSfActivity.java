@@ -143,6 +143,9 @@ public class ArSfActivity extends AppCompatActivity implements
     // 화면 회전 체크
     private static boolean DEVICE_LANDSCAPE = false;
 
+    //키 소지 여부
+    private static boolean stateHaveKey = false;
+
     //gps정보 앵커랑 같이 서버에 업로드하려고
     private double lat = 0.0;
     private double lng = 0.0;
@@ -191,6 +194,8 @@ public class ArSfActivity extends AppCompatActivity implements
         azimuth = intent.getIntExtra("azimuth", 0);
         channel = intent.getStringExtra("channel");
         userType = intent.getIntExtra("userType",0);
+        stateHaveKey = intent.getBooleanExtra("haveKey", false);
+        Log.d("키넘어온거", String.valueOf(stateHaveKey));
 
         //정밀 위경도 요청
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -662,21 +667,66 @@ public class ArSfActivity extends AppCompatActivity implements
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-
                         AlertDialog.Builder dialog = new AlertDialog.Builder(ArSfActivity.this);
-                        dialog.setMessage("앵커를 등록하시겠습니까?");
-                        dialog.setPositiveButton("등록", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                    @Override
-                                    public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                        UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
+                        // 열쇠 앵커일때는
+                        if(wrappedAnchor.getAnchorType() == 3){
+                            dialog.setMessage("열쇠를 획득하시겠습니까?");
+                            dialog.setPositiveButton("열쇠 획득", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
+                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
+                                        @Override
+                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
+                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
+                                        }
+                                    });
+
+                                    //어짜피 여기까지 오면 키를 획득했다는것이므로 따로 db조회 필요없음
+                                    //바로 키 획득처리, db에는 윗 부분에서 반영할꺼임
+                                    stateHaveKey = true;
+
+                                    //앵커 획득한것처럼 보이게 화면상에서 지움
+                                    anchor.detach();
+                                }
+                            });
+                        }else if(wrappedAnchor.getAnchorType() == 4){ //박스 앵커일때는
+                            dialog.setMessage("상자를 여시겠습니까? Key를 가지고 있어야합니다.");
+                            dialog.setPositiveButton("상자 열기", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
+                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
+                                        @Override
+                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
+                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
+                                        }
+                                    });
+                                    if(stateHaveKey){ //키를 가지고 있으면
+                                        //승리 유저 정보 보냄
+                                        firebaseManager.sendWinnerInfo(channel, firebaseAuthManager.getUID());
+                                        Intent intent = new Intent(getApplicationContext(), SuccessActivity.class);
+                                        startActivity(intent);
+                                    }else{//키가 없으면
+
                                     }
-                                });
-                            }
-                        });
+                                }
+                            });
+                        }else{
+                            dialog.setMessage("앵커를 스크랩하시겠습니까?");
+                            dialog.setPositiveButton("가방에 담기", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
+                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
+                                        @Override
+                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
+                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
+                                        }
+                                    });
+                                }
+                            });
+                        }
                         dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {

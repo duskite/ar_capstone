@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +27,7 @@ import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
 import com.mju.ar_capstone.invenfragments.UserInvenFragment;
+import com.mju.ar_capstone.services.NotificationService;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
@@ -81,6 +83,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Context mContext;
 
     Bundle bundle;
+    private static boolean stateHaveKey = false;
+
+    //알림
+    NotificationService notificationService;
 
 
     @Override
@@ -111,6 +117,14 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
         if(userType == 1){
             firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
+            Intent serviceIntent = new Intent(getApplicationContext(), NotificationService.class);
+            serviceIntent.putExtra("selectedChannel",selectedChannel);
+            //서비스로 포어그라운드 돌리기어
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
         }else{
             //참가자일때
             firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
@@ -153,7 +167,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
 
-
+        
 
         // ar화면으로 넘어가기
         btnArSf = (Button) findViewById(R.id.btnArSf);
@@ -164,6 +178,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 intent.putExtra("userType", userType);
                 intent.putExtra("azimuth", getAzimuth());
                 intent.putExtra("channel", selectedChannel);
+
+                //키 소지 여부 넘기기
+                stateHaveKey = firebaseManager.checkHaveKey();
+                intent.putExtra("haveKey", stateHaveKey);
+
                 startActivity(intent);
             }
         });

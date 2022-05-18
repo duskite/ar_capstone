@@ -38,7 +38,7 @@ public class FirebaseManager {
     private DatabaseReference mp3NumDatabase;
     private DatabaseReference oneAnchorInfo;
 
-    private DatabaseReference channelDatabase;
+    public DatabaseReference channelDatabase;
 
     private DatabaseReference scrapDatabase;
 
@@ -70,7 +70,18 @@ public class FirebaseManager {
 
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+    }
+    public FirebaseManager(String channel){
+        addChannelList(channel);
 
+        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
+
+        //앵커 넘버, 이미지 넘버 가져오기
+        registerAnchorNumValueLisner();
+        registerImageNumValueLisner();
+        registerMp3NumValueLisner();
+
+        DatabaseReference.goOnline();
     }
 
     //키를 가지고 있지는 여부 반환
@@ -233,6 +244,13 @@ public class FirebaseManager {
 
     }
 
+    //승리자 정보 db에 저장
+    public void sendWinnerInfo(String channel, String userID){
+        DatabaseReference winnerDB = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list").child(channel);
+        winnerDB.child("winner").setValue(userID);
+        winnerDB.child("winnerList").child(userID).setValue(createdTimeOfContent());
+    }
+
     //채널리스트에 채널 추가함
     public void addChannelList(String channel){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
@@ -244,6 +262,8 @@ public class FirebaseManager {
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         channelDatabase.child(channel).child("hostID").setValue(hostID);
         channelDatabase.child(channel).child("channelType").setValue(channelType);
+//        channelDatabase.child(channel).child("winner").setValue("없음");
+//        channelDatabase.child(channel).child("winnerList").setValue("없음");
     }
 
     //참가자가 채널에 참가할때
@@ -251,19 +271,7 @@ public class FirebaseManager {
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         channelDatabase.child(channel).child("users").child(userID).setValue("참가");
     }
-    
-    public FirebaseManager(String channel){
-        addChannelList(channel);
 
-        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
-
-        //앵커 넘버, 이미지 넘버 가져오기
-        registerAnchorNumValueLisner();
-        registerImageNumValueLisner();
-        registerMp3NumValueLisner();
-
-        DatabaseReference.goOnline();
-    }
 
     // ar에서 가져가서 처리하는게 나을듯
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
