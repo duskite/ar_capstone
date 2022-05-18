@@ -4,13 +4,14 @@ import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.mju.ar_capstone.ManageChannelActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.WrappedAnchor;
 import com.mju.ar_capstone.adapter.HostListAdapter;
@@ -34,6 +36,7 @@ public class HostListFragment extends Fragment {
     RecyclerView recycler_sound, recycler_img, recycler_text;
     FirebaseManager firebaseManager;
     FireStorageManager fireStorageManager;
+    Button btnManageChannel;
     private String selectedChannel;
 
     private static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
@@ -43,10 +46,23 @@ public class HostListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_host_list, container, false);
         hostTv = viewGroup.findViewById(R.id.hostTv);
+        btnManageChannel = viewGroup.findViewById(R.id.btnManageChannel);
 
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
         hostTv.setText("주최자로 접속. 참가한 채널: " + selectedChannel);
+
+        btnManageChannel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), ManageChannelActivity.class);
+                intent.putExtra("selectedChannel", selectedChannel);
+                startActivity(intent);
+                getActivity().finish();
+            }
+        });
+
+
         return viewGroup;
     }
 

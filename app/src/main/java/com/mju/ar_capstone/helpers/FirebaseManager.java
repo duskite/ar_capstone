@@ -84,6 +84,14 @@ public class FirebaseManager {
         DatabaseReference.goOnline();
     }
 
+    //채널 삭제 메소드
+    public void deleteChannel(String selectedChannel){
+        DatabaseReference tmpDB = FirebaseDatabase.getInstance(DB_REGION).getReference();
+        tmpDB.child("channel_list").child(selectedChannel).removeValue();
+        tmpDB.child(selectedChannel).removeValue();
+        unRegisterAnchorNumValueLisner();
+    }
+
     //키를 가지고 있지는 여부 반환
     public boolean checkHaveKey(){
         return stateHaveKey;
@@ -360,6 +368,12 @@ public class FirebaseManager {
     }
     public int getNextImageNum() {return nextImageNum;}
     public int getNextMp3Num(){return nextMp3Num;}
+
+
+    // 채널 앵커 넘버 리스너 해제
+    public void unRegisterAnchorNumValueLisner(){
+        anchorNumDatabase.removeEventListener(anchorNumListener);
+    }
 
     //앵커 게시글 수 업뎃용
     public void registerAnchorNumValueLisner(){
