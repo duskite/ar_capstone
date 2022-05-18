@@ -86,8 +86,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Bundle bundle;
     private static boolean stateHaveKey = false;
 
-    //알림
-    NotificationService notificationService;
+//    //알림
+//    NotificationService notificationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,14 +118,14 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
         if(userType == 1){
             firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
-            Intent serviceIntent = new Intent(getApplicationContext(), NotificationService.class);
-            serviceIntent.putExtra("selectedChannel",selectedChannel);
-            //서비스로 포어그라운드 돌리기어
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(serviceIntent);
-            } else {
-                startService(serviceIntent);
-            }
+//            Intent serviceIntent = new Intent(getApplicationContext(), NotificationService.class);
+//            serviceIntent.putExtra("selectedChannel",selectedChannel);
+//            //서비스로 포어그라운드 돌리기어
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                startForegroundService(serviceIntent);
+//            } else {
+//                startService(serviceIntent);
+//            }
         }else{
             //참가자일때
             firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
@@ -168,7 +168,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
 
-        
 
         // ar화면으로 넘어가기
         btnArSf = (Button) findViewById(R.id.btnArSf);

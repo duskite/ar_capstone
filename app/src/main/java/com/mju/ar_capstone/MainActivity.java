@@ -6,10 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -69,10 +72,26 @@ public class MainActivity extends AppCompatActivity {
         //채널 리스트 가져옴
         firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
-        allChannelList = firebaseManager.getAllChannelList();
+        allChannelList = firebaseManager.getHostChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
-        tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
+        tvUserId.setText("참가자ID 발급완료. 터치시 자동으로 ID가 복사됩니다.\n" + "익명ID: " + firebaseAuthManager.getUID());
+        //클립보드에 id저장할 수 있도록 지원
+        tvUserId.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if(event.getAction()==MotionEvent.ACTION_DOWN){
+                    //눌렀을 때 동작
+                    ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipData clipData = ClipData.newPlainText("ID", firebaseAuthManager.getUID());
+                    //클립보드에 ID라는 이름표로 id 값을 복사하여 저장
+                    clipboardManager.setPrimaryClip(clipData);
+                }
+                return true;
+            }
+        });
+
         btnInven = findViewById(R.id.btnInven);
         edtChannelName = findViewById(R.id.edtChannelName);
         btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
@@ -278,12 +297,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
     }
 
     @Override

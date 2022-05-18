@@ -65,7 +65,7 @@ public class FirebaseManager {
 
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
-    public ArrayList<String> allChannelList = new ArrayList<>();
+    public ArrayList<String> hostChannelList = new ArrayList<>();
 
 
     public FirebaseManager(){
@@ -150,8 +150,8 @@ public class FirebaseManager {
     public ArrayList<String> getPublicChannelList(){
         return publicChannelList;
     }
-    public ArrayList<String> getAllChannelList(){
-        return allChannelList;
+    public ArrayList<String> getHostChannelList(){
+        return hostChannelList;
     }
 
     public void setAuth(String myID){
@@ -229,14 +229,12 @@ public class FirebaseManager {
                         String channelName = tmpSnapshot.getKey();
                         Log.d("채널이름 파이어베이스 리스너", channelName);
 
-                        if(hostID.equals(myID)){ //자기가 만든 채널만 접근 가능
-                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+                        if(hostID.equals(myID)){ //주최자 유형으로는 자기가 만든 채널만 접근 가능
+                            hostChannelList.add(channelName); //주최자로 접근가능한 채널이름 리스트에 넣는 부분
                         }
                         if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
+                            // 참가자 유형일때는 공개 채널 모두에 접근 가능 하도록 보여줘야함
                             publicChannelList.add(channelName);
-                            if(!hostID.equals(myID)){ //중복 방지
-                                allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
-                            }
                         }
 
                     }catch (NullPointerException e){
@@ -268,10 +266,28 @@ public class FirebaseManager {
     //채널 기본 정보 입력
     public void setChannelInfo(String channel, int channelType, String hostID){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
-        channelDatabase.child(channel).child("hostID").setValue(hostID);
-        channelDatabase.child(channel).child("channelType").setValue(channelType);
-//        channelDatabase.child(channel).child("winner").setValue("없음");
-//        channelDatabase.child(channel).child("winnerList").setValue("없음");
+        try { //host가 이미 있는지 체크해야함. 만약 null이면 새로 생성된 채널이므로 그냥 내용 추가하면 됨
+            channelDatabase.child(channel).child("hostID").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    try{
+                        if(!task.isSuccessful()){
+                        }else {
+                            //채널 주인이 있을경우는 여기가 실행됨. - 이미 주인이 있으므로 채널 기본정보를 수정하지 않음
+                            //채널 주인이 없으면 예외부분실행
+                            String tmp = (String) task.getResult().getValue();
+                            Log.d("채널주인", tmp);
+                        }
+                    }catch (NullPointerException e){ //채널 주인이 없으면 새로생성하는 경우라서 채널정보 입력하면 됨
+                        channelDatabase.child(channel).child("hostID").setValue(hostID);
+                        channelDatabase.child(channel).child("channelType").setValue(channelType);
+                    }
+                }
+            });
+        }catch (NullPointerException e){
+        }
+
+
     }
 
     //참가자가 채널에 참가할때

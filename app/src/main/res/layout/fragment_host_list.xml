@@ -17,6 +17,14 @@
             android:text="접속"
             android:id="@+id/hostTv"
             />
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:textOff="알림 켜기"
+            android:textOn="알림 끄기"
+            android:id="@+id/btnWinNoti"
+            android:layout_gravity="right"
+            />
         <Button
             android:layout_width="wrap_content"
             android:layout_height="40dp"
