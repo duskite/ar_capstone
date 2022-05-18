@@ -1,6 +1,7 @@
 package com.mju.ar_capstone;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -88,12 +89,12 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     //알림
     NotificationService notificationService;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
         mContext=this;
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -406,7 +407,9 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
+                if(mNaverMap != null){
+                    mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
+                }
             }
         }
     }

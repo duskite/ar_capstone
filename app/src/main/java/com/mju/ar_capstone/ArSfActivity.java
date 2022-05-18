@@ -54,6 +54,7 @@ import com.google.ar.sceneform.HitTestResult;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.Sceneform;
+import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
@@ -1027,16 +1028,17 @@ public class ArSfActivity extends AppCompatActivity implements
             cntMp3Renderable += 1;
         }else if(anchorType == HostDialog.AnchorType.key){
             model.setRenderable(keyRenderable);
-            model.getScaleController().setMinScale(0.01f);
-            model.getScaleController().setMaxScale(0.03f);
-            model.setLocalScale(new Vector3(0.02f, 0.02f, 0.02f));
+            model.getScaleController().setMinScale(0.001f);
+            model.getScaleController().setMaxScale(0.01f);
+            model.setLocalScale(new Vector3(0.005f, 0.005f, 0.005f));
+            model.setLocalRotation(new Quaternion(1,1,1,1));
             model.select();
 
         }else if(anchorType == HostDialog.AnchorType.box){
             model.setRenderable(boxRenderable);
             model.getScaleController().setMinScale(0.1f);
-            model.getScaleController().setMaxScale(0.3f);
-            model.setLocalScale(new Vector3(0.2f, 0.2f, 0.2f));
+            model.getScaleController().setMaxScale(0.2f);
+            model.setLocalScale(new Vector3(0.15f, 0.15f, 0.15f));
             model.select();
         }
 

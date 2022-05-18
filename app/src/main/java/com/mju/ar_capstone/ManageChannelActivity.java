@@ -1,7 +1,9 @@
 package com.mju.ar_capstone;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.invenfragments.HostListFragment;
 
 public class ManageChannelActivity extends AppCompatActivity {
 
@@ -37,6 +40,9 @@ public class ManageChannelActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 firebaseManager.deleteChannel(channel);
+
+                HostListFragment hostListFragment = (HostListFragment) HostListFragment.hostListFragment;
+                hostListFragment.getActivity().finish();
                 finish();
             }
         });

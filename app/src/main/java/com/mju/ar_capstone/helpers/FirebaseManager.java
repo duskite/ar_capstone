@@ -86,10 +86,10 @@ public class FirebaseManager {
 
     //채널 삭제 메소드
     public void deleteChannel(String selectedChannel){
+        unRegisterAnchorNumValueLisner();
         DatabaseReference tmpDB = FirebaseDatabase.getInstance(DB_REGION).getReference();
         tmpDB.child("channel_list").child(selectedChannel).removeValue();
-        tmpDB.child(selectedChannel).removeValue();
-        unRegisterAnchorNumValueLisner();
+        tmpDB.child(selectedChannel).setValue(null);
     }
 
     //키를 가지고 있지는 여부 반환
@@ -371,8 +371,10 @@ public class FirebaseManager {
 
 
     // 채널 앵커 넘버 리스너 해제
+    // 여기서 리스너 해제가 제대로 안돼서 db에 내용은 없어지는데 채널명이 남아있음
     public void unRegisterAnchorNumValueLisner(){
-        anchorNumDatabase.removeEventListener(anchorNumListener);
+        anchorNumListener = null;
+        anchorNumDatabase = null;
     }
 
     //앵커 게시글 수 업뎃용

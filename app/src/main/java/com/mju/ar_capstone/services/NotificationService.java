@@ -88,10 +88,15 @@ public class NotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("알림", "onStartCommand");
-        selectedChannel = intent.getStringExtra("selectedChannel");
-        Log.d("알림", selectedChannel);
-        initDB(selectedChannel);
+
+        try{
+
+        }catch (NullPointerException e){
+            Log.d("알림", "onStartCommand");
+            selectedChannel = intent.getStringExtra("selectedChannel");
+            Log.d("알림", selectedChannel);
+            initDB(selectedChannel);
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }

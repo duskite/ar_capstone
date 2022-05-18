@@ -4,6 +4,7 @@ import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,10 +17,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.mju.ar_capstone.InventoryActivity;
 import com.mju.ar_capstone.ManageChannelActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.WrappedAnchor;
@@ -39,11 +42,17 @@ public class HostListFragment extends Fragment {
     Button btnManageChannel;
     private String selectedChannel;
 
+    //채널 삭제시 액티비티 종료시키려고 담아둠
+    //프래그먼트 액티비티를 종료함
+    public static HostListFragment hostListFragment;
+
     private static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        hostListFragment = HostListFragment.this;
+
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_host_list, container, false);
         hostTv = viewGroup.findViewById(R.id.hostTv);
         btnManageChannel = viewGroup.findViewById(R.id.btnManageChannel);
@@ -58,7 +67,6 @@ public class HostListFragment extends Fragment {
                 Intent intent = new Intent(getContext(), ManageChannelActivity.class);
                 intent.putExtra("selectedChannel", selectedChannel);
                 startActivity(intent);
-                getActivity().finish();
             }
         });
 
