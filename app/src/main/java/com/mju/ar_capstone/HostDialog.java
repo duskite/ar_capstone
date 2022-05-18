@@ -25,7 +25,7 @@ public class HostDialog extends Dialog {
     private CustomDialogClickListener customDialogClickListener;
     private Button dialogBtnOk, dialogBtnDelete, btnImgMakePuzzle;
     private RadioGroup dialogRdGroup;
-    private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnMp3;
+    private RadioButton dialogRdBtnText,dialogRdBtnImg, dialogRdBtnMp3, dialogRdBtnKey, dialogRdBtnBox;
 
     //화면 회전에 따라 다른 레이아웃 보여줌
     private static boolean ORIENTATION = false;
@@ -33,7 +33,9 @@ public class HostDialog extends Dialog {
     public enum AnchorType{
         text,
         image,
-        mp3
+        mp3,
+        key,
+        box
     }
     AnchorType anchorType;
 
@@ -70,6 +72,8 @@ public class HostDialog extends Dialog {
             dialogRdBtnText = (RadioButton) findViewById(R.id.dialog_rdbtn_text);
             dialogRdBtnImg = (RadioButton) findViewById(R.id.dialog_rdbtn_img);
             dialogRdBtnMp3 = (RadioButton) findViewById(R.id.dialog_rdbtn_mp3);
+            dialogRdBtnKey = (RadioButton) findViewById(R.id.dialog_rdbtn_key);
+            dialogRdBtnBox = (RadioButton) findViewById(R.id.dialog_rdbtn_box);
 
             dialogEdt = (EditText) findViewById(R.id.dialog_edt);
             dialogImg = (ImageView) findViewById(R.id.dialog_img);
@@ -102,6 +106,7 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
                         btnImgMakePuzzle.setVisibility(View.VISIBLE);
+
                         anchorType = anchorType.image;
 
                         Log.d("순서", "이미지 모드 눌림");
@@ -113,7 +118,24 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.VISIBLE);
                         btnImgMakePuzzle.setVisibility(View.GONE);
+
                         anchorType = anchorType.mp3;
+                    }else if(checkedId == R.id.dialog_rdbtn_key){
+                        textView.setText("열쇠 생성");
+                        dialogImg.setVisibility(View.GONE);
+                        dialogEdt.setVisibility(View.GONE);
+                        dialogMp3.setVisibility(View.GONE);
+                        btnImgMakePuzzle.setVisibility(View.GONE);
+
+                        anchorType = anchorType.key;
+                    }else if(checkedId == R.id.dialog_rdbtn_box){
+                        textView.setText("잠긴 상자 생성");
+                        dialogImg.setVisibility(View.GONE);
+                        dialogEdt.setVisibility(View.GONE);
+                        dialogMp3.setVisibility(View.GONE);
+                        btnImgMakePuzzle.setVisibility(View.GONE);
+
+                        anchorType = anchorType.box;
                     }
                 }
             });
