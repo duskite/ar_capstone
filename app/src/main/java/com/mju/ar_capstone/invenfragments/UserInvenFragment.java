@@ -43,11 +43,12 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     private final String TAG = UserInvenFragment.class.getSimpleName();
     RecyclerView recycler_sound, recycler_img, recycler_text;
     ViewGroup viewGroup;
-    TextView userTv;
+    TextView userTv, haveKeyTv;
     FirebaseManager firebaseManager;
     FireStorageManager fireStorageManager;
     private FirebaseAuthManager firebaseAuthManager;
     private String selectedChannel;
+    private static boolean stateHaveKey = false;
 
     // 드래그앤 드롭 관련 헬퍼
     private ItemTouchHelper itemTouchHelper;
@@ -69,12 +70,16 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
 
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_user_inven, container, false);
         userTv = viewGroup.findViewById(R.id.userTv);
+        haveKeyTv = viewGroup.findViewById(R.id.haveKeyTv);
         ButterKnife.bind(this, viewGroup);
 
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
 
         userTv.setText("참가자로 접속. 참가한 채널: " + selectedChannel );
+        if(stateHaveKey){
+            haveKeyTv.setText(" Key: 획득함");
+        }
 
 
         return viewGroup;
@@ -160,8 +165,10 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         recycler_sound.setLayoutManager(null);
     }
 
+    //스크랩한 앵커 불러오기, 키 앵커 소유 여부 체크
     public void loadScrapAnchor(){
         wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
+        stateHaveKey = firebaseManager.checkHaveKey();
     }
 
 }

@@ -61,6 +61,7 @@ public class FirebaseManager {
 
 
     private String myID;
+    private static boolean stateHaveKey = false;
 
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
@@ -70,6 +71,11 @@ public class FirebaseManager {
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
 
+    }
+
+    //키를 가지고 있지는 여부 반환
+    public boolean checkHaveKey(){
+        return stateHaveKey;
     }
 
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
@@ -94,6 +100,11 @@ public class FirebaseManager {
                     DataSnapshot dataSnapshot = task.getResult();
                     for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
                         String tmpStr = tmpSnapshot.getKey().toString();
+                        int tmpAnchorType = tmpSnapshot.getValue(int.class);
+                        if(tmpAnchorType == 3){ //키를 가지고 있음
+                            Log.d("스크랩", "키 소유중");
+                            stateHaveKey = true;
+                        }
                         userScrapAnchorIdList.add(tmpStr);
                         Log.d("스크랩", tmpStr);
                     }
