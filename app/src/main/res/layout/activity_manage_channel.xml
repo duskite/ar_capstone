@@ -20,4 +20,18 @@
         android:text="현재 채널 삭제"
         />
 
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/edtHostAdd"
+        android:hint="주최자로 추가하려는 사용자의 익명ID를 입력하세요."
+        />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnHostAdd"
+        android:text="추가하기"
+        android:enabled="false"
+        />
+
 </LinearLayout>

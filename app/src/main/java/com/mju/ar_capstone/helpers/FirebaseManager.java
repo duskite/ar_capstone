@@ -84,6 +84,12 @@ public class FirebaseManager {
         DatabaseReference.goOnline();
     }
 
+    //호스트 추가 기능
+    public void addHostInChannel(String addChannel, String addHostID){
+        DatabaseReference addHostDB = channelDatabase.child(addChannel).child("hostID");
+        addHostDB.child(addHostID).setValue("subHost");
+    }
+
     //채널 삭제 메소드
     public void deleteChannel(String selectedChannel){
         unRegisterAnchorNumValueLisner();
@@ -222,19 +228,26 @@ public class FirebaseManager {
                     DataSnapshot dataSnapshot = task.getResult();
                     for(DataSnapshot tmpSnapshot: dataSnapshot.getChildren()){
                         Log.d("파베채널리스트", String.valueOf(tmpSnapshot.getKey()));
-
                     try{
                         int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
-                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
-                        String channelName = tmpSnapshot.getKey();
-                        Log.d("채널이름 파이어베이스 리스너", channelName);
+//                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
+                        DataSnapshot hostIDsSnapshot = (DataSnapshot) tmpSnapshot.child("hostID");
+                        for(DataSnapshot hostSnapshot: hostIDsSnapshot.getChildren()){
+                            String hostID = hostSnapshot.getKey();
+                            String channelName = tmpSnapshot.getKey();
+                            Log.d("채널이름 파이어베이스 리스너", channelName);
 
-                        if(hostID.equals(myID)){ //주최자 유형으로는 자기가 만든 채널만 접근 가능
-                            hostChannelList.add(channelName); //주최자로 접근가능한 채널이름 리스트에 넣는 부분
-                        }
-                        if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
-                            // 참가자 유형일때는 공개 채널 모두에 접근 가능 하도록 보여줘야함
-                            publicChannelList.add(channelName);
+                            if(hostID.equals(myID)){ //주최자 유형으로는 자기가 만들거나 속한 채널만 접근 가능
+                                if(!hostChannelList.contains(channelName)){ //중복 방지
+                                    hostChannelList.add(channelName); //주최자로 접근가능한 채널이름 리스트에 넣는 부분
+                                }
+                            }
+                            if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
+                                // 참가자 유형일때는 공개 채널 모두에 접근 가능 하도록 보여줘야함
+                                if(!publicChannelList.contains(channelName)){ //중복 방지
+                                    publicChannelList.add(channelName);
+                                }
+                            }
                         }
 
                     }catch (NullPointerException e){
@@ -261,7 +274,7 @@ public class FirebaseManager {
     public void addChannelList(String channel){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         //우선 의미없는 값 넣어서 디비 만들음
-        channelDatabase.child(channel).child("created").setValue("생성됨");
+        channelDatabase.child(channel).child("created").setValue(createdTimeOfContent());
     }
     //채널 기본 정보 입력
     public void setChannelInfo(String channel, int channelType, String hostID){
@@ -273,14 +286,21 @@ public class FirebaseManager {
                     try{
                         if(!task.isSuccessful()){
                         }else {
-                            //채널 주인이 있을경우는 여기가 실행됨. - 이미 주인이 있으므로 채널 기본정보를 수정하지 않음
-                            //채널 주인이 없으면 예외부분실행
-                            String tmp = (String) task.getResult().getValue();
-                            Log.d("채널주인", tmp);
+                            DataSnapshot dataSnapshot = task.getResult();
+                            if(dataSnapshot.getValue() == null){
+                                Log.d("채널주인", "비어있음");
+                                //채널 주인이 없는 경우에는 채널 정보를 생성함
+                                //내가 처음 생성했다는 소리
+                                channelDatabase.child(channel).child("hostID").child(hostID).setValue("mainHost");
+                                channelDatabase.child(channel).child("channelType").setValue(channelType);
+                            }else{
+                                Log.d("채널주인", "들어있음");
+                                //이미 채널 주인이 있을 경우에는 채널 정보 변경하지 않음
+                                //그냥 입장만하는거임
+                            }
                         }
-                    }catch (NullPointerException e){ //채널 주인이 없으면 새로생성하는 경우라서 채널정보 입력하면 됨
-                        channelDatabase.child(channel).child("hostID").setValue(hostID);
-                        channelDatabase.child(channel).child("channelType").setValue(channelType);
+                    }catch (NullPointerException e){
+                        Log.d("채널주인", "onComplete null");
                     }
                 }
             });

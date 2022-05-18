@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedChannel = "base_channel"; //기본 채널
     private EditText edtChannelName;
 
-    private ArrayList<String> publicChannelList, allChannelList;
+    private ArrayList<String> publicChannelList, hostChannelList;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         //채널 리스트 가져옴
         firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
-        allChannelList = firebaseManager.getHostChannelList();
+        hostChannelList = firebaseManager.getHostChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
         tvUserId.setText("참가자ID 발급완료. 터치시 자동으로 ID가 복사됩니다.\n" + "익명ID: " + firebaseAuthManager.getUID());
@@ -137,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
         rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+                //채널 다시 한번 로드 해놓음, 변경사항 있을수 있어서
+                firebaseManager.getChannelList();
 
                 checkCreate.setVisibility(View.VISIBLE);
                 btnInven.setEnabled(true);
@@ -171,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // 공용 채널에 이 이름이 있는지 체크
-                if(!allChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
+                if(!publicChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
                     if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
                         android.app.AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                         dialog.setMessage("존재하지 않는 채널입니다.");
@@ -201,11 +203,15 @@ public class MainActivity extends AppCompatActivity {
         btnSpinnerLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //채널 재로드, 사용자 유형에따라 보이는게 변해야하는데
+                //최신 채널리스트로 동기화 한 후 어댑터에 뜨도록
+                publicChannelList = firebaseManager.getPublicChannelList();
+                hostChannelList = firebaseManager.getHostChannelList();
 
                 int arraySize = 0;
                 ArrayList<String> selectedChannelList = new ArrayList<>();
                 if(userType == 1){
-                    selectedChannelList = allChannelList;
+                    selectedChannelList = hostChannelList;
                 }else if(userType == 2){
                     selectedChannelList = publicChannelList;
                 }
