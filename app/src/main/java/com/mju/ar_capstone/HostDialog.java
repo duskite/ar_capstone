@@ -41,7 +41,7 @@ public class HostDialog extends Dialog {
 
     public EditText dialogEdt;
     public ImageView dialogImg;
-    private TextView textView;
+    private TextView textView, dialogKey, dialogBox;
 
     private LinearLayout dialogMp3;
     private ImageButton audioRecordImageBtn, mp3play;
@@ -79,6 +79,9 @@ public class HostDialog extends Dialog {
             dialogImg = (ImageView) findViewById(R.id.dialog_img);
             dialogMp3 = (LinearLayout) findViewById(R.id.dialog_mp3);
 
+            dialogBox = (TextView) findViewById(R.id.dialog_box);
+            dialogKey = (TextView) findViewById(R.id.dialog_key);
+
             audioRecordImageBtn = (ImageButton) findViewById(R.id.audioRecordImageBtn);
             mp3play = (ImageButton) findViewById(R.id.mp3play);
             audioRecordText = (TextView) findViewById(R.id.audioRecordText);
@@ -96,6 +99,8 @@ public class HostDialog extends Dialog {
                         dialogImg.setVisibility(View.GONE);
                         btnImgMakePuzzle.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
+                        dialogBox.setVisibility(View.GONE);
+                        dialogKey.setVisibility(View.GONE);
                         anchorType = anchorType.text;
 
                         Log.d("순서", "텍스트 모드 눌림");
@@ -106,11 +111,12 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
                         btnImgMakePuzzle.setVisibility(View.VISIBLE);
+                        dialogBox.setVisibility(View.GONE);
+                        dialogKey.setVisibility(View.GONE);
 
                         anchorType = anchorType.image;
 
                         Log.d("순서", "이미지 모드 눌림");
-
 
                     } else if (checkedId == R.id.dialog_rdbtn_mp3) {
                         textView.setText("음성 녹음 모드");
@@ -118,6 +124,8 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.VISIBLE);
                         btnImgMakePuzzle.setVisibility(View.GONE);
+                        dialogBox.setVisibility(View.GONE);
+                        dialogKey.setVisibility(View.GONE);
 
                         anchorType = anchorType.mp3;
                     }else if(checkedId == R.id.dialog_rdbtn_key){
@@ -126,6 +134,10 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
                         btnImgMakePuzzle.setVisibility(View.GONE);
+                        dialogBox.setVisibility(View.GONE);
+                        dialogKey.setText("열쇠는 잠긴상자를 여는데 사용됩니다. 이것을 획득한 참가자는 상자를 열고\n" +
+                                "게임에서 승리할 수 있습니다.");
+                        dialogKey.setVisibility(View.VISIBLE);
 
                         anchorType = anchorType.key;
                     }else if(checkedId == R.id.dialog_rdbtn_box){
@@ -134,6 +146,10 @@ public class HostDialog extends Dialog {
                         dialogEdt.setVisibility(View.GONE);
                         dialogMp3.setVisibility(View.GONE);
                         btnImgMakePuzzle.setVisibility(View.GONE);
+                        dialogBox.setText("잠긴 상자는 열쇠를 통해 열 수 있으며, 참가자들의 최종 목표입니다.\n" +
+                                "모든 상자는 모든 열쇠로 열립니다. 배치 개수를 적절히 조정하세요.");
+                        dialogBox.setVisibility(View.VISIBLE);
+                        dialogKey.setVisibility(View.GONE);
 
                         anchorType = anchorType.box;
                     }

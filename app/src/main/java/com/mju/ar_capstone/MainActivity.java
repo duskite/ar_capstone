@@ -6,10 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
@@ -41,12 +45,16 @@ public class MainActivity extends AppCompatActivity {
     private String selectedChannel = "base_channel"; //기본 채널
     private EditText edtChannelName;
 
-    private ArrayList<String> publicChannelList, allChannelList;
+    private ArrayList<String> publicChannelList, hostChannelList, privateChannelList;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
 
     private CheckBox checkCreate;
+
+    //앱 종료처리
+    private long backKeyPressedTime = 0;
+    private Toast toast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,10 +72,27 @@ public class MainActivity extends AppCompatActivity {
         //채널 리스트 가져옴
         firebaseManager.getChannelList();
         publicChannelList = firebaseManager.getPublicChannelList();
-        allChannelList = firebaseManager.getAllChannelList();
+        hostChannelList = firebaseManager.getHostChannelList();
+        privateChannelList = firebaseManager.getPrivateChannelList();
 
         tvUserId = (TextView) findViewById(R.id.userId);
-        tvUserId.setText("참가자ID 발급완료\n" + "익명ID: " + firebaseAuthManager.getUID());
+        tvUserId.setText("참가자ID 발급완료. 터치시 자동으로 ID가 복사됩니다.\n" + "익명ID: " + firebaseAuthManager.getUID());
+        //클립보드에 id저장할 수 있도록 지원
+        tvUserId.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if(event.getAction()==MotionEvent.ACTION_DOWN){
+                    //눌렀을 때 동작
+                    ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    ClipData clipData = ClipData.newPlainText("ID", firebaseAuthManager.getUID());
+                    //클립보드에 ID라는 이름표로 id 값을 복사하여 저장
+                    clipboardManager.setPrimaryClip(clipData);
+                }
+                return true;
+            }
+        });
+
         btnInven = findViewById(R.id.btnInven);
         edtChannelName = findViewById(R.id.edtChannelName);
         btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
@@ -113,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
         rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+                //채널 다시 한번 로드 해놓음, 변경사항 있을수 있어서
+                firebaseManager.getChannelList();
 
                 checkCreate.setVisibility(View.VISIBLE);
                 btnInven.setEnabled(true);
@@ -123,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
                         edtChannelName.setHint("위 버튼 체크시 생성가능");
                         tvChannelLoad.setText("접근가능한 채널 불러오기");
                         btnSpinnerLoad.setEnabled(true);
+                        spinner.setVisibility(View.INVISIBLE);
                         userType = 1;
                         break;
                     case R.id.participant:
@@ -134,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
                         btnInven.setText("입장하기");
                         btnSpinnerLoad.setEnabled(true);
                         rdChannelType.setVisibility(View.INVISIBLE);
+                        spinner.setVisibility(View.INVISIBLE);
                         break;
                 }
                 Log.d("유저타입", String.valueOf(userType));
@@ -146,8 +175,8 @@ public class MainActivity extends AppCompatActivity {
                     selectedChannel = edtChannelName.getText().toString();
                 }
 
-                // 공용 채널에 이 이름이 있는지 체크
-                if(!allChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
+                // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
+                if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
                     if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
                         android.app.AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                         dialog.setMessage("존재하지 않는 채널입니다.");
@@ -177,11 +206,16 @@ public class MainActivity extends AppCompatActivity {
         btnSpinnerLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //채널 재로드, 사용자 유형에따라 보이는게 변해야하는데
+                //최신 채널리스트로 동기화 한 후 어댑터에 뜨도록
+                publicChannelList = firebaseManager.getPublicChannelList();
+                hostChannelList = firebaseManager.getHostChannelList();
+                privateChannelList = firebaseManager.getPrivateChannelList();
 
                 int arraySize = 0;
                 ArrayList<String> selectedChannelList = new ArrayList<>();
                 if(userType == 1){
-                    selectedChannelList = allChannelList;
+                    selectedChannelList = hostChannelList;
                 }else if(userType == 2){
                     selectedChannelList = publicChannelList;
                 }
@@ -247,17 +281,43 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        // 기존 뒤로가기 버튼의 기능을 막기위해 주석처리 또는 삭제
+        // super.onBackPressed();
 
+        // 마지막으로 뒤로가기 버튼을 눌렀던 시간에 2초를 더해 현재시간과 비교 후
+        // 마지막으로 뒤로가기 버튼을 눌렀던 시간이 2초가 지났으면 Toast Show
+        // 2000 milliseconds = 2 seconds
+        if (System.currentTimeMillis() > backKeyPressedTime + 2000) {
+            backKeyPressedTime = System.currentTimeMillis();
+            toast = Toast.makeText(this, "\'뒤로\' 버튼을 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
+            toast.show();
+            return;
+        }
+        // 마지막으로 뒤로가기 버튼을 눌렀던 시간에 2초를 더해 현재시간과 비교 후
+        // 마지막으로 뒤로가기 버튼을 눌렀던 시간이 2초가 지나지 않았으면 종료
+        // 현재 표시된 Toast 취소
+        if (System.currentTimeMillis() <= backKeyPressedTime + 2000) {
+            finish();
+            toast.cancel();
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
     }
 
     @Override

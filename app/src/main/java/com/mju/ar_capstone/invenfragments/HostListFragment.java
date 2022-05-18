@@ -4,26 +4,35 @@ import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.mju.ar_capstone.InventoryActivity;
+import com.mju.ar_capstone.ManageChannelActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.WrappedAnchor;
 import com.mju.ar_capstone.adapter.HostListAdapter;
 import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
+import com.mju.ar_capstone.services.NotificationService;
 
 import java.util.ArrayList;
 
@@ -34,19 +43,65 @@ public class HostListFragment extends Fragment {
     RecyclerView recycler_sound, recycler_img, recycler_text;
     FirebaseManager firebaseManager;
     FireStorageManager fireStorageManager;
+    Button btnManageChannel;
+    ToggleButton btnWinNoti;
     private String selectedChannel;
+
+    //채널 삭제시 액티비티 종료시키려고 담아둠
+    //프래그먼트 액티비티를 종료함
+    public static HostListFragment hostListFragment;
+
+    //알림
+    NotificationService notificationService;
 
     private static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        hostListFragment = HostListFragment.this;
+
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_host_list, container, false);
         hostTv = viewGroup.findViewById(R.id.hostTv);
+        btnManageChannel = viewGroup.findViewById(R.id.btnManageChannel);
+        btnWinNoti = (ToggleButton) viewGroup.findViewById(R.id.btnWinNoti);
 
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
         hostTv.setText("주최자로 접속. 참가한 채널: " + selectedChannel);
+
+        btnWinNoti.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Intent serviceIntent = new Intent(getContext(), NotificationService.class);
+                serviceIntent.putExtra("selectedChannel",selectedChannel);
+                if(isChecked){
+                    // 우승자 알림 켜기
+                    //서비스로 포어그라운드 돌리기어
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        getActivity().startForegroundService(serviceIntent);
+                    } else {
+                        getActivity().startService(serviceIntent);
+                    }
+                }else {
+                    //알림 끄기
+                    getActivity().stopService(serviceIntent);
+                }
+
+            }
+        });
+
+
+        btnManageChannel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), ManageChannelActivity.class);
+                intent.putExtra("selectedChannel", selectedChannel);
+                startActivity(intent);
+            }
+        });
+
+
         return viewGroup;
     }
 
@@ -98,4 +153,5 @@ public class HostListFragment extends Fragment {
         recycler_sound.setLayoutManager(null);
         super.onStop();
     }
+
 }

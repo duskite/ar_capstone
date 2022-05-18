@@ -1,6 +1,7 @@
 package com.mju.ar_capstone;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,10 +28,13 @@ import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
 import com.mju.ar_capstone.invenfragments.UserInvenFragment;
+import com.mju.ar_capstone.services.NotificationService;
 import com.naver.maps.geometry.LatLng;
+import com.naver.maps.map.CameraPosition;
 import com.naver.maps.map.LocationTrackingMode;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
+import com.naver.maps.map.NaverMapOptions;
 import com.naver.maps.map.OnMapReadyCallback;
 import com.naver.maps.map.overlay.CircleOverlay;
 import com.naver.maps.map.overlay.InfoWindow;
@@ -81,13 +86,17 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Context mContext;
 
     Bundle bundle;
+    private static boolean stateHaveKey = false;
 
+//    //알림
+//    NotificationService notificationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
         mContext=this;
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -154,7 +163,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
 
 
-
         // ar화면으로 넘어가기
         btnArSf = (Button) findViewById(R.id.btnArSf);
         btnArSf.setOnClickListener(new View.OnClickListener() {
@@ -164,6 +172,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 intent.putExtra("userType", userType);
                 intent.putExtra("azimuth", getAzimuth());
                 intent.putExtra("channel", selectedChannel);
+
+                //키 소지 여부 넘기기
+                stateHaveKey = firebaseManager.checkHaveKey();
+                intent.putExtra("haveKey", stateHaveKey);
+
                 startActivity(intent);
             }
         });
@@ -293,6 +306,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setOnMapClickListener(this);
 
+        //카메라 기본 줌 변경함
+        CameraPosition cameraPosition = new CameraPosition(mNaverMap.getCameraPosition().target, 18);
+        mNaverMap.setCameraPosition(cameraPosition);
+
         mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int i, boolean b) {
@@ -345,12 +362,12 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             if(userType == 2){ // 참가자일때
 
                 //너무 가까운거는 넘어감, 메모리 문제 때문에 먼것들만 써클 오버레이 찍어줘야함
-                if(latLng.distanceTo(tmpLatLng) < 20){
+                if(latLng.distanceTo(tmpLatLng) < 10){
                     continue;
                 }
-
+                Log.d("지도 오버레이", "몇개찍혔나");
                 // 마커를 보여주지 않고 부근만 찍음
-                CircleOverlay circleOverlay = new CircleOverlay(latLng, 20);
+                CircleOverlay circleOverlay = new CircleOverlay(latLng, 10);
 //                circleOverlay.setColor(Color.RED);
                 circleOverlay.setOutlineColor(Color.RED);
                 circleOverlay.setOutlineWidth(10);
@@ -387,7 +404,9 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
+                if(mNaverMap != null){
+                    mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
+                }
             }
         }
     }

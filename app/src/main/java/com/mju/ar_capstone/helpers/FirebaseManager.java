@@ -38,7 +38,7 @@ public class FirebaseManager {
     private DatabaseReference mp3NumDatabase;
     private DatabaseReference oneAnchorInfo;
 
-    private DatabaseReference channelDatabase;
+    public DatabaseReference channelDatabase;
 
     private DatabaseReference scrapDatabase;
 
@@ -61,15 +61,47 @@ public class FirebaseManager {
 
 
     private String myID;
+    private static boolean stateHaveKey = false;
 
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
-    public ArrayList<String> allChannelList = new ArrayList<>();
+    public ArrayList<String> hostChannelList = new ArrayList<>();
+    public ArrayList<String> privateChannelList = new ArrayList<>();
 
 
     public FirebaseManager(){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
+    }
+    public FirebaseManager(String channel){
+        addChannelList(channel);
 
+        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
+
+        //앵커 넘버, 이미지 넘버 가져오기
+        registerAnchorNumValueLisner();
+        registerImageNumValueLisner();
+        registerMp3NumValueLisner();
+
+        DatabaseReference.goOnline();
+    }
+
+    //호스트 추가 기능
+    public void addHostInChannel(String addChannel, String addHostID){
+        DatabaseReference addHostDB = channelDatabase.child(addChannel).child("hostID");
+        addHostDB.child(addHostID).setValue("subHost");
+    }
+
+    //채널 삭제 메소드
+    public void deleteChannel(String selectedChannel){
+        unRegisterAnchorNumValueLisner();
+        DatabaseReference tmpDB = FirebaseDatabase.getInstance(DB_REGION).getReference();
+        tmpDB.child("channel_list").child(selectedChannel).removeValue();
+        tmpDB.child(selectedChannel).setValue(null);
+    }
+
+    //키를 가지고 있지는 여부 반환
+    public boolean checkHaveKey(){
+        return stateHaveKey;
     }
 
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
@@ -94,6 +126,11 @@ public class FirebaseManager {
                     DataSnapshot dataSnapshot = task.getResult();
                     for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
                         String tmpStr = tmpSnapshot.getKey().toString();
+                        int tmpAnchorType = tmpSnapshot.getValue(int.class);
+                        if(tmpAnchorType == 3){ //키를 가지고 있음
+                            Log.d("스크랩", "키 소유중");
+                            stateHaveKey = true;
+                        }
                         userScrapAnchorIdList.add(tmpStr);
                         Log.d("스크랩", tmpStr);
                     }
@@ -120,8 +157,11 @@ public class FirebaseManager {
     public ArrayList<String> getPublicChannelList(){
         return publicChannelList;
     }
-    public ArrayList<String> getAllChannelList(){
-        return allChannelList;
+    public ArrayList<String> getHostChannelList(){
+        return hostChannelList;
+    }
+    public ArrayList<String> getPrivateChannelList(){
+        return privateChannelList;
     }
 
     public void setAuth(String myID){
@@ -192,20 +232,29 @@ public class FirebaseManager {
                     DataSnapshot dataSnapshot = task.getResult();
                     for(DataSnapshot tmpSnapshot: dataSnapshot.getChildren()){
                         Log.d("파베채널리스트", String.valueOf(tmpSnapshot.getKey()));
-
                     try{
                         int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
-                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
-                        String channelName = tmpSnapshot.getKey();
-                        Log.d("채널이름 파이어베이스 리스너", channelName);
+//                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
+                        DataSnapshot hostIDsSnapshot = (DataSnapshot) tmpSnapshot.child("hostID");
+                        for(DataSnapshot hostSnapshot: hostIDsSnapshot.getChildren()){
+                            String hostID = hostSnapshot.getKey();
+                            String channelName = tmpSnapshot.getKey();
+                            Log.d("채널이름 파이어베이스 리스너", channelName);
 
-                        if(hostID.equals(myID)){ //자기가 만든 채널만 접근 가능
-                            allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
-                        }
-                        if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
-                            publicChannelList.add(channelName);
-                            if(!hostID.equals(myID)){ //중복 방지
-                                allChannelList.add(channelName); //주최자가 접근가능한 채널이름 리스트에 넣는 부분
+                            if(hostID.equals(myID)){ //주최자 유형으로는 자기가 만들거나 속한 채널만 접근 가능
+                                if(!hostChannelList.contains(channelName)){ //중복 방지
+                                    hostChannelList.add(channelName); //주최자로 접근가능한 채널이름 리스트에 넣는 부분
+                                }
+                            }
+                            if(checkChannelType == 1){ // 공개 채널일때만 리스트에 넣는 부분
+                                // 참가자 유형일때는 공개 채널 모두에 접근 가능 하도록 보여줘야함
+                                if(!publicChannelList.contains(channelName)){ //중복 방지
+                                    publicChannelList.add(channelName);
+                                }
+                            }else if(checkChannelType == 2){
+                                if(!privateChannelList.contains(channelName)){
+                                    privateChannelList.add(channelName);
+                                }
                             }
                         }
 
@@ -222,17 +271,51 @@ public class FirebaseManager {
 
     }
 
+    //승리자 정보 db에 저장
+    public void sendWinnerInfo(String channel, String userID){
+        DatabaseReference winnerDB = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list").child(channel);
+        winnerDB.child("winner").setValue(userID);
+        winnerDB.child("winnerList").child(userID).setValue(createdTimeOfContent());
+    }
+
     //채널리스트에 채널 추가함
     public void addChannelList(String channel){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         //우선 의미없는 값 넣어서 디비 만들음
-        channelDatabase.child(channel).child("created").setValue("생성됨");
+        channelDatabase.child(channel).child("created").setValue(createdTimeOfContent());
     }
     //채널 기본 정보 입력
     public void setChannelInfo(String channel, int channelType, String hostID){
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
-        channelDatabase.child(channel).child("hostID").setValue(hostID);
-        channelDatabase.child(channel).child("channelType").setValue(channelType);
+        try { //host가 이미 있는지 체크해야함. 만약 null이면 새로 생성된 채널이므로 그냥 내용 추가하면 됨
+            channelDatabase.child(channel).child("hostID").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    try{
+                        if(!task.isSuccessful()){
+                        }else {
+                            DataSnapshot dataSnapshot = task.getResult();
+                            if(dataSnapshot.getValue() == null){
+                                Log.d("채널주인", "비어있음");
+                                //채널 주인이 없는 경우에는 채널 정보를 생성함
+                                //내가 처음 생성했다는 소리
+                                channelDatabase.child(channel).child("hostID").child(hostID).setValue("mainHost");
+                                channelDatabase.child(channel).child("channelType").setValue(channelType);
+                            }else{
+                                Log.d("채널주인", "들어있음");
+                                //이미 채널 주인이 있을 경우에는 채널 정보 변경하지 않음
+                                //그냥 입장만하는거임
+                            }
+                        }
+                    }catch (NullPointerException e){
+                        Log.d("채널주인", "onComplete null");
+                    }
+                }
+            });
+        }catch (NullPointerException e){
+        }
+
+
     }
 
     //참가자가 채널에 참가할때
@@ -240,19 +323,7 @@ public class FirebaseManager {
         channelDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("channel_list");
         channelDatabase.child(channel).child("users").child(userID).setValue("참가");
     }
-    
-    public FirebaseManager(String channel){
-        addChannelList(channel);
 
-        mDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child(channel);
-
-        //앵커 넘버, 이미지 넘버 가져오기
-        registerAnchorNumValueLisner();
-        registerImageNumValueLisner();
-        registerMp3NumValueLisner();
-
-        DatabaseReference.goOnline();
-    }
 
     // ar에서 가져가서 처리하는게 나을듯
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
@@ -341,6 +412,14 @@ public class FirebaseManager {
     }
     public int getNextImageNum() {return nextImageNum;}
     public int getNextMp3Num(){return nextMp3Num;}
+
+
+    // 채널 앵커 넘버 리스너 해제
+    // 여기서 리스너 해제가 제대로 안돼서 db에 내용은 없어지는데 채널명이 남아있음
+    public void unRegisterAnchorNumValueLisner(){
+        anchorNumListener = null;
+        anchorNumDatabase = null;
+    }
 
     //앵커 게시글 수 업뎃용
     public void registerAnchorNumValueLisner(){
