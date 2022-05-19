@@ -78,6 +78,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 public class ArSfActivity extends AppCompatActivity implements
         FragmentOnAttachListener,
         BaseArFragment.OnTapArPlaneListener,
@@ -642,25 +644,23 @@ public class ArSfActivity extends AppCompatActivity implements
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
 
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(ArSfActivity.this);
-                        dialog.setMessage("앵커를 삭제하시겠습니까?");
-                        dialog.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.WARNING_TYPE);
+                        sweetAlertDialog.setContentText("앵커를 삭제하시겠습니까?");
+                        sweetAlertDialog.setConfirmButton("삭제하기", new SweetAlertDialog.OnSweetClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                            public void onClick(SweetAlertDialog sweetAlertDialog) {
                                 firebaseManager.deleteContent(model.getName());
                                 anchor.detach();
                                 model.setRenderable(null);
                             }
                         });
-                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+                        sweetAlertDialog.setCancelButton("취소", new SweetAlertDialog.OnSweetClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
+                            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                sweetAlertDialog.dismiss();
                             }
                         });
-
-                        dialog.show();
-
+                        sweetAlertDialog.show();
                     }
                 });
             }else{
@@ -668,13 +668,15 @@ public class ArSfActivity extends AppCompatActivity implements
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(ArSfActivity.this);
+                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+
                         // 열쇠 앵커일때는
                         if(wrappedAnchor.getAnchorType() == 3){
-                            dialog.setMessage("열쇠를 획득하시겠습니까?");
-                            dialog.setPositiveButton("열쇠 획득", new DialogInterface.OnClickListener() {
+                            sweetAlertDialog.setContentText("열쇠를 획득하시겠습니까?");
+                            sweetAlertDialog.setConfirmText("열쇠 획득");
+                            sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                 @Override
-                                public void onClick(DialogInterface dialog, int which) {
+                                public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
                                     firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
                                         @Override
@@ -689,13 +691,16 @@ public class ArSfActivity extends AppCompatActivity implements
 
                                     //앵커 획득한것처럼 보이게 화면상에서 지움
                                     anchor.detach();
+
+                                    sweetAlertDialog.dismiss();
                                 }
                             });
                         }else if(wrappedAnchor.getAnchorType() == 4){ //박스 앵커일때는
-                            dialog.setMessage("상자를 여시겠습니까? Key를 가지고 있어야합니다.");
-                            dialog.setPositiveButton("상자 열기", new DialogInterface.OnClickListener() {
+                            sweetAlertDialog.setContentText("상자를 여시겠습니까?\nKey를 가지고 있어야 합니다.");
+                            sweetAlertDialog.setConfirmText("상자 열기");
+                            sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                 @Override
-                                public void onClick(DialogInterface dialog, int which) {
+                                public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
                                     firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
                                         @Override
@@ -707,6 +712,7 @@ public class ArSfActivity extends AppCompatActivity implements
                                         //승리 유저 정보 보냄
                                         firebaseManager.sendWinnerInfo(channel, firebaseAuthManager.getUID());
                                         Intent intent = new Intent(getApplicationContext(), SuccessActivity.class);
+                                        sweetAlertDialog.dismiss();
                                         startActivity(intent);
                                     }else{//키가 없으면
 
@@ -714,28 +720,30 @@ public class ArSfActivity extends AppCompatActivity implements
                                 }
                             });
                         }else{
-                            dialog.setMessage("앵커를 스크랩하시겠습니까?");
-                            dialog.setPositiveButton("가방에 담기", new DialogInterface.OnClickListener() {
+                            sweetAlertDialog.setContentText("앵커를 스크랩하시겠습니까?");
+                            sweetAlertDialog.setConfirmText("가방에 담기");
+                            sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                 @Override
-                                public void onClick(DialogInterface dialog, int which) {
+                                public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
                                     firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
                                         @Override
                                         public void onDataLoaded(WrappedAnchor wrappedAnchor) {
                                             UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
+                                            sweetAlertDialog.dismiss();
                                         }
                                     });
                                 }
                             });
                         }
-                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+                        sweetAlertDialog.setCancelText("취소");
+                        sweetAlertDialog.setCancelClickListener(new SweetAlertDialog.OnSweetClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
+                            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                sweetAlertDialog.dismiss();
                             }
                         });
-
-                        dialog.show();
+                        sweetAlertDialog.show();
 
                     }
                 });

@@ -30,6 +30,8 @@ import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import java.util.ArrayList;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 public class MainActivity extends AppCompatActivity {
 
     private Button btnInven;
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     //앱 종료처리
     private long backKeyPressedTime = 0;
     private Toast toast;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,15 +181,17 @@ public class MainActivity extends AppCompatActivity {
                 // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
                 if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
                     if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
-                        android.app.AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-                        dialog.setMessage("존재하지 않는 채널입니다.");
-                        dialog.setNegativeButton("닫기", new DialogInterface.OnClickListener() {
+
+                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE);
+                        sweetAlertDialog.setTitleText("존재하지 않는 채널입니다.");
+                        sweetAlertDialog.setConfirmText("닫기");
+                        sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
+                            public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                sweetAlertDialog.dismiss();
                             }
                         });
-                        dialog.show();
+                        sweetAlertDialog.show();
                         return;
                     }
                 }

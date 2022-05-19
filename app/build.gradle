@@ -65,4 +65,7 @@ dependencies {
     // butterknife
     implementation 'com.jakewharton:butterknife:10.2.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+
+    // SweetAlertDialog
+    implementation 'com.github.f0ris.sweetalert:library:1.5.1'
 }
