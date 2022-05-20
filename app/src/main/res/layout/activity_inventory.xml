@@ -7,7 +7,7 @@
 
     <fragment
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="280dp"
         android:id="@+id/map"
         android:name="com.naver.maps.map.MapFragment" />
 
@@ -17,7 +17,6 @@
         android:layout_height="match_parent"
         android:id="@+id/host_or_user_frame"
         >
-
         <Button
             android:id="@+id/btnArSf"
             android:layout_gravity="bottom|center"

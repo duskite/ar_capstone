@@ -8,30 +8,34 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:orientation="horizontal"
         >
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="5"
             android:layout_height="wrap_content"
             android:text="접속"
             android:id="@+id/userTv"
             />
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="2"
             android:layout_height="wrap_content"
-            android:text=" Key: 없음"
+            android:text="Key: 없음"
             android:id="@+id/haveKeyTv"
-            android:layout_gravity="right"
             />
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_marginVertical="5dp"
         android:layout_height="0dp"
         android:layout_weight="2"
         android:background="#ffffff"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:id="@+id/hostlist0">
         <TextView
             android:layout_width="wrap_content"
@@ -40,21 +44,25 @@
             android:textColor="@color/black"
             android:id="@+id/hostText"/>
         <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginVertical="25dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginBottom="5dp"
             android:id="@+id/recycler_text"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="match_parent"/>
     </FrameLayout>
 
 
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_marginVertical="5dp"
         android:layout_height="0dp"
         android:layout_weight="4"
         android:background="#ffffff"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:id="@+id/hostlist1">
         <TextView
             android:layout_width="wrap_content"
@@ -63,10 +71,11 @@
             android:textColor="@color/black"
             android:id="@+id/hostImage"/>
         <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginVertical="25dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginBottom="5dp"
             android:id="@+id/recycler_img"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
     </FrameLayout>
@@ -75,10 +84,13 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_marginVertical="5dp"
         android:layout_height="0dp"
         android:layout_weight="2"
         android:background="#ffffff"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:id="@+id/hostlist2">
         <TextView
             android:layout_width="wrap_content"
@@ -87,11 +99,12 @@
             android:textColor="@color/black"
             android:id="@+id/hostMp3"/>
         <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginVertical="25dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginBottom="5dp"
             android:id="@+id/recycler_sound"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="match_parent"/>
     </FrameLayout>
 
 </LinearLayout>

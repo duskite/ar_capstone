@@ -20,13 +20,13 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:id="@+id/table_0"
-                android:scaleType="centerInside"/>
+                android:scaleType="fitXY"/>
             <ImageButton
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:scaleType="centerInside"
+                android:scaleType="fitXY"
                 android:id="@+id/table_1" />
         </TableRow>
 
@@ -41,14 +41,14 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:scaleType="centerInside"
+                android:scaleType="fitXY"
                 android:id="@+id/table_2" />
             <ImageButton
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:scaleType="centerInside"
+                android:scaleType="fitXY"
                 android:id="@+id/table_3" />
 
         </TableRow>
