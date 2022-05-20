@@ -10,7 +10,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="5"
+        android:layout_weight="7"
         android:id="@+id/manage_or_winner_frame"
         />
 
@@ -41,38 +41,5 @@
             />
 
     </LinearLayout>
-
-<!--    <TextView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="현재 채널: "-->
-<!--        android:id="@+id/tvChannelName"-->
-<!--        />-->
-<!--    <Button-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:id="@+id/btnDeleteChannel"-->
-<!--        android:text="현재 채널 삭제"-->
-<!--        />-->
-
-<!--    <EditText-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:id="@+id/edtHostAdd"-->
-<!--        android:hint="주최자로 추가하려는 사용자의 익명ID를 입력하세요."-->
-<!--        />-->
-<!--    <Button-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:id="@+id/btnHostAdd"-->
-<!--        android:text="추가하기"-->
-<!--        android:enabled="false"-->
-<!--        />-->
-    
-<!--    <androidx.recyclerview.widget.RecyclerView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="200dp"-->
-<!--        android:id="@+id/recycler_winner"-->
-<!--        />-->
 
 </LinearLayout>

@@ -39,7 +39,6 @@ public class FirebaseManager {
     private DatabaseReference oneAnchorInfo;
 
     public DatabaseReference channelDatabase;
-
     private DatabaseReference scrapDatabase;
 
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -110,6 +109,30 @@ public class FirebaseManager {
         });
 
         return hashMap;
+    }
+    public void getWinnerList(String selectedChannel, GetWinnerListListener getWinnerListListener){
+        HashMap<String, String> hashMap = new HashMap<>();
+        DatabaseReference winnerDB = channelDatabase.child(selectedChannel).child("winnerList");
+        winnerDB.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+
+                }else{
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
+                        String user = tmpSnapshot.getKey().toString();
+                        String time = tmpSnapshot.getValue(String.class);
+
+                        Log.d("우승자", user);
+                        Log.d("우승자", time);
+
+                        hashMap.put(user, time);
+                    }
+                    getWinnerListListener.onDataLoaded(hashMap);
+                }
+            }
+        });
 
     }
 
@@ -120,11 +143,15 @@ public class FirebaseManager {
     }
 
     //채널 삭제 메소드
+    //스토리지까지 삭제
     public void deleteChannel(String selectedChannel){
         unRegisterAnchorNumValueLisner();
         DatabaseReference tmpDB = FirebaseDatabase.getInstance(DB_REGION).getReference();
         tmpDB.child("channel_list").child(selectedChannel).removeValue();
         tmpDB.child(selectedChannel).setValue(null);
+
+        FireStorageManager deleteStorage = new FireStorageManager(selectedChannel);
+        deleteStorage.deleteChannelStorage();
     }
 
     //키를 가지고 있지는 여부 반환
@@ -135,6 +162,11 @@ public class FirebaseManager {
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
+    }
+
+    // 우승자 데이터 로드 리스터
+    public interface GetWinnerListListener{
+        void onDataLoaded(HashMap<String, String> hashMap);
     }
 
     // 참가자가 스크랩시 db에 반영
@@ -262,7 +294,6 @@ public class FirebaseManager {
                         Log.d("파베채널리스트", String.valueOf(tmpSnapshot.getKey()));
                     try{
                         int checkChannelType = tmpSnapshot.child("channelType").getValue(int.class);
-//                        String hostID = tmpSnapshot.child("hostID").getValue(String.class);
                         DataSnapshot hostIDsSnapshot = (DataSnapshot) tmpSnapshot.child("hostID");
                         for(DataSnapshot hostSnapshot: hostIDsSnapshot.getChildren()){
                             String hostID = hostSnapshot.getKey();
@@ -362,15 +393,37 @@ public class FirebaseManager {
     public String createdTimeOfContent(){
         long now = System.currentTimeMillis();
         Date date = new Date(now);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         return (String) dateFormat.format(date);
     }
 
     // 컨텐츠 삭제, 앵커아이디 기준으로 삭제
     public void deleteContent(String anchorID){
+        Log.d("앵커 삭제", "deleteContent");
 
         if(anchorID != null){
+
+            mDatabase.child("contents").child(anchorID).child("text_or_path")
+                    .get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DataSnapshot> task) {
+                            if(!task.isSuccessful()){
+
+                            }else {
+                                DataSnapshot dataSnapshot = task.getResult();
+                                String tmp = dataSnapshot.getValue(String.class);
+                                Log.d("앵커 삭제", "text_or_path: " + tmp);
+
+                                //현재 채널 이름을 가지고 스토리지에서도 삭제
+                                String nowChannel = mDatabase.getKey().toString();
+                                FireStorageManager deleteStorage = new FireStorageManager(nowChannel);
+                                Log.d("앵커 삭제", "nowChannel: " + nowChannel);
+                                deleteStorage.deleteAnchor(tmp);
+                            }
+                        }
+                    });
+
             mDatabase.child("contents").child(anchorID).removeValue();
             mDatabase.child("anchorList").child(anchorID).removeValue();
         }else {

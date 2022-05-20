@@ -652,6 +652,7 @@ public class ArSfActivity extends AppCompatActivity implements
                                 firebaseManager.deleteContent(model.getName());
                                 anchor.detach();
                                 model.setRenderable(null);
+                                sweetAlertDialog.dismiss();
                             }
                         });
                         sweetAlertDialog.setCancelButton("취소", new SweetAlertDialog.OnSweetClickListener() {
