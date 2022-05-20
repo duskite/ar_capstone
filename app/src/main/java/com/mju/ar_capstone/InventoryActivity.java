@@ -170,17 +170,16 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         btnArSf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
-//                intent.putExtra("userType", userType);
-//                intent.putExtra("azimuth", getAzimuth());
-//                intent.putExtra("channel", selectedChannel);
-//
-//                //키 소지 여부 넘기기
-//                stateHaveKey = firebaseManager.checkHaveKey();
-//                intent.putExtra("haveKey", stateHaveKey);
-//
-//                startActivity(intent);
-                startActivity(new Intent(getApplicationContext(), OssLicensesMenuActivity.class));
+                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
+                intent.putExtra("userType", userType);
+                intent.putExtra("azimuth", getAzimuth());
+                intent.putExtra("channel", selectedChannel);
+
+                //키 소지 여부 넘기기
+                stateHaveKey = firebaseManager.checkHaveKey();
+                intent.putExtra("haveKey", stateHaveKey);
+
+                startActivity(intent);
             }
         });
 
