@@ -29,12 +29,20 @@ public class MessageDialog extends Dialog {
         dialogBtnOk = findViewById(R.id.dialog_btn_ok);
         ((TextView) findViewById(R.id.dialog_tv_test)).setText(msg);
         dialogBtnOk.setOnClickListener(v -> {
-            this.customDialogClickListener.onPositiveClick();
+            this.customDialogClickListener.onPositiveClick(true);
+            dismiss();
+        });
+        dialogBtnCancel = findViewById(R.id.dialog_btn_cancel);
+        dialogBtnCancel.setOnClickListener(v -> {
+            this.customDialogClickListener.onPositiveClick(false);
             dismiss();
         });
     }
 
+    //이 부분 구현하다가 말았길래 마저 구현함
+    // true - 삭제
+    // false - 닫기
     public interface CustomDialogClickListener{
-        void onPositiveClick();
+        void onPositiveClick(boolean b);
     }
 }

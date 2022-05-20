@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.QuickContactBadge;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -140,13 +141,16 @@ public class HostListAdapter extends RecyclerView.Adapter<HostListAdapter.ViewHo
             });
             itemView.setOnLongClickListener(view -> {//삭제 다이얼로그 부분
                 int pos = getAdapterPosition();
-                new MessageDialog(context, context.getString(R.string.delete_msg), () ->
-                {//다이얼로그 확인시 삭제
-                    Log.d(TAG, "ViewHolder long click: "+pos);
-                    firebaseManager.deleteContent(hostItemObjs.get(pos).getCloudAnchorId());
-                    Log.d(TAG, "ViewHolder long click: " + new Gson().toJson(hostItemObjs.get(pos)));
-                    hostItemObjs.remove(pos);
-                    notifyDataSetChanged();
+                new MessageDialog(context, context.getString(R.string.delete_msg), (deletion) ->
+                {
+                    if(deletion){
+                        //다이얼로그 확인시 삭제
+                        Log.d(TAG, "ViewHolder long click: "+pos);
+                        firebaseManager.deleteContent(hostItemObjs.get(pos).getCloudAnchorId());
+                        Log.d(TAG, "ViewHolder long click: " + new Gson().toJson(hostItemObjs.get(pos)));
+                        hostItemObjs.remove(pos);
+                        notifyDataSetChanged();
+                    }
                 }
                 ).show();
 
