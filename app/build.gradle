@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
+
+    id 'com.google.android.gms.oss-licenses-plugin'
 }
 
 android {
@@ -81,4 +83,7 @@ dependencies {
 
     // SwipeRefreshLayout
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+    // oss licenses-plugin
+    implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
 }
