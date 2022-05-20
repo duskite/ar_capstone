@@ -49,7 +49,7 @@ public class ManageChannelFragment extends Fragment {
         edtHostAdd = viewGroup.findViewById(R.id.edtHostAdd);
         btnDeleteChannel = viewGroup.findViewById(R.id.btnDeleteChannel);
         tvChannelName = viewGroup.findViewById(R.id.tvChannelName);
-        tvChannelName.setText("현재 채널: " + selectedChannel);
+        tvChannelName.setText("채널명: " + selectedChannel);
         materialCheckBox = viewGroup.findViewById(R.id.check_delete_channel);
 
         materialCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

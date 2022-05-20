@@ -3,13 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#777777">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:orientation="horizontal"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         >
         <TextView
             android:layout_width="0dp"
@@ -27,84 +28,97 @@
             />
     </LinearLayout>
 
-    <FrameLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
-        android:background="#ffffff"
+        android:layout_weight="3"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:id="@+id/hostlist0">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="[텍스트 앵커]"
-            android:textColor="@color/black"
-            android:id="@+id/hostText"/>
-        <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginTop="25dp"
-            android:layout_marginBottom="5dp"
-            android:id="@+id/recycler_text"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:layout_marginBottom="5dp">
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </FrameLayout>
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:id="@+id/hostlist0">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="[텍스트 앵커]"
+                android:textColor="@color/black"
+                android:id="@+id/hostText"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="5dp"
+                android:id="@+id/recycler_text"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
 
-
-
-    <FrameLayout
+    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
-        android:background="#ffffff"
+        android:layout_weight="3"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:id="@+id/hostlist1">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="[이미지 앵커]"
-            android:textColor="@color/black"
-            android:id="@+id/hostImage"/>
-        <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginTop="25dp"
-            android:layout_marginBottom="5dp"
-            android:id="@+id/recycler_img"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        android:layout_marginBottom="5dp">
 
-    </FrameLayout>
-
-
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:background="#ffffff"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:id="@+id/hostlist2">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="[음성 앵커]"
-            android:textColor="@color/black"
-            android:id="@+id/hostMp3"/>
-        <androidx.recyclerview.widget.RecyclerView
-            android:layout_marginTop="25dp"
-            android:layout_marginBottom="5dp"
-            android:id="@+id/recycler_sound"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </FrameLayout>
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:id="@+id/hostlist1">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="[이미지 앵커]"
+                android:textColor="@color/black"
+                android:id="@+id/hostImage"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="5dp"
+                android:id="@+id/recycler_img"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </FrameLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:id="@+id/hostlist2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="[음성 앵커]"
+                android:textColor="@color/black"
+                android:id="@+id/hostMp3"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="5dp"
+                android:id="@+id/recycler_sound"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>
