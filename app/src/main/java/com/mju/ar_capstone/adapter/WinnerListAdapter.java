@@ -37,9 +37,11 @@ public class WinnerListAdapter extends RecyclerView.Adapter<WinnerListAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
+        int i = position + 1;
         String user = userIdList.get(position);
         String time = clearTimeList.get(position);
 
+        holder.tvRank.setText(String.valueOf(i));
         holder.tvWinnerID.setText(user);
         holder.tvClearTime.setText(time);
     }
@@ -60,16 +62,15 @@ public class WinnerListAdapter extends RecyclerView.Adapter<WinnerListAdapter.Vi
     }
 
 
-
-
     //이너 클래스 뷰홀더
     class ViewHolder extends RecyclerView.ViewHolder{
 
-        public TextView tvWinnerID, tvClearTime;
+        public TextView tvWinnerID, tvClearTime, tvRank;
 
         public ViewHolder(Context context, View itemView) {
             super(itemView);
 
+            tvRank = itemView.findViewById(R.id.tvRank);
             tvWinnerID = itemView.findViewById(R.id.tvWinnerID);
             tvClearTime = itemView.findViewById(R.id.tvClearTime);
         }
