@@ -24,6 +24,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
@@ -49,7 +51,7 @@ import java.util.List;
 public class InventoryActivity extends AppCompatActivity implements SensorEventListener, OnMapReadyCallback, Overlay.OnClickListener,NaverMap.OnMapClickListener {
 
     private int userType, channelType;
-    private Button btnArSf;
+    private FloatingActionButton btnArSf;
     private String selectedChannel;
 
     // ar 화면 켜질때 방위각 넘김
@@ -164,20 +166,21 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
 
         // ar화면으로 넘어가기
-        btnArSf = (Button) findViewById(R.id.btnArSf);
+        btnArSf = (FloatingActionButton) findViewById(R.id.btnArSf);
         btnArSf.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
-                intent.putExtra("userType", userType);
-                intent.putExtra("azimuth", getAzimuth());
-                intent.putExtra("channel", selectedChannel);
-
-                //키 소지 여부 넘기기
-                stateHaveKey = firebaseManager.checkHaveKey();
-                intent.putExtra("haveKey", stateHaveKey);
-
-                startActivity(intent);
+//                Intent intent = new Intent(getApplicationContext(), ArSfActivity.class);
+//                intent.putExtra("userType", userType);
+//                intent.putExtra("azimuth", getAzimuth());
+//                intent.putExtra("channel", selectedChannel);
+//
+//                //키 소지 여부 넘기기
+//                stateHaveKey = firebaseManager.checkHaveKey();
+//                intent.putExtra("haveKey", stateHaveKey);
+//
+//                startActivity(intent);
+                startActivity(new Intent(getApplicationContext(), OssLicensesMenuActivity.class));
             }
         });
 
