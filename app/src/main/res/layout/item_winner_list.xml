@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="50dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="사용자ID"
-        android:gravity="center_vertical"
-        android:layout_alignParentLeft="true"
-        android:id="@+id/tvWinnerID"
-        />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_alignParentRight="true"
-        android:text="클리어 시간"
-        android:id="@+id/tvClearTime"
-        />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="사용자ID"
+            android:gravity="center_vertical"
+            android:layout_alignParentLeft="true"
+            android:id="@+id/tvWinnerID"
+            />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:text="클리어 시간"
+            android:id="@+id/tvClearTime"
+            />
 
-</RelativeLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>
