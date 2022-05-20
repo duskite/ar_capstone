@@ -3,7 +3,6 @@
     android:orientation="vertical"
     android:layout_width="300dp"
     android:layout_height="500dp"
-    android:gravity="center"
     android:background="@drawable/dialog_radius"
     >
 
@@ -17,56 +16,55 @@
             android:layout_height="match_parent"
             android:layout_width="match_parent">
 
-
-        <RadioGroup
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:padding="5dp"
-            android:gravity="center"
-            android:id="@+id/dialog_rd_group"
-            >
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="텍스트"
-                android:id="@+id/dialog_rdbtn_text"
-                android:padding="1dp"
-                android:layout_margin="2dp"
-                />
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="이미지"
-                android:id="@+id/dialog_rdbtn_img"
-                android:padding="1dp"
-                android:layout_margin="2dp"
-                />
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="음성"
-                android:id="@+id/dialog_rdbtn_mp3"
-                android:padding="1dp"
-                android:layout_margin="2dp"
-                />
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="열쇠"
-                android:id="@+id/dialog_rdbtn_key"
-                android:padding="1dp"
-                android:layout_margin="2dp"
-                />
-            <RadioButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="잠긴 상자"
-                android:id="@+id/dialog_rdbtn_box"
-                android:padding="1dp"
-                android:layout_margin="2dp"
-                />
-        </RadioGroup>
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:padding="5dp"
+                android:gravity="center"
+                android:id="@+id/dialog_rd_group"
+                >
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="텍스트"
+                    android:id="@+id/dialog_rdbtn_text"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="이미지"
+                    android:id="@+id/dialog_rdbtn_img"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="음성"
+                    android:id="@+id/dialog_rdbtn_mp3"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="열쇠"
+                    android:id="@+id/dialog_rdbtn_key"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="잠긴 상자"
+                    android:id="@+id/dialog_rdbtn_box"
+                    android:padding="1dp"
+                    android:layout_margin="2dp"
+                    />
+            </RadioGroup>
 
         </HorizontalScrollView>
     </LinearLayout>
@@ -173,7 +171,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_gravity="center"
+        android:layout_gravity="center|bottom"
         >
         <Button
             android:layout_width="0dp"
@@ -184,6 +182,7 @@
             android:background="@drawable/btn_shape_no"
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_marginLeft="3dp"
+            android:layout_marginTop="6dp"
             />
         <Button
             android:layout_width="0dp"
@@ -193,10 +192,10 @@
             android:text="확인"
             android:background="@drawable/btn_shape_yes"
             android:layout_marginRight="3dp"
+            android:layout_marginTop="6dp"
             style="@style/Widget.AppCompat.Button.Borderless"
             />
     </LinearLayout>
-
 
 
 </LinearLayout>
