@@ -16,8 +16,10 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="우승자 리스트\n아래로 당겨서 새로고침"
+            android:textSize="20dp"
+            android:textStyle="bold"
             android:gravity="center"
-            android:paddingTop="50dp"/>
+            android:paddingTop="40dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
@@ -25,8 +27,6 @@
             android:id="@+id/recycler_winner"
             />
     </LinearLayout>
-
-
 
 
 

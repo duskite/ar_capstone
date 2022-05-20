@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.TransformableNode;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mju.ar_capstone.R;
@@ -21,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FireStorageManager {
 
@@ -55,6 +57,51 @@ public class FireStorageManager {
     }
 
     public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
+
+    //저장소 공간에서 삭제해버림
+    //지금으로써는 잘 돌아감
+    public void deleteStorage(){
+        // 폴더쨰로 날릴 수 없어서 고민중
+        // 파일 하나하나 삭제해야 하는데, 삭제할 데이터가 많을때 사용자 런타임동안 지워지는지 체크 필요함
+        imgReferece.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            @Override
+            public void onSuccess(ListResult listResult) {
+                List<StorageReference> list = listResult.getItems();
+                for(int i=0; i<list.size(); i++){
+                    list.get(i).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            Log.d("파일 삭제", "삭제 성공");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d("파일 삭제", "삭제 실패");
+                        }
+                    });
+                }
+            }
+        });
+        mp3Reference.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+            @Override
+            public void onSuccess(ListResult listResult) {
+                List<StorageReference> list = listResult.getItems();
+                for(int i=0; i<list.size(); i++){
+                    list.get(i).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            Log.d("파일 삭제", "삭제 성공");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d("파일 삭제", "삭제 실패");
+                        }
+                    });
+                }
+            }
+        });
+    }
 
     public String makeImageFileID(){
         currentImageID = strImageID + String.valueOf(firebaseManager.getNextImageNum());

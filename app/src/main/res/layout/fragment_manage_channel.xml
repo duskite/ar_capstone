@@ -4,31 +4,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="현재 채널: "
-        android:id="@+id/tvChannelName"
-        />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnDeleteChannel"
-        android:text="현재 채널 삭제"
-        />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="현재 채널: "
+            android:id="@+id/tvChannelName"
+            android:textSize="40dp"
+            />
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="채널 삭제를 원할 경우 체크해주세요."
+            android:id="@+id/check_delete_channel"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnDeleteChannel"
+            android:text="채널 삭제"
+            android:enabled="false"
+            />
+    </LinearLayout>
 
-    <EditText
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/edtHostAdd"
-        android:hint="주최자로 추가하려는 사용자의 익명ID를 입력하세요."
-        />
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnHostAdd"
-        android:text="추가하기"
-        android:enabled="false"
-        />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="같이 AR맵을 구성할 유저를 초대할 수 있습니다.\n초대된 유저는 주최자로 접근 가능한 기능이 모두 활성화됩니다."
+            />
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/edtHostAdd"
+            android:hint="추가하려는 사용자의 익명ID를 입력하세요."
+            />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnHostAdd"
+            android:text="추가하기"
+            android:enabled="false"
+          />
+    </LinearLayout>
 
 </LinearLayout>

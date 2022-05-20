@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -14,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
@@ -23,6 +26,7 @@ public class ManageChannelFragment extends Fragment {
     private Button btnDeleteChannel, btnHostAdd;
     private TextView tvChannelName;
     private EditText edtHostAdd;
+    private MaterialCheckBox materialCheckBox;
 
     private String selectedChannel;
     private String addHostID;
@@ -45,7 +49,19 @@ public class ManageChannelFragment extends Fragment {
         edtHostAdd = viewGroup.findViewById(R.id.edtHostAdd);
         btnDeleteChannel = viewGroup.findViewById(R.id.btnDeleteChannel);
         tvChannelName = viewGroup.findViewById(R.id.tvChannelName);
-        tvChannelName.setText(selectedChannel);
+        tvChannelName.setText("현재 채널: " + selectedChannel);
+        materialCheckBox = viewGroup.findViewById(R.id.check_delete_channel);
+
+        materialCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    btnDeleteChannel.setEnabled(true);
+                }else {
+                    btnDeleteChannel.setEnabled(false);
+                }
+            }
+        });
 
         btnDeleteChannel.setOnClickListener(new View.OnClickListener() {
             @Override

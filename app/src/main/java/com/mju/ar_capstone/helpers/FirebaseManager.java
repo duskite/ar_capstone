@@ -149,6 +149,9 @@ public class FirebaseManager {
         DatabaseReference tmpDB = FirebaseDatabase.getInstance(DB_REGION).getReference();
         tmpDB.child("channel_list").child(selectedChannel).removeValue();
         tmpDB.child(selectedChannel).setValue(null);
+
+        FireStorageManager deleteStorage = new FireStorageManager(selectedChannel);
+        deleteStorage.deleteStorage();
     }
 
     //키를 가지고 있지는 여부 반환
@@ -391,7 +394,7 @@ public class FirebaseManager {
     public String createdTimeOfContent(){
         long now = System.currentTimeMillis();
         Date date = new Date(now);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         return (String) dateFormat.format(date);
     }
