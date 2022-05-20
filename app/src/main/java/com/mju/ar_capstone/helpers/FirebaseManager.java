@@ -110,6 +110,30 @@ public class FirebaseManager {
         });
 
         return hashMap;
+    }
+    public void getWinnerList(String selectedChannel, GetWinnerListListener getWinnerListListener){
+        HashMap<String, String> hashMap = new HashMap<>();
+        DatabaseReference winnerDB = channelDatabase.child(selectedChannel).child("winnerList");
+        winnerDB.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if(!task.isSuccessful()){
+
+                }else{
+                    DataSnapshot dataSnapshot = task.getResult();
+                    for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
+                        String user = tmpSnapshot.getKey().toString();
+                        String time = tmpSnapshot.getValue(String.class);
+
+                        Log.d("우승자", user);
+                        Log.d("우승자", time);
+
+                        hashMap.put(user, time);
+                    }
+                    getWinnerListListener.onDataLoaded(hashMap);
+                }
+            }
+        });
 
     }
 
@@ -135,6 +159,11 @@ public class FirebaseManager {
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
+    }
+
+    // 우승자 데이터 로드 리스터
+    public interface GetWinnerListListener{
+        void onDataLoaded(HashMap<String, String> hashMap);
     }
 
     // 참가자가 스크랩시 db에 반영

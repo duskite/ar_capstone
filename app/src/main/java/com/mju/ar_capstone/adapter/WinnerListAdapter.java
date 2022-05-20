@@ -50,8 +50,13 @@ public class WinnerListAdapter extends RecyclerView.Adapter<WinnerListAdapter.Vi
     }
 
     public void setArrayData(String user, String time){
-        clearTimeList.add(time);
-        userIdList.add(user);
+
+        //기존에 없던 우승자 정보만 어댑터에 추가
+        if(!userIdList.contains(user)){
+            clearTimeList.add(time);
+            userIdList.add(user);
+        }
+
     }
 
 
