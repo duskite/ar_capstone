@@ -395,6 +395,7 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
+    public void clearWrappedAnchorList(){ wrappedAnchorList.clear();}
 
     //컨텐츠 생성 시간
     public String createdTimeOfContent(){
