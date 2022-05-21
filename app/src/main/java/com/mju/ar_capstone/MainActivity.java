@@ -30,6 +30,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.mju.ar_capstone.bottomsheets.BottomSheetChannelCreate;
 import com.mju.ar_capstone.bottomsheets.BottomSheetChannelEnter;
+import com.mju.ar_capstone.bottomsheets.BottomSheetChannelSecretEnter;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnHostCreate, btnHostEnter, btnUserEnter;
+    private Button btnHostCreate, btnHostEnter, btnUserEnter, btnUserSecretEnter;
     private RadioGroup rdUserType;
     private int userType = 0;
 
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         btnHostCreate = (Button) findViewById(R.id.btnHostCreate);
         btnHostEnter = (Button) findViewById(R.id.btnHostEnter);
         btnUserEnter = (Button) findViewById(R.id.btnUserEnter);
+        btnUserSecretEnter = (Button) findViewById(R.id.btnUserSecretEnter);
     }
 
 
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 bottomSheetChannelCreate.show(getSupportFragmentManager(), "create");
             }
         });
-        //채널 입장 바텀시트 호스트
+        //채널 참여 바텀시트 호스트
         btnHostEnter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -138,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
             }
         });
+
         //채널 입장 바텀시트 유저
         btnUserEnter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,42 +149,14 @@ public class MainActivity extends AppCompatActivity {
                 bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
             }
         });
-
-//
-//        btnInven.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if(!edtChannelName.getText().toString().equals("")){
-//                    selectedChannel = edtChannelName.getText().toString();
-//                }
-//
-//                // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
-//                if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
-//                    if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
-//
-//                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE);
-//                        sweetAlertDialog.setTitleText("존재하지 않는 채널입니다.");
-//                        sweetAlertDialog.setConfirmText("닫기");
-//                        sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-//                            @Override
-//                            public void onClick(SweetAlertDialog sweetAlertDialog) {
-//                                sweetAlertDialog.dismiss();
-//                            }
-//                        });
-//                        sweetAlertDialog.show();
-//                        return;
-//                    }
-//                }
-//
-//                //채널이 있을때
-//                Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
-//                intent.putExtra("channel", selectedChannel);
-//                intent.putExtra("userType", userType);
-//                intent.putExtra("channelType", channelType);
-//                Log.d("채널이름 넘기는거 메인", selectedChannel);
-//                startActivity(intent);
-//            }
-//        });
+        //비공개 채널 입장 바텀시트 유저
+        btnUserSecretEnter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BottomSheetChannelSecretEnter bottomSheetChannelSecretEnter = new BottomSheetChannelSecretEnter(firebaseManager, userType);
+                bottomSheetChannelSecretEnter.show(getSupportFragmentManager(), "enter");
+            }
+        });
 
         permisionCheck();
     }

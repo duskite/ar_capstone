@@ -163,7 +163,12 @@ public class FirebaseManager {
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
     }
-
+    public interface GetContentsListener{
+        void onDataLoaded();
+    }
+    public interface GetLoadUserScrapAnchors{
+        void onDataLoaded();
+    }
     // 우승자 데이터 로드 리스터
     public interface GetWinnerListListener{
         void onDataLoaded(HashMap<String, String> hashMap);
@@ -179,7 +184,7 @@ public class FirebaseManager {
         scrapDatabase.child(anchorID).setValue(anchorType);
     }
     // db에서 참가자가 스크랩했던 앵커들 가져옴
-    public void loadUserScrapAnchors(String channel, String userID){
+    public void loadUserScrapAnchors(String channel, String userID, GetLoadUserScrapAnchors getLoadUserScrapAnchors){
         scrapDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("users").child(userID).child(channel);
         scrapDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -188,6 +193,7 @@ public class FirebaseManager {
 
                 }else {
                     DataSnapshot dataSnapshot = task.getResult();
+                    //유저가 스크랩한 앵커 id로 리스트 만듦
                     for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
                         String tmpStr = tmpSnapshot.getKey().toString();
                         int tmpAnchorType = tmpSnapshot.getValue(int.class);
@@ -199,24 +205,30 @@ public class FirebaseManager {
                         Log.d("스크랩", tmpStr);
                     }
                     Log.d("스크랩", "한 번 로드 끝");
+
+                    //전체 앵커 정보 중 유저가 스크랩한 앵커id와 같은 앵커 정보를 저장
+                    for(String s: userScrapAnchorIdList){
+                        for(int i=0; i< wrappedAnchorList.size(); i++ )
+                            if(s.equals(wrappedAnchorList.get(i).getCloudAnchorId())){
+                                userScrapAnchorList.add(wrappedAnchorList.get(i));
+                            }
+                    }
+
+                    //모든게 다 로드 된 이후
+                    getLoadUserScrapAnchors.onDataLoaded();
                 }
             }
         });
 
     }
     public ArrayList<WrappedAnchor> getUserScrapAnchorList(){
-
-        for(String s: userScrapAnchorIdList){
-            for(int i=0; i< wrappedAnchorList.size(); i++ )
-            if(s.equals(wrappedAnchorList.get(i).getCloudAnchorId())){
-                userScrapAnchorList.add(wrappedAnchorList.get(i));
-            }
-        }
         return userScrapAnchorList;
     }
+
     public void clearUserScrapAnchorIdList(){
         userScrapAnchorIdList.clear();
     }
+    public void clearUserScrapAnchorList(){userScrapAnchorList.clear();}
 
     public ArrayList<String> getPublicChannelList(){
         return publicChannelList;
@@ -393,6 +405,7 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
+    public void clearWrappedAnchorList(){ wrappedAnchorList.clear();}
 
     //컨텐츠 생성 시간
     public String createdTimeOfContent(){
@@ -578,7 +591,9 @@ public class FirebaseManager {
 
     }
 
-    public void getContents(){
+
+
+    public void getContents(GetContentsListener getContentsListener){
         contentsDatabase = mDatabase.child("contents");
         contentsDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -626,6 +641,8 @@ public class FirebaseManager {
                         }
                     }
                     Log.d("순서", "리스너 데이터 로드 완료");
+
+                    getContentsListener.onDataLoaded();
 
                 }
             }

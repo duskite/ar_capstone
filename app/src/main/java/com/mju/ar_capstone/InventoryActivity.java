@@ -99,10 +99,25 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         setContentView(R.layout.activity_inventory);
         mContext=this;
 
+        // 지도 객체 생성
+        FragmentManager fm = getSupportFragmentManager();
+        MapFragment mapFragment = (MapFragment)fm.findFragmentById(R.id.map);
+        if (mapFragment == null) {
+            mapFragment = MapFragment.newInstance();
+            fm.beginTransaction().add(R.id.map, mapFragment).commit();
+        }
+        // getMapAsync를 호출하여 비동기로 onMapReady 콜백 메서드 호출
+        // onMapReady에서 NaverMap 객체를 받음
+        mapFragment.getMapAsync(this);
+
+
+        Log.d("인벤", "onCreate");
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         registerListener();
+
 
         // 메인에서 정보 가져옴
         Intent intent = getIntent();
@@ -112,12 +127,16 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         //디폴트는 공개로
         channelType = intent.getIntExtra("channelType", 1);
         selectedChannel = intent.getStringExtra("channel");
-        Log.d("채널넘기는거 인벤", selectedChannel);
+        //프래그먼트에 값 넘길 번들 객체
+        bundle = new Bundle();
+        bundle.putString("selectedChannel", selectedChannel);
 
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
 
-        firebaseManager.getContents();
+
+        //여기 잠시 컨텐츠 불러오는거 지움
+
         firebaseAuthManager = new FirebaseAuthManager();
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
         //참가자일 경우는 아예 채널타입을 넘기지 않음
@@ -129,42 +148,20 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
         }
 
-
-        //프래그먼트에 값 넘길 번들 객체
-        bundle = new Bundle();
-        bundle.putString("selectedChannel", selectedChannel);
-
         fragmentManager = getSupportFragmentManager();
         if (userType == 1){ //주최자 일 때
             hostListFragment = new HostListFragment();
+            hostListFragment.setFirebaseManager(firebaseManager);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
-            hostListFragment.setFirebaseManager(firebaseManager);
             hostListFragment.setArguments(bundle);
         }else{ //참가자 일 때
             userInvenFragment = new UserInvenFragment(mContext);
+            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-            userInvenFragment.loadScrapAnchor();
             userInvenFragment.setArguments(bundle);
         }
-
-        // 지도 객체 생성
-        FragmentManager fm = getSupportFragmentManager();
-        MapFragment mapFragment = (MapFragment)fm.findFragmentById(R.id.map);
-        if (mapFragment == null) {
-            mapFragment = MapFragment.newInstance();
-            fm.beginTransaction().add(R.id.map, mapFragment).commit();
-        }
-        // getMapAsync를 호출하여 비동기로 onMapReady 콜백 메서드 호출
-        // onMapReady에서 NaverMap 객체를 받음
-        mapFragment.getMapAsync(this);
-        // 위치를 반환하는 구현체인 FusedLocationSource 생성
-        mLocationSource =
-                new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
-        // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
-        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
 
 
         // ar화면으로 넘어가기
@@ -190,44 +187,44 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("스크랩", "onResume이 몇번 호출되는지");
+        Log.d("인벤", "onResume");
 
 
-        if(userType == 1){
-        }else{
-            //참가자일때
-            Log.d("스크랩", "getUserScrapAnchors onResume에서");
-            firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
-        }
-
-        fragmentManager = getSupportFragmentManager();
-        if (userType == 1){ //주최자 일 때
-            hostListFragment = new HostListFragment();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
-            hostListFragment.setFirebaseManager(firebaseManager);
-            hostListFragment.setArguments(bundle);
-        }else{ //참가자 일 때
-            userInvenFragment = new UserInvenFragment(mContext);
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-            userInvenFragment.loadScrapAnchor();
-            userInvenFragment.setArguments(bundle);
-        }
+//        if(userType == 1){
+//        }else{
+//            //참가자일때
+//            Log.d("스크랩", "getUserScrapAnchors onResume에서");
+//            firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
+//        }
+//
+//        fragmentManager = getSupportFragmentManager();
+//        if (userType == 1){ //주최자 일 때
+//            hostListFragment = new HostListFragment();
+//            fragmentTransaction = fragmentManager.beginTransaction();
+//            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+//            hostListFragment.setFirebaseManager(firebaseManager);
+//            hostListFragment.setArguments(bundle);
+//        }else{ //참가자 일 때
+//            userInvenFragment = new UserInvenFragment(mContext);
+//            fragmentTransaction = fragmentManager.beginTransaction();
+//            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+//            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
+//            userInvenFragment.loadScrapAnchor();
+//            userInvenFragment.setArguments(bundle);
+//        }
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("최적화", "onPause 인벤토리 액티비티");
+        Log.d("인벤", "onPause");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("최적화", "onDestroy 인벤토리 액티비티");
+        Log.d("인벤", "onDestroy");
         sensorManager = null;
         accelerometer = null;
         magneticField = null;
@@ -241,6 +238,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("인벤", "onStop");
         firebaseManager.clearUserScrapAnchorIdList();
     }
 
@@ -305,10 +303,17 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     //지도 부분
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
+        Log.d("인벤", "onMapReady");
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
         mNaverMap = naverMap;
+
+        // 기존 코드 onPause 발생으로 전체 동작 문제생겨서 수정함
+        // 위치를 반환하는 구현체인 FusedLocationSource 생성
+        mLocationSource =
+                new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setOnMapClickListener(this);
+        mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
 
         //카메라 기본 줌 변경함
         CameraPosition cameraPosition = new CameraPosition(mNaverMap.getCameraPosition().target, 18);
@@ -398,20 +403,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
 
             //이전 위경도값 잠시 담아둠
             tmpLatLng = latLng;
-        }
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // request code와 권한획득 여부 확인
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if(mNaverMap != null){
-                    mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
-                }
-            }
         }
     }
 }
