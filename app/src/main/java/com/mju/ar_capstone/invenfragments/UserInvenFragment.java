@@ -1,6 +1,7 @@
 package com.mju.ar_capstone.invenfragments;
 
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
+import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_KEY;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
@@ -77,9 +78,6 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         selectedChannel = bundle.getString("selectedChannel");
 
         userTv.setText("참가자로 접속. 참가한 채널: " + selectedChannel );
-        if(stateHaveKey){
-            haveKeyTv.setText(" Key: 획득함");
-        }
 
         return viewGroup;
     }
@@ -100,7 +98,6 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
                     @Override
                     public void onDataLoaded() {
                         ArrayList<WrappedAnchor> wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
-                        stateHaveKey = firebaseManager.checkHaveKey();
 
                         ArrayList<WrappedAnchor> textList = new ArrayList<>();
                         ArrayList<WrappedAnchor> imgList = new ArrayList<>();
@@ -114,6 +111,13 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
                                 imgList.add(w);
                             }else if(w.getAnchorType()==ANCHOR_SOUND){
                                 soundList.add(w);
+                            }else if(w.getAnchorType()==ANCHOR_KEY){
+                                stateHaveKey = true;
+                            }else {
+                                stateHaveKey = false; //다른 경우 모두 키 없음으로 처리
+                            }
+                            if(stateHaveKey){ //키 획득 여부 반영
+                                haveKeyTv.setText(" Key: 획득함");
                             }
                             Log.d(TAG, "onCreateView wrappedAnchorArrayList: "+new Gson().toJson(w));
                         }

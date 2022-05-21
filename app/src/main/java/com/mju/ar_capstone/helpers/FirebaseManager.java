@@ -298,6 +298,10 @@ public class FirebaseManager {
         });
     }
 
+    public void clearChannelList(){ hostChannelList.clear();
+    privateChannelList.clear();
+    publicChannelList.clear();}
+
     public void getChannelList(GetChannelListListener getChannelListListener){
         channelDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override

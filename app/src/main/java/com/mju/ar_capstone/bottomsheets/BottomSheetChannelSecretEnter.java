@@ -84,8 +84,6 @@ public class BottomSheetChannelSecretEnter extends BottomSheetDialogFragment {
         });
 
 
-
-
         //입장하기 버튼 클릭시
         btnSceretEnter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -118,5 +116,11 @@ public class BottomSheetChannelSecretEnter extends BottomSheetDialogFragment {
 
 
         return view;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        dismiss();
     }
 }

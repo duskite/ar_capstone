@@ -22,7 +22,8 @@
             android:layout_margin="50dp"
             android:gravity="center"
             android:text="neAR"
-            android:textSize="50dp" />
+            android:textSize="80dp"
+            android:fontFamily="@font/bmdohyeon"/>
 
 
         <!--        주최자 참가자 체크 부분-->
@@ -58,6 +59,7 @@
                     android:gravity="center"
                     android:padding="30dp"
                     android:text="주최자"
+                    android:textSize="30dp"
                     android:textColor="@drawable/selector_radio_text" />
 
                 <RadioButton
@@ -70,6 +72,7 @@
                     android:button="@null"
                     android:gravity="center"
                     android:padding="30dp"
+                    android:textSize="30dp"
                     android:text="참가자"
                     android:textColor="@drawable/selector_radio_text" />
             </RadioGroup>

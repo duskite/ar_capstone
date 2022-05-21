@@ -3,7 +3,7 @@ package com.mju.ar_capstone;
 import com.google.ar.core.Pose;
 
 public class WrappedAnchor {
-    public static final int ANCHOR_TEXT = 0,ANCHOR_IMG = 1,ANCHOR_SOUND = 2;
+    public static final int ANCHOR_TEXT = 0,ANCHOR_IMG = 1,ANCHOR_SOUND = 2, ANCHOR_KEY = 3;
     private String cloudAnchorId;
     private String textOrPath;
     private String userID;

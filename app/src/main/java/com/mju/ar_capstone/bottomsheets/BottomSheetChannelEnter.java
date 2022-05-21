@@ -32,6 +32,7 @@ public class BottomSheetChannelEnter extends BottomSheetDialogFragment {
     private FirebaseManager firebaseManager;
     private int userType;
     private Button btnChannelLoad;
+    private ChannelListAdapter adapter = new ChannelListAdapter();
 
     public BottomSheetChannelEnter(FirebaseManager firebaseManager, int userType){
         this.firebaseManager = firebaseManager;
@@ -53,7 +54,7 @@ public class BottomSheetChannelEnter extends BottomSheetDialogFragment {
             @Override
             public void onDataLoaded() {
                 String[] strArray = channelLoad(userType);
-                ChannelListAdapter adapter = new ChannelListAdapter();
+                adapter = new ChannelListAdapter();
                 adapter.setUserType(userType);
                 for(int i=0; i<strArray.length; i++){
                     adapter.setArrayData(strArray[i]);
@@ -66,6 +67,8 @@ public class BottomSheetChannelEnter extends BottomSheetDialogFragment {
 
         return view;
     }
+
+
 
     //문자열로 뽑아서 넘겨줌
     //여기 그냥 arraylist로 해도 될 꺼 같은데 우선 문자열 배열로
@@ -119,5 +122,40 @@ public class BottomSheetChannelEnter extends BottomSheetDialogFragment {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         return displayMetrics.heightPixels;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        firebaseManager.clearChannelList();
+        adapter = null;
+        dismiss();
+    }
+
+
+    // onResume일때 데이터 재로드
+    // 현재 화면이 밑으로 내려갔다가 다시 최상단에 위치했을때,
+    // 채널 삭제, 추가 등 변경사항 바로 반영
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        firebaseManager.getChannelList(new FirebaseManager.GetChannelListListener() {
+            @Override
+            public void onDataLoaded() {
+                String[] strArray = channelLoad(userType);
+                adapter = new ChannelListAdapter();
+                adapter.setUserType(userType);
+                for(int i=0; i<strArray.length; i++){
+                    adapter.setArrayData(strArray[i]);
+                }
+
+                recyclerView.setAdapter(adapter);
+
+                adapter.notifyDataSetChanged();
+
+            }
+        });
+        adapter.notifyDataSetChanged();
     }
 }
