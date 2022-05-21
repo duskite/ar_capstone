@@ -684,12 +684,6 @@ public class ArSfActivity extends AppCompatActivity implements
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                        }
-                                    });
 
                                     //어짜피 여기까지 오면 키를 획득했다는것이므로 따로 db조회 필요없음
                                     //바로 키 획득처리, db에는 윗 부분에서 반영할꺼임
@@ -707,13 +701,6 @@ public class ArSfActivity extends AppCompatActivity implements
                             sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
-                                    firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                        }
-                                    });
                                     if(stateHaveKey){ //키를 가지고 있으면
                                         //승리 유저 정보 보냄
                                         firebaseManager.sendWinnerInfo(channel, firebaseAuthManager.getUID());
@@ -732,13 +719,7 @@ public class ArSfActivity extends AppCompatActivity implements
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                            sweetAlertDialog.dismiss();
-                                        }
-                                    });
+                                    sweetAlertDialog.dismiss();
                                 }
                             });
                         }

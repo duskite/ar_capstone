@@ -158,13 +158,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         }else{ //참가자 일 때
             userInvenFragment = new UserInvenFragment(mContext);
             userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-
             fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-//            userInvenFragment.loadScrapAnchor();
             userInvenFragment.setArguments(bundle);
         }
-
 
 
         // ar화면으로 넘어가기

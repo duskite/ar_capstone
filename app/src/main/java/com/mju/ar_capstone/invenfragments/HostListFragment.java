@@ -164,6 +164,7 @@ public class HostListFragment extends Fragment {
         super.onStop();
 
         //다른 화면 넘어가면 앵커 리스트 한번 비워서 중복으로 가져오는거 방지
+        //화면 새로 뜰때 새정보 로드하기 위해서
         firebaseManager.clearWrappedAnchorList();
         Log.d("주최자인벤", "onStop");
     }

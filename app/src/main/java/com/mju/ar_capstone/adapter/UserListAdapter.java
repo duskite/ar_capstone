@@ -108,11 +108,6 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         notifyItemMoved(from_position, to_position);
         return true;
     }
-//    @Override
-//    public void onItemSwipe(int position) {
-//        userItemObjs.remove(position);
-//        notifyItemRemoved(position);
-//    }
 
     protected class ViewHolder extends RecyclerView.ViewHolder{
         TextView item_txt,item_sound_txt;
