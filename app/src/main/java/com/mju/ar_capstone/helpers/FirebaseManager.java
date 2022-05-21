@@ -60,7 +60,7 @@ public class FirebaseManager {
 
 
     private String myID;
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
@@ -167,6 +167,10 @@ public class FirebaseManager {
     // 우승자 데이터 로드 리스터
     public interface GetWinnerListListener{
         void onDataLoaded(HashMap<String, String> hashMap);
+    }
+    // 채널 리스트 로드 리스터
+    public interface GetChannelListListener{
+        void onDataLoaded();
     }
 
     // 참가자가 스크랩시 db에 반영
@@ -282,7 +286,7 @@ public class FirebaseManager {
         });
     }
 
-    public void getChannelList(){
+    public void getChannelList(GetChannelListListener getChannelListListener){
         channelDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
@@ -316,6 +320,7 @@ public class FirebaseManager {
                                 }
                             }
                         }
+                        getChannelListListener.onDataLoaded();
 
                     }catch (NullPointerException e){
                         //만약 비어있으면 비공개 채널이라고 생각
