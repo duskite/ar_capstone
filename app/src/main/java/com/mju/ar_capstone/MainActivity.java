@@ -26,6 +26,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.mju.ar_capstone.bottomsheets.BottomSheetChannelCreate;
+import com.mju.ar_capstone.bottomsheets.BottomSheetChannelEnter;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import java.util.ArrayList;
@@ -34,29 +38,44 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnInven;
-    private RadioGroup rdUserType, rdChannelType;
+    private Button btnHostCreate, btnHostEnter, btnUserEnter;
+    private RadioGroup rdUserType;
     private int userType = 0;
-    private int channelType = 1;
-    private LinearLayout layoutChannelType;
 
-    private TextView tvUserId, tvChannelLoad;
-    private Spinner spinner;
-    private Button btnSpinnerLoad;
+    private LinearLayout layoutHost, layoutUser;
+    private MaterialButtonToggleGroup btnHostToggle;
 
-    private String selectedChannel = "base_channel"; //기본 채널
-    private EditText edtChannelName;
-
-    private ArrayList<String> publicChannelList, hostChannelList, privateChannelList;
+    private TextView tvUserId;
 
     private FirebaseAuthManager firebaseAuthManager;
     private FirebaseManager firebaseManager;
 
-    private CheckBox checkCreate;
-
     //앱 종료처리
     private long backKeyPressedTime = 0;
     private Toast toast;
+
+    private void viewInit(){
+        //firebase 설정
+        firebaseAuthManager = new FirebaseAuthManager();
+        firebaseManager = new FirebaseManager();
+        firebaseManager.setAuth(firebaseAuthManager.getUID().toString());
+
+        rdUserType = (RadioGroup) findViewById(R.id.userType);
+        layoutHost = (LinearLayout) findViewById(R.id.layout_host);
+        layoutUser = (LinearLayout) findViewById(R.id.layout_user);
+        //최초에는 하단 레이아웃 안보이게
+        layoutHost.setVisibility(View.GONE);
+        layoutUser.setVisibility(View.GONE);
+
+        btnHostToggle = (MaterialButtonToggleGroup) findViewById(R.id.btnHostToggle);
+        btnHostToggle.setSingleSelection(true);
+
+        tvUserId = (TextView) findViewById(R.id.userId);
+
+        btnHostCreate = (Button) findViewById(R.id.btnHostCreate);
+        btnHostEnter = (Button) findViewById(R.id.btnHostEnter);
+        btnUserEnter = (Button) findViewById(R.id.btnUserEnter);
+    }
 
 
     @Override
@@ -64,22 +83,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        viewInit();
 
-        checkCreate = findViewById(R.id.check_create);
-        layoutChannelType = findViewById(R.id.layout_channel_type);
-        layoutChannelType.setVisibility(View.INVISIBLE);
+        //유저 타입 고름
+        rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-        firebaseAuthManager = new FirebaseAuthManager();
-        firebaseManager = new FirebaseManager();
-        firebaseManager.setAuth(firebaseAuthManager.getUID().toString());
-        //채널 리스트 가져옴
-        firebaseManager.getChannelList();
-        publicChannelList = firebaseManager.getPublicChannelList();
-        hostChannelList = firebaseManager.getHostChannelList();
-        privateChannelList = firebaseManager.getPrivateChannelList();
-
-        tvUserId = (TextView) findViewById(R.id.userId);
-        tvUserId.setText("참가자ID 발급완료. 터치시 자동으로 ID가 복사됩니다.\n" + "익명ID: " + firebaseAuthManager.getUID());
+                switch (checkedId){
+                    case R.id.host:
+                        userType = 1;
+                        layoutUser.setVisibility(View.GONE);
+                        layoutHost.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.participant:
+                        userType = 2;
+                        layoutHost.setVisibility(View.GONE);
+                        layoutUser.setVisibility(View.VISIBLE);
+                        break;
+                }
+                Log.d("유저타입", String.valueOf(userType));
+            }
+        });
+        tvUserId.setText("익명ID 발급완료. 터치하여 복사하기.\n" + "익명ID: " + firebaseAuthManager.getUID());
         //클립보드에 id저장할 수 있도록 지원
         tvUserId.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -96,161 +122,66 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnInven = findViewById(R.id.btnInven);
-        edtChannelName = findViewById(R.id.edtChannelName);
-        btnSpinnerLoad = findViewById(R.id.btnSpinnerLoad);
-        tvChannelLoad = findViewById(R.id.tvChannelLoad);
-        spinner = (Spinner) findViewById(R.id.spinner_channel);
-        spinner.setVisibility(View.INVISIBLE);
-
-
-        checkCreate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(buttonView.isChecked() == true){
-                    edtChannelName.setEnabled(true);
-                    edtChannelName.setHint("생성할 채널명을 입력해주세요");
-                    btnInven.setText("생성하기");
-                    layoutChannelType.setVisibility(View.VISIBLE);
-                }else{
-                    edtChannelName.setEnabled(false);
-                    btnInven.setText("입장하기");
-                    layoutChannelType.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
-
-        rdChannelType = (RadioGroup) findViewById(R.id.channelType);
-        rdChannelType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId){
-                    case R.id.channelPublic:
-                        channelType = 1;
-                        break;
-                    case R.id.channelSecret:
-                        channelType = 2;
-                        break;
-                }
-            }
-        });
-
-
-        // 입장하기 인벤토리로 이동
-        rdUserType = (RadioGroup) findViewById(R.id.userType);
-        rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                //채널 다시 한번 로드 해놓음, 변경사항 있을수 있어서
-                firebaseManager.getChannelList();
-
-                checkCreate.setVisibility(View.VISIBLE);
-                btnInven.setEnabled(true);
-
-                switch (checkedId){
-                    case R.id.host:
-                        edtChannelName.setEnabled(false);
-                        edtChannelName.setHint("위 버튼 체크시 생성가능");
-                        tvChannelLoad.setText("접근가능한 채널 불러오기");
-                        btnSpinnerLoad.setEnabled(true);
-                        spinner.setVisibility(View.INVISIBLE);
-                        userType = 1;
-                        break;
-                    case R.id.participant:
-                        userType = 2;
-                        checkCreate.setVisibility(View.GONE);
-                        edtChannelName.setEnabled(true);
-                        tvChannelLoad.setText("공개된 채널 불러오기");
-                        edtChannelName.setHint("입장할 채널명을 입력해주세요");
-                        btnInven.setText("입장하기");
-                        btnSpinnerLoad.setEnabled(true);
-                        rdChannelType.setVisibility(View.INVISIBLE);
-                        spinner.setVisibility(View.INVISIBLE);
-                        break;
-                }
-                Log.d("유저타입", String.valueOf(userType));
-            }
-        });
-        btnInven.setOnClickListener(new View.OnClickListener() {
+        //채널 생성 바텀시트 호스트
+        btnHostCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!edtChannelName.getText().toString().equals("")){
-                    selectedChannel = edtChannelName.getText().toString();
-                }
-
-                // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
-                if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
-                    if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
-
-                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE);
-                        sweetAlertDialog.setTitleText("존재하지 않는 채널입니다.");
-                        sweetAlertDialog.setConfirmText("닫기");
-                        sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
-                            @Override
-                            public void onClick(SweetAlertDialog sweetAlertDialog) {
-                                sweetAlertDialog.dismiss();
-                            }
-                        });
-                        sweetAlertDialog.show();
-                        return;
-                    }
-                }
-
-                //채널이 있을때
-                Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
-                intent.putExtra("channel", selectedChannel);
-                intent.putExtra("userType", userType);
-                intent.putExtra("channelType", channelType);
-                Log.d("채널이름 넘기는거 메인", selectedChannel);
-                startActivity(intent);
+                BottomSheetChannelCreate bottomSheetChannelCreate = new BottomSheetChannelCreate();
+                bottomSheetChannelCreate.show(getSupportFragmentManager(), "create");
             }
         });
-
-
-
-        btnSpinnerLoad.setOnClickListener(new View.OnClickListener() {
+        //채널 입장 바텀시트 호스트
+        btnHostEnter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //채널 재로드, 사용자 유형에따라 보이는게 변해야하는데
-                //최신 채널리스트로 동기화 한 후 어댑터에 뜨도록
-                publicChannelList = firebaseManager.getPublicChannelList();
-                hostChannelList = firebaseManager.getHostChannelList();
-                privateChannelList = firebaseManager.getPrivateChannelList();
-
-                int arraySize = 0;
-                ArrayList<String> selectedChannelList = new ArrayList<>();
-                if(userType == 1){
-                    selectedChannelList = hostChannelList;
-                }else if(userType == 2){
-                    selectedChannelList = publicChannelList;
-                }
-                arraySize = selectedChannelList.size();
-                Log.d("채널 사이즈", String.valueOf(arraySize));
-                String[] spinnerList = new String[arraySize];
-                for(int i=0; i<arraySize; i++){
-                    spinnerList[i] = selectedChannelList.get(i);
-                    Log.d("채널 순서" + i, spinnerList[i]);
-                }
-
-                //채널리스트로 선택 스피너 생성
-                spinner.setVisibility(View.VISIBLE);
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_dropdown_item_1line, spinnerList);
-                adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
-                spinner.setAdapter(adapter);
-                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        selectedChannel = spinnerList[position];
-                        Log.d("채널", "선택" + selectedChannel);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                });
-
+                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
+                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
             }
         });
+        //채널 입장 바텀시트 유저
+        btnUserEnter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
+                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
+            }
+        });
+
+//
+//        btnInven.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if(!edtChannelName.getText().toString().equals("")){
+//                    selectedChannel = edtChannelName.getText().toString();
+//                }
+//
+//                // 공개 채널과 비공개 채널에 이 이름이 있는지 체크
+//                if(!publicChannelList.contains(selectedChannel) && !privateChannelList.contains(selectedChannel)){ // 이 이름으로 생성된 채널이 없는데
+//                    if(userType == 2){ //그러나 참가자일경우는 채널 생성 하지 않고 멈춤
+//
+//                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(MainActivity.this, SweetAlertDialog.ERROR_TYPE);
+//                        sweetAlertDialog.setTitleText("존재하지 않는 채널입니다.");
+//                        sweetAlertDialog.setConfirmText("닫기");
+//                        sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+//                            @Override
+//                            public void onClick(SweetAlertDialog sweetAlertDialog) {
+//                                sweetAlertDialog.dismiss();
+//                            }
+//                        });
+//                        sweetAlertDialog.show();
+//                        return;
+//                    }
+//                }
+//
+//                //채널이 있을때
+//                Intent intent = new Intent(MainActivity.this, InventoryActivity.class);
+//                intent.putExtra("channel", selectedChannel);
+//                intent.putExtra("userType", userType);
+//                intent.putExtra("channelType", channelType);
+//                Log.d("채널이름 넘기는거 메인", selectedChannel);
+//                startActivity(intent);
+//            }
+//        });
 
         permisionCheck();
     }

@@ -88,7 +88,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Context mContext;
 
     Bundle bundle;
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
 //    //알림
 //    NotificationService notificationService;
@@ -120,6 +120,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         firebaseManager.getContents();
         firebaseAuthManager = new FirebaseAuthManager();
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
+        //참가자일 경우는 아예 채널타입을 넘기지 않음
+        //주최자일 경우에는 해당 채널의 소유를 먼저 확인하고, 이미 소유자가 있을 경우 채널타입은 사용되지 않음
         if(userType == 1){
             firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
         }else{

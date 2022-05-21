@@ -148,7 +148,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private static boolean DEVICE_LANDSCAPE = false;
 
     //키 소지 여부
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
     //gps정보 앵커랑 같이 서버에 업로드하려고
     private double lat = 0.0;
