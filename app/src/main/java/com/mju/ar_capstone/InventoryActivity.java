@@ -117,7 +117,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // 액티비티 생성시 서버와 연결후 데이터 가져옴
         firebaseManager = new FirebaseManager(selectedChannel);
 
-        firebaseManager.getContents();
+
         firebaseAuthManager = new FirebaseAuthManager();
         //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
         //참가자일 경우는 아예 채널타입을 넘기지 않음
@@ -128,7 +128,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             //참가자일때
             firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
         }
-
 
         //프래그먼트에 값 넘길 번들 객체
         bundle = new Bundle();
@@ -149,6 +148,8 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
             userInvenFragment.loadScrapAnchor();
             userInvenFragment.setArguments(bundle);
         }
+
+
 
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();

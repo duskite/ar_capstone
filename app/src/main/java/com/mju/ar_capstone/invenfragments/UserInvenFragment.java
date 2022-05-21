@@ -167,6 +167,7 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
 
     //스크랩한 앵커 불러오기, 키 앵커 소유 여부 체크
     public void loadScrapAnchor(){
+
         wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
         stateHaveKey = firebaseManager.checkHaveKey();
     }

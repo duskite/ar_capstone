@@ -163,7 +163,9 @@ public class FirebaseManager {
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
     }
-
+    public interface GetContentsListener{
+        void onDataLoaded();
+    }
     // 우승자 데이터 로드 리스터
     public interface GetWinnerListListener{
         void onDataLoaded(HashMap<String, String> hashMap);
@@ -578,7 +580,9 @@ public class FirebaseManager {
 
     }
 
-    public void getContents(){
+
+
+    public void getContents(GetContentsListener getContentsListener){
         contentsDatabase = mDatabase.child("contents");
         contentsDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -626,6 +630,8 @@ public class FirebaseManager {
                         }
                     }
                     Log.d("순서", "리스너 데이터 로드 완료");
+
+                    getContentsListener.onDataLoaded();
 
                 }
             }

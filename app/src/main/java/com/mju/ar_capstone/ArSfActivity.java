@@ -222,8 +222,12 @@ public class ArSfActivity extends AppCompatActivity implements
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                firebaseManager.getContents();
-                loadCloudAnchors();
+                firebaseManager.getContents(new FirebaseManager.GetContentsListener() {
+                    @Override
+                    public void onDataLoaded() {
+                        loadCloudAnchors();
+                    }
+                });
             }
         });
 

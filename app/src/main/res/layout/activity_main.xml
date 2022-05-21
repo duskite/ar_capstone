@@ -138,7 +138,14 @@
                     android:id="@+id/btnUserEnter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="참가"
+                    android:text="공개 채널"
+                    style="?attr/materialButtonOutlinedStyle"
+                    />
+                <Button
+                    android:id="@+id/btnUserSecretEnter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="비공개 채널"
                     style="?attr/materialButtonOutlinedStyle"
                     />
             </com.google.android.material.button.MaterialButtonToggleGroup>
