@@ -11,6 +11,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -74,7 +75,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private InfoWindow infoWindow;
-    private List<Marker> listMarker = new ArrayList<Marker>();
+
+    //마커와 써클 오버레이 한번씩 비워줘야함
+    private List<Marker> markerList = new ArrayList<>();
+    private List<CircleOverlay> circleOverlayList = new ArrayList<>();
 
     //서버랑 연결
     private FirebaseManager firebaseManager;
@@ -188,31 +192,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     protected void onResume() {
         super.onResume();
         Log.d("인벤", "onResume");
-
-
-//        if(userType == 1){
-//        }else{
-//            //참가자일때
-//            Log.d("스크랩", "getUserScrapAnchors onResume에서");
-//            firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
-//        }
-//
-//        fragmentManager = getSupportFragmentManager();
-//        if (userType == 1){ //주최자 일 때
-//            hostListFragment = new HostListFragment();
-//            fragmentTransaction = fragmentManager.beginTransaction();
-//            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
-//            hostListFragment.setFirebaseManager(firebaseManager);
-//            hostListFragment.setArguments(bundle);
-//        }else{ //참가자 일 때
-//            userInvenFragment = new UserInvenFragment(mContext);
-//            fragmentTransaction = fragmentManager.beginTransaction();
-//            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-//            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-//            userInvenFragment.loadScrapAnchor();
-//            userInvenFragment.setArguments(bundle);
-//        }
-
     }
 
     @Override
@@ -225,21 +204,12 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     protected void onDestroy() {
         super.onDestroy();
         Log.d("인벤", "onDestroy");
-        sensorManager = null;
-        accelerometer = null;
-        magneticField = null;
-        firebaseManager = null;
-        firebaseAuthManager = null;
-        hostListFragment = null;
-        userInvenFragment = null;
-        mNaverMap = null;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.d("인벤", "onStop");
-        firebaseManager.clearUserScrapAnchorIdList();
     }
 
     //방위각 구해서 넘기는 부분
@@ -319,49 +289,63 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         CameraPosition cameraPosition = new CameraPosition(mNaverMap.getCameraPosition().target, 18);
         mNaverMap.setCameraPosition(cameraPosition);
 
+        //호출횟수가 너무 많기는 한데, 사용자가 카메라 이동시 마커 원활하게 보여주려면 이게 나은듯
+        //대신 메모리 관리를 updateAnchors에서 해주고 있어서 동작에 무리 없음
         mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int i, boolean b) {
                 updateAnchors(mNaverMap);
             }
         });
-        // 정보창의 값을 listInforWindow에 저장
-        //listInfoWindow.add(infoWindow);
-        infoWindow = new InfoWindow();
-        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
-            @NonNull
-            @Override
-            public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                //Marker marker = infoWindow.getMarker();
-                // 마커에 setTag된 정보를 infoWindow에서 불러옴
-                return (CharSequence)infoWindow.getMarker().getTag();
-            }
-        });
+
+//        // 정보창의 값을 listInforWindow에 저장
+//        //listInfoWindow.add(infoWindow);
+//        infoWindow = new InfoWindow();
+//        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+//            @NonNull
+//            @Override
+//            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+//                //Marker marker = infoWindow.getMarker();
+//                // 마커에 setTag된 정보를 infoWindow에서 불러옴
+//                return (CharSequence)infoWindow.getMarker().getTag();
+//            }
+//        });
 
     }
     // 마커 클릭하면 정보창 나오기
     @Override
     public boolean onClick(@NonNull Overlay overlay) {
-        if (overlay instanceof Marker) {
-            Marker marker = (Marker) overlay;
-            if (marker.getInfoWindow() != null) {
-                infoWindow.close();
-            } else {
-                infoWindow.open(marker);
-            }
-            return true;
-        }
+//        if (overlay instanceof Marker) {
+//            Marker marker = (Marker) overlay;
+//            if (marker.getInfoWindow() != null) {
+//                infoWindow.close();
+//            } else {
+//                infoWindow.open(marker);
+//            }
+//            return true;
+//        }
         return false;
     }
 
     // 맵 누르면 정보창 끄게하기
     @Override
     public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
-        if (infoWindow.getMarker() != null) {
-            infoWindow.close();
-        }
+//        if (infoWindow.getMarker() != null) {
+//            infoWindow.close();
+//        }
     }
     public void updateAnchors(NaverMap naverMap){
+
+
+        //새로운 내용 반영하기 전에 이미 전에 찍혀있던거 모두 지워줌
+        for(Marker m: markerList){
+            m.setMap(null);
+        }
+        for(CircleOverlay c: circleOverlayList){
+            c.setMap(null);
+        }
+
+        Log.d("써클문제", "updateAnchors");
 
         LatLng tmpLatLng = new LatLng(0, 0);
 
@@ -377,18 +361,23 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 Log.d("지도 오버레이", "몇개찍혔나");
                 // 마커를 보여주지 않고 부근만 찍음
                 CircleOverlay circleOverlay = new CircleOverlay(latLng, 10);
-//                circleOverlay.setColor(Color.RED);
                 circleOverlay.setOutlineColor(Color.RED);
                 circleOverlay.setOutlineWidth(10);
                 circleOverlay.setMap(naverMap);
+
+                Log.d("써클문제", "써클찍음");
+
+                //위치 정보를 넣은 circleOverlay값을 circleOverlayList에 저장
+                //호출시 직접 낱개로 지워줘야함
+                circleOverlayList.add(circleOverlay);
+
             }else { //주최자일때
                 //(루프 한번 돌 때 마다 marker객체 생성)
                 Marker marker = new Marker();
                 marker.setPosition(latLng);
                 marker.setMap(naverMap);
+                Log.d("써클문제", "마커찍음");
 
-                //위치 정보를 넣은 marker값을 listMarker에 저장
-                listMarker.add(marker);
                 //마커 크기 및 색상 설정
                 marker.setWidth(75);
                 marker.setHeight(100);
@@ -399,6 +388,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 marker.setOnClickListener(this);
                 //마커에 앵커 타입을 태그로 설정
                 marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
+
+                //위치 정보를 넣은 marker값을 markerList에 저장
+                //호출시 직접 낱개로 지워줘야함
+                markerList.add(marker);
             }
 
             //이전 위경도값 잠시 담아둠
