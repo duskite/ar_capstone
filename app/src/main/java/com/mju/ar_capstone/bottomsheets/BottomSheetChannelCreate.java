@@ -139,4 +139,10 @@ public class BottomSheetChannelCreate extends BottomSheetDialogFragment {
         return displayMetrics.heightPixels;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        dismiss();
+    }
+
 }
