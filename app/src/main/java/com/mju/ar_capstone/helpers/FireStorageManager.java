@@ -59,20 +59,22 @@ public class FireStorageManager {
     public synchronized void setFirebaseManager(FirebaseManager firebaseManager) {this.firebaseManager = firebaseManager;}
 
     public void deleteAnchor(String text_or_path){
-        if(text_or_path.contains(JPG_TYPE)){
-            imgReferece.child(text_or_path).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-                    Log.d("앵커 삭제", "이미지 삭제 성공");
-                }
-            });
-        }else if(text_or_path.contains(MP3_TYPE)){
-            mp3Reference.child(text_or_path).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-                    Log.d("앵커 삭제", "음성 삭제 성공");
-                }
-            });
+        if(text_or_path != null){
+            if(text_or_path.contains(JPG_TYPE)){
+                imgReferece.child(text_or_path).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Log.d("앵커 삭제", "이미지 삭제 성공");
+                    }
+                });
+            }else if(text_or_path.contains(MP3_TYPE)){
+                mp3Reference.child(text_or_path).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Log.d("앵커 삭제", "음성 삭제 성공");
+                    }
+                });
+            }
         }
     }
     //저장소 공간에서 삭제해버림
