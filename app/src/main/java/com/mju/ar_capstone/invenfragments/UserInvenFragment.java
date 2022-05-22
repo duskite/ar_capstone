@@ -36,6 +36,7 @@ import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.ItemTouchHelperCallback;
+import com.mju.ar_capstone.helpers.ItemTouchHelperListner;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -128,20 +129,22 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
                         recycler_text.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
                         recycler_text.setAdapter(new UserListAdapter(textList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_TEXT));
 
+                        Log.d("드래그문제", "호출횟수");
+
                         recycler_img = viewGroup.findViewById(R.id.recycler_img);
-                        recycler_img.setLayoutManager(new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
-//        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, true));
+//                        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+                        recycler_img.setLayoutManager(new GridLayoutManager(getContext(), 2, GridLayoutManager.HORIZONTAL, false));
 
                         userListAdapter = new UserListAdapter(imgList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_IMG);
-                        recycler_img.setAdapter(userListAdapter);
                         itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(userListAdapter));
                         itemTouchHelper.attachToRecyclerView(recycler_img);
+                        recycler_img.setAdapter(userListAdapter);
+
 
 
                         recycler_sound = viewGroup.findViewById(R.id.recycler_sound);
                         recycler_sound.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
                         recycler_sound.setAdapter(new UserListAdapter(soundList, fireStorageManager, firebaseManager, ANCHOR_SOUND));
-
 
                     }
                 });
