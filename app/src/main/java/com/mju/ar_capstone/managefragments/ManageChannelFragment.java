@@ -19,6 +19,7 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mju.ar_capstone.ArSfActivity;
 import com.mju.ar_capstone.R;
+import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
 
@@ -36,6 +37,7 @@ public class ManageChannelFragment extends Fragment {
     private static int ID_LENGTH = 28;
 
     private FirebaseManager firebaseManager;
+    private FirebaseAuthManager firebaseAuthManager;
     private ViewGroup viewGroup;
 
 
@@ -47,6 +49,7 @@ public class ManageChannelFragment extends Fragment {
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
         firebaseManager = new FirebaseManager();
+        firebaseAuthManager = new FirebaseAuthManager();
 
         btnHostAdd = viewGroup.findViewById(R.id.btnHostAdd);
         edtHostAdd = viewGroup.findViewById(R.id.edtHostAdd);
@@ -69,12 +72,26 @@ public class ManageChannelFragment extends Fragment {
         btnDeleteChannel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                firebaseManager.deleteChannel(selectedChannel);
+                firebaseManager.checkMainHost(selectedChannel, firebaseAuthManager.getUID(), new FirebaseManager.GetHostType() {
+                    @Override
+                    public void onHostTypeLoaded(boolean isMainHost) {
+                        //메인 호스트만 채널 삭제 가능하도록 함
+                        if(isMainHost){
+                            firebaseManager.deleteChannel(selectedChannel);
 
-                HostListFragment hostListFragment = (HostListFragment) HostListFragment.hostListFragment;
+                            HostListFragment hostListFragment = (HostListFragment) HostListFragment.hostListFragment;
 
-                hostListFragment.getActivity().finish();
-                getActivity().finish();
+                            hostListFragment.getActivity().finish();
+                            getActivity().finish();
+                        }else {
+                            SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(getContext(), SweetAlertDialog.WARNING_TYPE);
+                            sweetAlertDialog.setContentText("채널 삭제 권한이 없습니다.");
+                            sweetAlertDialog.show();
+                        }
+                    }
+
+                });
+
             }
         });
 

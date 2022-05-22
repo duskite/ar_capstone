@@ -142,6 +142,26 @@ public class FirebaseManager {
         addHostDB.child(addHostID).setValue("subHost");
     }
 
+
+    public void checkMainHost(String selectedChannel, String currentUserID, GetHostType getHostType){
+        DatabaseReference addHostDB = channelDatabase.child(selectedChannel).child("hostID").child(currentUserID);
+        addHostDB.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                boolean hostCheck = false;
+                try{
+                    if((task.getResult().getValue()).equals("mainHost")){
+                        hostCheck = true;
+                    };
+                }catch (NullPointerException e){
+                    hostCheck = false;
+                }
+
+                getHostType.onHostTypeLoaded(hostCheck);
+            }
+        });
+    }
+
     //채널 삭제 메소드
     //스토리지까지 삭제
     public void deleteChannel(String selectedChannel){
@@ -159,6 +179,10 @@ public class FirebaseManager {
         return stateHaveKey;
     }
 
+    //메인 호스트인지 서브 호스트인지 불러오기
+    public interface GetHostType{
+        void onHostTypeLoaded(boolean isMainHost);
+    }
     // searching어쩌구 메소드에서 쓰려고 만듦 / 콜백 데이터 로드되면
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
