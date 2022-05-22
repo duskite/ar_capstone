@@ -167,7 +167,6 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                     }
                 }
             });
-
             item_img.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
@@ -191,7 +190,6 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                     dlg.show();
                 }
             });
-
             item_txt.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
@@ -199,6 +197,25 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                     TextView usertxt = (TextView) dialogView.findViewById(R.id.userTxT);
                     String a1 = item_txt.getText().toString();
                     usertxt.setText(a1);
+                    dlg.setView(dialogView);
+                    dlg.setNegativeButton("삭제", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //다이얼로그 확인시 삭제
+                            int pos = getAdapterPosition();
+                            userItemObjs.remove(pos);
+                            notifyItemRemoved(pos);
+                        }
+                    });
+                    dlg.setPositiveButton("닫기",null);
+                    dlg.show();
+                }
+            });
+            item_sound.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
+                    AlertDialog.Builder dlg = new AlertDialog.Builder(context);
                     dlg.setView(dialogView);
                     dlg.setNegativeButton("삭제", new DialogInterface.OnClickListener() {
                         @Override
