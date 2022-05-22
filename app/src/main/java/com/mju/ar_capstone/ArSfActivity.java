@@ -190,6 +190,8 @@ public class ArSfActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_arsf);
         Log.d("갤러리", "onCreate");
 
+        //사용자가 들어오자마자 이미지를 남길때 모델이 없으면 안보임, 그래서 미리 하나 로드
+        makePreModels(IMAGE_MODEL);
         //모델 로드, 미리 만들어놓는거임
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
         //이 후에는 각각 필요한 모델들만 로드됨
@@ -251,7 +253,11 @@ public class ArSfActivity extends AppCompatActivity implements
                     public void onDataLoaded() {
                         //데이터 로드하는 시점에 사용자의 위치와 남겨졌던 앵커간에 거리 판단하기 위해서
                         checkGPS(true);
-                        loadCloudAnchors();
+
+                        //화면 구성하기 전에 로드 방지
+                        if(arFragment.getArSceneView() != null){
+                            loadCloudAnchors();
+                        }
                     }
                 });
             }
@@ -272,8 +278,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
         //모델 로드, 미리 만들어놓는거임
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
+        // 얘네들은 하나의 모델 중복 사용하는 것들
         makePreModels(SELECT_MODEL);
-        makePreModels(-99);
         makePreModels(DENY_MODEL);
         makePreModels(KEY_MODEL);
         makePreModels(BOX_MODEL);
@@ -675,10 +681,15 @@ public class ArSfActivity extends AppCompatActivity implements
                         sweetAlertDialog.setConfirmButton("삭제하기", new SweetAlertDialog.OnSweetClickListener() {
                             @Override
                             public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                sweetAlertDialog.dismiss();
+
                                 firebaseManager.deleteContent(model.getName());
                                 anchor.detach();
                                 model.setRenderable(null);
-                                sweetAlertDialog.dismiss();
+
+                                SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                sweetAlertDialogInner.setContentText("삭제 완료");
+                                sweetAlertDialogInner.show();
                             }
                         });
                         sweetAlertDialog.setCancelButton("취소", new SweetAlertDialog.OnSweetClickListener() {
@@ -695,7 +706,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.NORMAL_TYPE);
 
                         // 열쇠 앵커일때는
                         if(wrappedAnchor.getAnchorType() == 3){
@@ -714,6 +725,10 @@ public class ArSfActivity extends AppCompatActivity implements
                                     anchor.detach();
 
                                     sweetAlertDialog.dismiss();
+
+                                    SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                    sweetAlertDialogInner.setContentText("획득 완료");
+                                    sweetAlertDialogInner.show();
                                 }
                             });
                         }else if(wrappedAnchor.getAnchorType() == 4){ //박스 앵커일때는
@@ -741,6 +756,10 @@ public class ArSfActivity extends AppCompatActivity implements
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
                                     sweetAlertDialog.dismiss();
+
+                                    SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                    sweetAlertDialogInner.setContentText("스크랩 완료");
+                                    sweetAlertDialogInner.show();
                                 }
                             });
                         }
@@ -1131,24 +1150,28 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
-        Log.d("순서", "onTapPlane");
-        if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
-        //if(true){ //주최자 일 경우만 앵커 생성 가능
-            createSelectAnchor(hitResult);
-            Log.e("HAN", "onTapPlane type1");
-        }else{
-            Log.e("HAN", "onTapPlane type2");
-            Anchor anchor = hitResult.createAnchor();
-            Pose pose = anchor.getPose();
-            AnchorNode anchorNode = new AnchorNode(anchor);
-            anchorNode.setParent(arFragment.getArSceneView().getScene());
+        //ar 화면이 구성된 이후 터치 가능 하도록
+        if(arFragment.getArSceneView() != null){
 
-            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-            model.setRenderable(this.denyRenderable);
-            model.setParent(anchorNode);
-            model.select();
+            Log.d("순서", "onTapPlane");
+            if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
+                //if(true){ //주최자 일 경우만 앵커 생성 가능
+                createSelectAnchor(hitResult);
+                Log.e("HAN", "onTapPlane type1");
+            }else{
+                Log.e("HAN", "onTapPlane type2");
+                Anchor anchor = hitResult.createAnchor();
+                Pose pose = anchor.getPose();
+                AnchorNode anchorNode = new AnchorNode(anchor);
+                anchorNode.setParent(arFragment.getArSceneView().getScene());
+
+                TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+                model.setRenderable(this.denyRenderable);
+                model.setParent(anchorNode);
+                model.select();
+            }
+
         }
-
     }
 
     @Override
