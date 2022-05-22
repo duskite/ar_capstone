@@ -28,6 +28,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -118,9 +120,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private Button btnAnchorLoad;
 
+    // 갤러리에서 이미지 불러오는거 관련
+    ActivityResultLauncher<Intent> activityResultLauncher;
     private final int GALLERY_CODE = 10;
-    private ImageView tmpImageView;
-    private Uri tmpImageUri;
+    private static ImageView tmpImageView;
+    private static Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
 
 
@@ -148,7 +152,7 @@ public class ArSfActivity extends AppCompatActivity implements
     private static boolean DEVICE_LANDSCAPE = false;
 
     //키 소지 여부
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
     //gps정보 앵커랑 같이 서버에 업로드하려고
     private double lat = 0.0;
@@ -184,6 +188,29 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arsf);
+        Log.d("갤러리", "onCreate");
+
+        //사용자가 들어오자마자 이미지를 남길때 모델이 없으면 안보임, 그래서 미리 하나 로드
+        makePreModels(IMAGE_MODEL);
+        //모델 로드, 미리 만들어놓는거임
+        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
+        //이 후에는 각각 필요한 모델들만 로드됨
+        // 불러올때 좀 미리할 좋은 방법을 고민해야함
+        preLoadModels();
+        // 갤러리 콜백되는 부분 - 이게 있어야 사용자가 사진을 선택안해도 안꺼짐
+        activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if(result.getResultCode() == RESULT_OK && result.getData().getData() != null){
+
+                tmpImageUri = result.getData().getData();
+                Glide.with(this).load(tmpImageUri).into(tmpImageView);
+                Log.d("갤러리", "사진 띄움");
+            }else{
+                //사진을 선택안하고 뒤로가기 할 때
+                //혹은 null
+                Log.d("갤러리", "null");
+            }
+        });
+
         getSupportFragmentManager().addFragmentOnAttachListener(this);
         if (savedInstanceState == null) {
             if (Sceneform.isSupported(this)) {
@@ -209,33 +236,37 @@ public class ArSfActivity extends AppCompatActivity implements
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
-//        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
 
         poseManager = new PoseManager();
-        //gps는 ar화면이 불러와지는 순간으로만 체크
+        //gps는 ar화면이 불러와지는 순간과 앵커 로드할때 체크
         checkGPS(true);
 
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
         btnAnchorLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                firebaseManager.getContents();
-                loadCloudAnchors();
+                firebaseManager.getContents(new FirebaseManager.GetContentsListener() {
+                    @Override
+                    public void onDataLoaded() {
+                        //데이터 로드하는 시점에 사용자의 위치와 남겨졌던 앵커간에 거리 판단하기 위해서
+                        checkGPS(true);
+
+                        //화면 구성하기 전에 로드 방지
+                        if(arFragment.getArSceneView() != null){
+                            loadCloudAnchors();
+                        }
+                    }
+                });
             }
         });
-
-        //모델 로드, 미리 만들어놓는거임
-        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
-        //이 후에는 각각 필요한 모델들만 로드됨
-        // 불러올때 좀 미리할 좋은 방법을 고민해야함
-        preLoadModels();
     }
 
     @Override
     public void onSessionConfiguration(Session session, Config config) {
+        Log.d("갤러리", "onSessionConfiguration");
         if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
             config.setDepthMode(Config.DepthMode.AUTOMATIC);
         }
@@ -247,8 +278,8 @@ public class ArSfActivity extends AppCompatActivity implements
 
         //모델 로드, 미리 만들어놓는거임
         // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
+        // 얘네들은 하나의 모델 중복 사용하는 것들
         makePreModels(SELECT_MODEL);
-        makePreModels(-99);
         makePreModels(DENY_MODEL);
         makePreModels(KEY_MODEL);
         makePreModels(BOX_MODEL);
@@ -650,10 +681,15 @@ public class ArSfActivity extends AppCompatActivity implements
                         sweetAlertDialog.setConfirmButton("삭제하기", new SweetAlertDialog.OnSweetClickListener() {
                             @Override
                             public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                sweetAlertDialog.dismiss();
+
                                 firebaseManager.deleteContent(model.getName());
                                 anchor.detach();
                                 model.setRenderable(null);
-                                sweetAlertDialog.dismiss();
+
+                                SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                sweetAlertDialogInner.setContentText("삭제 완료");
+                                sweetAlertDialogInner.show();
                             }
                         });
                         sweetAlertDialog.setCancelButton("취소", new SweetAlertDialog.OnSweetClickListener() {
@@ -670,7 +706,7 @@ public class ArSfActivity extends AppCompatActivity implements
                 model.setOnTapListener(new Node.OnTapListener() {
                     @Override
                     public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                        SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.NORMAL_TYPE);
 
                         // 열쇠 앵커일때는
                         if(wrappedAnchor.getAnchorType() == 3){
@@ -680,12 +716,6 @@ public class ArSfActivity extends AppCompatActivity implements
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                        }
-                                    });
 
                                     //어짜피 여기까지 오면 키를 획득했다는것이므로 따로 db조회 필요없음
                                     //바로 키 획득처리, db에는 윗 부분에서 반영할꺼임
@@ -695,6 +725,10 @@ public class ArSfActivity extends AppCompatActivity implements
                                     anchor.detach();
 
                                     sweetAlertDialog.dismiss();
+
+                                    SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                    sweetAlertDialogInner.setContentText("획득 완료");
+                                    sweetAlertDialogInner.show();
                                 }
                             });
                         }else if(wrappedAnchor.getAnchorType() == 4){ //박스 앵커일때는
@@ -703,13 +737,6 @@ public class ArSfActivity extends AppCompatActivity implements
                             sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
-                                    firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                        }
-                                    });
                                     if(stateHaveKey){ //키를 가지고 있으면
                                         //승리 유저 정보 보냄
                                         firebaseManager.sendWinnerInfo(channel, firebaseAuthManager.getUID());
@@ -728,13 +755,11 @@ public class ArSfActivity extends AppCompatActivity implements
                                 @Override
                                 public void onClick(SweetAlertDialog sweetAlertDialog) {
                                     firebaseManager.userScrapAnchor(channel, firebaseAuthManager.getUID(), model.getName(), wrappedAnchor.getAnchorType());
-                                    firebaseManager.searchingContentWithAnchorID(model.getName(), new FirebaseManager.GetOneAnchorInfoListener() {
-                                        @Override
-                                        public void onDataLoaded(WrappedAnchor wrappedAnchor) {
-                                            UserInvenFragment.wrappedAnchorArrayList.add(wrappedAnchor);
-                                            sweetAlertDialog.dismiss();
-                                        }
-                                    });
+                                    sweetAlertDialog.dismiss();
+
+                                    SweetAlertDialog sweetAlertDialogInner = new SweetAlertDialog(ArSfActivity.this, SweetAlertDialog.SUCCESS_TYPE);
+                                    sweetAlertDialogInner.setContentText("스크랩 완료");
+                                    sweetAlertDialogInner.show();
                                 }
                             });
                         }
@@ -1097,6 +1122,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     @Override
     public void onViewCreated(ArSceneView arSceneView) {
+        Log.d("갤러리", "onViewCreated");
         arFragment.setOnViewCreatedListener(null);
         // Fine adjust the maximum frame rate
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
@@ -1124,80 +1150,66 @@ public class ArSfActivity extends AppCompatActivity implements
     @Override
     public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
 
-        Log.d("순서", "onTapPlane");
-        if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
-        //if(true){ //주최자 일 경우만 앵커 생성 가능
-            createSelectAnchor(hitResult);
-            Log.e("HAN", "onTapPlane type1");
-        }else{
-            Log.e("HAN", "onTapPlane type2");
-            Anchor anchor = hitResult.createAnchor();
-            Pose pose = anchor.getPose();
-            AnchorNode anchorNode = new AnchorNode(anchor);
-            anchorNode.setParent(arFragment.getArSceneView().getScene());
+        //ar 화면이 구성된 이후 터치 가능 하도록
+        if(arFragment.getArSceneView() != null){
 
-            TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
-            model.setRenderable(this.denyRenderable);
-            model.setParent(anchorNode);
-            model.select();
+            Log.d("순서", "onTapPlane");
+            if(userType == 1){ //주최자 일 경우만 앵커 생성 가능
+                //if(true){ //주최자 일 경우만 앵커 생성 가능
+                createSelectAnchor(hitResult);
+                Log.e("HAN", "onTapPlane type1");
+            }else{
+                Log.e("HAN", "onTapPlane type2");
+                Anchor anchor = hitResult.createAnchor();
+                Pose pose = anchor.getPose();
+                AnchorNode anchorNode = new AnchorNode(anchor);
+                anchorNode.setParent(arFragment.getArSceneView().getScene());
+
+                TransformableNode model = new TransformableNode(arFragment.getTransformationSystem());
+                model.setRenderable(this.denyRenderable);
+                model.setParent(anchorNode);
+                model.select();
+            }
+
         }
-
     }
 
     @Override
     protected void onDestroy() {
-        Log.d("최적화", "onDestroy");
         super.onDestroy();
-        arFragment.onDestroy();
-        fusedLocationProviderClient = null;
-        firebaseManager = null;
-        fireStorageManager = null;
-        firebaseAuthManager = null;
-        cntTextRenderable = 0;
-        cntImageRenderable = 0;
-        cntMp3Renderable = 0;
-        poseManager = null;
-        writeMode = false;
-        selectRenderable = null;
-        imageRenderableList = null;
-        textRenderableList = null;
-        mp3RenderableList = null;
-        mediaRecorder = null;
-        mediaPlayer = null;
+        Log.d("갤러리", "onDestroy");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("갤러리", "onResume");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d("갤러리", "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("갤러리", "onStop");
     }
+
 
     // 이미지 업로드 부분
     //사용자 갤러리 불러오기
     private void loadAlbum(){
+        Log.d("갤러리", "loadAlbum start");
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
-        startActivityForResult(intent, GALLERY_CODE);
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == GALLERY_CODE) {
-            Log.d("순서 갤러리", "이미지 불러와서 이미지 뷰에 넣는 부분");
-            tmpImageUri = data.getData();
-            Glide.with(this).load(tmpImageUri).into(tmpImageView);
-        }
+        activityResultLauncher.launch(intent);
+        Log.d("갤러리", "loadAlbum end");
     }
+
 
 }
 

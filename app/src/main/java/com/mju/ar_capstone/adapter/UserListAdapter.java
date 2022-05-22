@@ -42,17 +42,18 @@ import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> implements ItemTouchHelperListner {
+public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> implements ItemTouchHelperListner{
     private static String TAG = UserListAdapter.class.getSimpleName();
     private FirebaseManager firebaseManager;
     private MediaPlayer mediaPlayer = new MediaPlayer();
-    ArrayList<WrappedAnchor> userItemObjs;
+    public ArrayList<WrappedAnchor> userItemObjs;
     FireStorageManager fireStorageManager;
     Context context;
     Activity activity;
     int adapterType;
+
     /**
-     * 주최자에 리스트를 보여주는 아이템 Adapter
+     * 주최자에 리스트를 보여주는 아이템 AdapteronItemMove
      * @param userObjs
      * firebase rtdb에서 가져온 리스트 데이터
      * @param fireStorageManager
@@ -74,6 +75,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         this.activity=activity;
         View view = LayoutInflater.from(context).inflate(R.layout.host_grid_item, parent, false);
         UserListAdapter.ViewHolder vh = new UserListAdapter.ViewHolder(view) ;
+
         return vh;
     }
 
@@ -121,11 +123,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         notifyItemMoved(from_position, to_position);
         return true;
     }
-//    @Override
-//    public void onItemSwipe(int position) {
-//        userItemObjs.remove(position);
-//        notifyItemRemoved(position);
-//    }
+
 
     protected class ViewHolder extends RecyclerView.ViewHolder{
         TextView item_txt,item_sound_txt;
@@ -133,11 +131,13 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         ImageButton item_sound_ic;
         ConstraintLayout item_sound;
 
+
         ViewHolder(View itemView) {
             super(itemView);
             item_txt =  itemView.findViewById(R.id.item_txt);
             item_sound_txt = itemView.findViewById(R.id.item_sound_txt);
             item_img = itemView.findViewById(R.id.item_img);
+
             item_sound = itemView.findViewById(R.id.item_sound);
             item_sound_ic = itemView.findViewById(R.id.item_sound_ic);
             item_sound_ic.setOnClickListener(view -> {//음성 실행

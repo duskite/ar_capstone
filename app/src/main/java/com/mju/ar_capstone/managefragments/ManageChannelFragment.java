@@ -17,9 +17,12 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mju.ar_capstone.ArSfActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.invenfragments.HostListFragment;
+
+import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class ManageChannelFragment extends Fragment {
 
@@ -69,6 +72,7 @@ public class ManageChannelFragment extends Fragment {
                 firebaseManager.deleteChannel(selectedChannel);
 
                 HostListFragment hostListFragment = (HostListFragment) HostListFragment.hostListFragment;
+
                 hostListFragment.getActivity().finish();
                 getActivity().finish();
             }
@@ -103,6 +107,16 @@ public class ManageChannelFragment extends Fragment {
                 addHostID = edtHostAdd.getText().toString();
                 firebaseManager.addHostInChannel(selectedChannel, addHostID);
 
+                SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(getContext(), SweetAlertDialog.SUCCESS_TYPE);
+                sweetAlertDialog.setContentText("주최자 추가 완료");
+                sweetAlertDialog.setConfirmButton("닫기", new SweetAlertDialog.OnSweetClickListener() {
+                    @Override
+                    public void onClick(SweetAlertDialog sweetAlertDialog) {
+                        edtHostAdd.setText("");
+                        sweetAlertDialog.dismiss();
+                    }
+                });
+                sweetAlertDialog.show();
             }
         });
 

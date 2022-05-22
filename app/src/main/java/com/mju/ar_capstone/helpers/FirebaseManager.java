@@ -33,9 +33,9 @@ public class FirebaseManager {
 
     private DatabaseReference mDatabase;
     private DatabaseReference contentsDatabase;
-    private DatabaseReference anchorNumDatabase;
-    private DatabaseReference imageNumDatabase;
-    private DatabaseReference mp3NumDatabase;
+    private static DatabaseReference anchorNumDatabase;
+    private static DatabaseReference imageNumDatabase;
+    private static DatabaseReference mp3NumDatabase;
     private DatabaseReference oneAnchorInfo;
 
     public DatabaseReference channelDatabase;
@@ -44,9 +44,9 @@ public class FirebaseManager {
     private static final String DB_REGION = "https://ar-capstone-dbf8e-default-rtdb.asia-southeast1.firebasedatabase.app";
 
     //값 불러오는 리스너
-    private ValueEventListener anchorNumListener = null;
-    private ValueEventListener imageNumListener = null;
-    private ValueEventListener mp3NumListener = null;
+    private static ValueEventListener anchorNumListener = null;
+    private static ValueEventListener imageNumListener = null;
+    private static ValueEventListener mp3NumListener = null;
     //채널 리스트 불러오기
     private ValueEventListener channelListListener = null;
 
@@ -60,7 +60,7 @@ public class FirebaseManager {
 
 
     private String myID;
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
     //채널 이름 넣을 변수
     public ArrayList<String> publicChannelList = new ArrayList<>();
@@ -163,10 +163,19 @@ public class FirebaseManager {
     public interface GetOneAnchorInfoListener{
         void onDataLoaded(WrappedAnchor wrappedAnchor);
     }
-
+    public interface GetContentsListener{
+        void onDataLoaded();
+    }
+    public interface GetLoadUserScrapAnchors{
+        void onDataLoaded();
+    }
     // 우승자 데이터 로드 리스터
     public interface GetWinnerListListener{
         void onDataLoaded(HashMap<String, String> hashMap);
+    }
+    // 채널 리스트 로드 리스터
+    public interface GetChannelListListener{
+        void onDataLoaded();
     }
 
     // 참가자가 스크랩시 db에 반영
@@ -175,7 +184,7 @@ public class FirebaseManager {
         scrapDatabase.child(anchorID).setValue(anchorType);
     }
     // db에서 참가자가 스크랩했던 앵커들 가져옴
-    public void loadUserScrapAnchors(String channel, String userID){
+    public void loadUserScrapAnchors(String channel, String userID, GetLoadUserScrapAnchors getLoadUserScrapAnchors){
         scrapDatabase = FirebaseDatabase.getInstance(DB_REGION).getReference().child("users").child(userID).child(channel);
         scrapDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -184,6 +193,7 @@ public class FirebaseManager {
 
                 }else {
                     DataSnapshot dataSnapshot = task.getResult();
+                    //유저가 스크랩한 앵커 id로 리스트 만듦
                     for(DataSnapshot tmpSnapshot :dataSnapshot.getChildren()) {
                         String tmpStr = tmpSnapshot.getKey().toString();
                         int tmpAnchorType = tmpSnapshot.getValue(int.class);
@@ -195,24 +205,30 @@ public class FirebaseManager {
                         Log.d("스크랩", tmpStr);
                     }
                     Log.d("스크랩", "한 번 로드 끝");
+
+                    //전체 앵커 정보 중 유저가 스크랩한 앵커id와 같은 앵커 정보를 저장
+                    for(String s: userScrapAnchorIdList){
+                        for(int i=0; i< wrappedAnchorList.size(); i++ )
+                            if(s.equals(wrappedAnchorList.get(i).getCloudAnchorId())){
+                                userScrapAnchorList.add(wrappedAnchorList.get(i));
+                            }
+                    }
+
+                    //모든게 다 로드 된 이후
+                    getLoadUserScrapAnchors.onDataLoaded();
                 }
             }
         });
 
     }
     public ArrayList<WrappedAnchor> getUserScrapAnchorList(){
-
-        for(String s: userScrapAnchorIdList){
-            for(int i=0; i< wrappedAnchorList.size(); i++ )
-            if(s.equals(wrappedAnchorList.get(i).getCloudAnchorId())){
-                userScrapAnchorList.add(wrappedAnchorList.get(i));
-            }
-        }
         return userScrapAnchorList;
     }
+
     public void clearUserScrapAnchorIdList(){
         userScrapAnchorIdList.clear();
     }
+    public void clearUserScrapAnchorList(){userScrapAnchorList.clear();}
 
     public ArrayList<String> getPublicChannelList(){
         return publicChannelList;
@@ -282,7 +298,13 @@ public class FirebaseManager {
         });
     }
 
-    public void getChannelList(){
+    public void clearChannelList(){
+        hostChannelList.clear();
+        privateChannelList.clear();
+        publicChannelList.clear();
+    }
+
+    public void getChannelList(GetChannelListListener getChannelListListener){
         channelDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
@@ -316,6 +338,7 @@ public class FirebaseManager {
                                 }
                             }
                         }
+                        getChannelListListener.onDataLoaded();
 
                     }catch (NullPointerException e){
                         //만약 비어있으면 비공개 채널이라고 생각
@@ -388,6 +411,7 @@ public class FirebaseManager {
     public ArrayList<WrappedAnchor> getWrappedAnchorList(){
         return wrappedAnchorList;
     }
+    public void clearWrappedAnchorList(){ wrappedAnchorList.clear();}
 
     //컨텐츠 생성 시간
     public String createdTimeOfContent(){
@@ -496,10 +520,13 @@ public class FirebaseManager {
 
 
     // 채널 앵커 넘버 리스너 해제
-    // 여기서 리스너 해제가 제대로 안돼서 db에 내용은 없어지는데 채널명이 남아있음
+    //앵커 넘버 관련 디비랑 리스너는 static으로 변경함
+    //채널 삭제, 채널 리스트 삭제 모두 잘 이루어짐
     public void unRegisterAnchorNumValueLisner(){
-        anchorNumListener = null;
-        anchorNumDatabase = null;
+        if(anchorNumDatabase != null && anchorNumListener != null) {
+            anchorNumDatabase.removeEventListener(anchorNumListener);
+            Log.d("리스너해제", "해제 성공");
+        }
     }
 
     //앵커 게시글 수 업뎃용
@@ -573,7 +600,9 @@ public class FirebaseManager {
 
     }
 
-    public void getContents(){
+
+
+    public void getContents(GetContentsListener getContentsListener){
         contentsDatabase = mDatabase.child("contents");
         contentsDatabase.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -621,6 +650,8 @@ public class FirebaseManager {
                         }
                     }
                     Log.d("순서", "리스너 데이터 로드 완료");
+
+                    getContentsListener.onDataLoaded();
 
                 }
             }

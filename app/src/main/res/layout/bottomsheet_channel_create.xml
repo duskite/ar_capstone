@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+
+    <!--            주최자 채널 생성-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/layout_create"
+        android:orientation="vertical">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_margin="10dp"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:hint="새로운 채널 생성"
+            app:helperTextEnabled="true"
+            app:helperText="채널명을 입력하세요(최대 28자)"
+            app:counterEnabled="true"
+            app:counterMaxLength="28"
+            android:layout_gravity="center"
+            >
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/edtChannelName"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="채널 공개 여부를 선택해주세요" />
+
+            <RadioGroup
+                android:id="@+id/channelType"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="5dp">
+
+                <RadioButton
+                    android:id="@+id/channelPublic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:checked="true"
+                    android:padding="1dp"
+                    android:text="공개" />
+
+                <RadioButton
+                    android:id="@+id/channelSecret"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:padding="1dp"
+                    android:text="비공개" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnCreate"
+            android:layout_width="250dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="15dp"
+            android:background="@drawable/btn_shape"
+            android:enabled="false"
+            android:text="생성하기" />
+
+    </LinearLayout>
+
+</LinearLayout>

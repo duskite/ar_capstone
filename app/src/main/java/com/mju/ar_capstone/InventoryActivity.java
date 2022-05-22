@@ -11,6 +11,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -74,7 +75,10 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     private FusedLocationSource mLocationSource;
     private NaverMap mNaverMap;
     private InfoWindow infoWindow;
-    private List<Marker> listMarker = new ArrayList<Marker>();
+
+    //마커와 써클 오버레이 한번씩 비워줘야함
+    private List<Marker> markerList = new ArrayList<>();
+    private List<CircleOverlay> circleOverlayList = new ArrayList<>();
 
     //서버랑 연결
     private FirebaseManager firebaseManager;
@@ -88,7 +92,7 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Context mContext;
 
     Bundle bundle;
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
 //    //알림
 //    NotificationService notificationService;
@@ -98,55 +102,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
         mContext=this;
-
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        registerListener();
-
-        // 메인에서 정보 가져옴
-        Intent intent = getIntent();
-        //디폴트는 참가자로
-        userType = intent.getIntExtra("userType", 2);
-
-        //디폴트는 공개로
-        channelType = intent.getIntExtra("channelType", 1);
-        selectedChannel = intent.getStringExtra("channel");
-        Log.d("채널넘기는거 인벤", selectedChannel);
-
-        // 액티비티 생성시 서버와 연결후 데이터 가져옴
-        firebaseManager = new FirebaseManager(selectedChannel);
-
-        firebaseManager.getContents();
-        firebaseAuthManager = new FirebaseAuthManager();
-        //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
-        if(userType == 1){
-            firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
-        }else{
-            //참가자일때
-            firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
-        }
-
-
-        //프래그먼트에 값 넘길 번들 객체
-        bundle = new Bundle();
-        bundle.putString("selectedChannel", selectedChannel);
-
-        fragmentManager = getSupportFragmentManager();
-        if (userType == 1){ //주최자 일 때
-            hostListFragment = new HostListFragment();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
-            hostListFragment.setFirebaseManager(firebaseManager);
-            hostListFragment.setArguments(bundle);
-        }else{ //참가자 일 때
-            userInvenFragment = new UserInvenFragment(mContext);
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-            userInvenFragment.loadScrapAnchor();
-            userInvenFragment.setArguments(bundle);
-        }
 
         // 지도 객체 생성
         FragmentManager fm = getSupportFragmentManager();
@@ -158,11 +113,59 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
         // getMapAsync를 호출하여 비동기로 onMapReady 콜백 메서드 호출
         // onMapReady에서 NaverMap 객체를 받음
         mapFragment.getMapAsync(this);
-        // 위치를 반환하는 구현체인 FusedLocationSource 생성
-        mLocationSource =
-                new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
-        // 권한확인, onRequestPermissionsResult 콜백 매서드 호출
-        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_REQUEST_CODE);
+
+
+        Log.d("인벤", "onCreate");
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        registerListener();
+
+
+        // 메인에서 정보 가져옴
+        Intent intent = getIntent();
+        //디폴트는 참가자로
+        userType = intent.getIntExtra("userType", 2);
+
+        //디폴트는 공개로
+        channelType = intent.getIntExtra("channelType", 1);
+        selectedChannel = intent.getStringExtra("channel");
+        //프래그먼트에 값 넘길 번들 객체
+        bundle = new Bundle();
+        bundle.putString("selectedChannel", selectedChannel);
+
+        // 액티비티 생성시 서버와 연결후 데이터 가져옴
+        firebaseManager = new FirebaseManager(selectedChannel);
+
+
+        //여기 잠시 컨텐츠 불러오는거 지움
+
+        firebaseAuthManager = new FirebaseAuthManager();
+        //채널 생성시 기본 세팅하기, 이미 생성되어 있는 채널은 의미없음, 주최자일때만 해당됨
+        //참가자일 경우는 아예 채널타입을 넘기지 않음
+        //주최자일 경우에는 해당 채널의 소유를 먼저 확인하고, 이미 소유자가 있을 경우 채널타입은 사용되지 않음
+        if(userType == 1){
+            firebaseManager.setChannelInfo(selectedChannel, channelType, firebaseAuthManager.getUID());
+        }else{
+            //참가자일때
+            firebaseManager.joinChannel(selectedChannel, firebaseAuthManager.getUID());
+        }
+
+        fragmentManager = getSupportFragmentManager();
+        if (userType == 1){ //주최자 일 때
+            hostListFragment = new HostListFragment();
+            hostListFragment.setFirebaseManager(firebaseManager);
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
+            hostListFragment.setArguments(bundle);
+        }else{ //참가자 일 때
+            userInvenFragment = new UserInvenFragment(mContext);
+            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
+            userInvenFragment.setArguments(bundle);
+        }
 
 
         // ar화면으로 넘어가기
@@ -188,58 +191,25 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("스크랩", "onResume이 몇번 호출되는지");
-
-
-        if(userType == 1){
-        }else{
-            //참가자일때
-            Log.d("스크랩", "getUserScrapAnchors onResume에서");
-            firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID());
-        }
-
-        fragmentManager = getSupportFragmentManager();
-        if (userType == 1){ //주최자 일 때
-            hostListFragment = new HostListFragment();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, hostListFragment).commitAllowingStateLoss();
-            hostListFragment.setFirebaseManager(firebaseManager);
-            hostListFragment.setArguments(bundle);
-        }else{ //참가자 일 때
-            userInvenFragment = new UserInvenFragment(mContext);
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.host_or_user_frame, userInvenFragment).commitAllowingStateLoss();
-            userInvenFragment.setFirebaseManager(firebaseManager, firebaseAuthManager);
-            userInvenFragment.loadScrapAnchor();
-            userInvenFragment.setArguments(bundle);
-        }
-
+        Log.d("인벤", "onResume");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("최적화", "onPause 인벤토리 액티비티");
+        Log.d("인벤", "onPause");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("최적화", "onDestroy 인벤토리 액티비티");
-        sensorManager = null;
-        accelerometer = null;
-        magneticField = null;
-        firebaseManager = null;
-        firebaseAuthManager = null;
-        hostListFragment = null;
-        userInvenFragment = null;
-        mNaverMap = null;
+        Log.d("인벤", "onDestroy");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        firebaseManager.clearUserScrapAnchorIdList();
+        Log.d("인벤", "onStop");
     }
 
     //방위각 구해서 넘기는 부분
@@ -303,58 +273,79 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     //지도 부분
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
+        Log.d("인벤", "onMapReady");
         // NaverMap 객체 받아서 NaverMap 객체에 위치 소스 지정
         mNaverMap = naverMap;
+
+        // 기존 코드 onPause 발생으로 전체 동작 문제생겨서 수정함
+        // 위치를 반환하는 구현체인 FusedLocationSource 생성
+        mLocationSource =
+                new FusedLocationSource(this, PERMISSION_REQUEST_CODE);
         mNaverMap.setLocationSource(mLocationSource);
         mNaverMap.setOnMapClickListener(this);
+        mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
 
         //카메라 기본 줌 변경함
         CameraPosition cameraPosition = new CameraPosition(mNaverMap.getCameraPosition().target, 18);
         mNaverMap.setCameraPosition(cameraPosition);
 
+        //호출횟수가 너무 많기는 한데, 사용자가 카메라 이동시 마커 원활하게 보여주려면 이게 나은듯
+        //대신 메모리 관리를 updateAnchors에서 해주고 있어서 동작에 무리 없음
         mNaverMap.addOnCameraChangeListener(new NaverMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(int i, boolean b) {
                 updateAnchors(mNaverMap);
             }
         });
-        // 정보창의 값을 listInforWindow에 저장
-        //listInfoWindow.add(infoWindow);
-        infoWindow = new InfoWindow();
-        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
-            @NonNull
-            @Override
-            public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                //Marker marker = infoWindow.getMarker();
-                // 마커에 setTag된 정보를 infoWindow에서 불러옴
-                return (CharSequence)infoWindow.getMarker().getTag();
-            }
-        });
+
+//        // 정보창의 값을 listInforWindow에 저장
+//        //listInfoWindow.add(infoWindow);
+//        infoWindow = new InfoWindow();
+//        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+//            @NonNull
+//            @Override
+//            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+//                //Marker marker = infoWindow.getMarker();
+//                // 마커에 setTag된 정보를 infoWindow에서 불러옴
+//                return (CharSequence)infoWindow.getMarker().getTag();
+//            }
+//        });
 
     }
     // 마커 클릭하면 정보창 나오기
     @Override
     public boolean onClick(@NonNull Overlay overlay) {
-        if (overlay instanceof Marker) {
-            Marker marker = (Marker) overlay;
-            if (marker.getInfoWindow() != null) {
-                infoWindow.close();
-            } else {
-                infoWindow.open(marker);
-            }
-            return true;
-        }
+//        if (overlay instanceof Marker) {
+//            Marker marker = (Marker) overlay;
+//            if (marker.getInfoWindow() != null) {
+//                infoWindow.close();
+//            } else {
+//                infoWindow.open(marker);
+//            }
+//            return true;
+//        }
         return false;
     }
 
     // 맵 누르면 정보창 끄게하기
     @Override
     public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
-        if (infoWindow.getMarker() != null) {
-            infoWindow.close();
-        }
+//        if (infoWindow.getMarker() != null) {
+//            infoWindow.close();
+//        }
     }
     public void updateAnchors(NaverMap naverMap){
+
+
+        //새로운 내용 반영하기 전에 이미 전에 찍혀있던거 모두 지워줌
+        for(Marker m: markerList){
+            m.setMap(null);
+        }
+        for(CircleOverlay c: circleOverlayList){
+            c.setMap(null);
+        }
+
+        Log.d("써클문제", "updateAnchors");
 
         LatLng tmpLatLng = new LatLng(0, 0);
 
@@ -370,18 +361,23 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 Log.d("지도 오버레이", "몇개찍혔나");
                 // 마커를 보여주지 않고 부근만 찍음
                 CircleOverlay circleOverlay = new CircleOverlay(latLng, 10);
-//                circleOverlay.setColor(Color.RED);
                 circleOverlay.setOutlineColor(Color.RED);
                 circleOverlay.setOutlineWidth(10);
                 circleOverlay.setMap(naverMap);
+
+                Log.d("써클문제", "써클찍음");
+
+                //위치 정보를 넣은 circleOverlay값을 circleOverlayList에 저장
+                //호출시 직접 낱개로 지워줘야함
+                circleOverlayList.add(circleOverlay);
+
             }else { //주최자일때
                 //(루프 한번 돌 때 마다 marker객체 생성)
                 Marker marker = new Marker();
                 marker.setPosition(latLng);
                 marker.setMap(naverMap);
+                Log.d("써클문제", "마커찍음");
 
-                //위치 정보를 넣은 marker값을 listMarker에 저장
-                listMarker.add(marker);
                 //마커 크기 및 색상 설정
                 marker.setWidth(75);
                 marker.setHeight(100);
@@ -392,24 +388,14 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 marker.setOnClickListener(this);
                 //마커에 앵커 타입을 태그로 설정
                 marker.setTag(wrappedAnchor.getAnchorType() + "앵커");
+
+                //위치 정보를 넣은 marker값을 markerList에 저장
+                //호출시 직접 낱개로 지워줘야함
+                markerList.add(marker);
             }
 
             //이전 위경도값 잠시 담아둠
             tmpLatLng = latLng;
-        }
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // request code와 권한획득 여부 확인
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if(mNaverMap != null){
-                    mNaverMap.setLocationTrackingMode(LocationTrackingMode.Follow);
-                }
-            }
         }
     }
 }

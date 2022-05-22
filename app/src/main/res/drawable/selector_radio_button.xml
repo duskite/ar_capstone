@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_checked="true"> <shape android:shape="rectangle"> <solid android:color="#4B7C4D" /> <stroke android:width="1dp" android:color="@color/white" /> </shape> </item> <item android:state_checked="false"> <shape android:shape="rectangle"> <solid android:color="#FFFFFF" /> <stroke android:width="1dp" android:color="#000000" /> </shape> </item>
+
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="10dp"/>
+            <solid android:color="@color/material_on_surface_stroke" />
+            <stroke android:width="1dp" android:color="@color/purple_700" />
+        </shape>
+    </item>
+    <item android:state_checked="false">
+        <shape android:shape="rectangle">
+            <corners android:radius="10dp"/>
+            <solid android:color="@color/white" />
+            <stroke android:width="1dp" android:color="@color/material_on_surface_stroke" />
+        </shape> </item>
 
 </selector>

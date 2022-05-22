@@ -1,6 +1,7 @@
 package com.mju.ar_capstone.invenfragments;
 
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
+import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_KEY;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
@@ -35,6 +36,7 @@ import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.ItemTouchHelperCallback;
+import com.mju.ar_capstone.helpers.ItemTouchHelperListner;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,15 +50,13 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     FireStorageManager fireStorageManager;
     private FirebaseAuthManager firebaseAuthManager;
     private String selectedChannel;
-    private static boolean stateHaveKey = false;
+    private boolean stateHaveKey = false;
 
     // 드래그앤 드롭 관련 헬퍼
     private ItemTouchHelper itemTouchHelper;
-    private static UserListAdapter userListAdapter;
+    private UserListAdapter userListAdapter;
 
     Context mContext;
-
-    public static ArrayList<WrappedAnchor> wrappedAnchorArrayList = new ArrayList<>();
 
 
     public UserInvenFragment(Context mContet) {
@@ -68,6 +68,8 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
+        Log.d("참가자인벤", "onCreateView");
+
         viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_user_inven, container, false);
         userTv = viewGroup.findViewById(R.id.userTv);
         haveKeyTv = viewGroup.findViewById(R.id.haveKeyTv);
@@ -77,10 +79,6 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         selectedChannel = bundle.getString("selectedChannel");
 
         userTv.setText("참가자로 접속. 참가한 채널: " + selectedChannel );
-        if(stateHaveKey){
-            haveKeyTv.setText(" Key: 획득함");
-        }
-
 
         return viewGroup;
     }
@@ -88,11 +86,77 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     @Override
     public void onStart() {
         super.onStart();
+
+        Log.d("참가자인벤", "onStart");
+
+        //전체 데이터 앵커 정보로드
+        firebaseManager.getContents(new FirebaseManager.GetContentsListener() {
+            @Override
+            public void onDataLoaded() {
+
+                //사용자가 스크랩한 앵커id에 해당하는 앵커 정보들만 간추려서 로드
+                firebaseManager.loadUserScrapAnchors(selectedChannel, firebaseAuthManager.getUID(), new FirebaseManager.GetLoadUserScrapAnchors() {
+                    @Override
+                    public void onDataLoaded() {
+                        ArrayList<WrappedAnchor> wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
+
+                        ArrayList<WrappedAnchor> textList = new ArrayList<>();
+                        ArrayList<WrappedAnchor> imgList = new ArrayList<>();
+                        ArrayList<WrappedAnchor> soundList = new ArrayList<>();
+
+
+                        for (WrappedAnchor w: wrappedAnchorArrayList) {
+                            if(w.getAnchorType()==ANCHOR_TEXT){
+                                textList.add(w);
+                            }else if(w.getAnchorType()==ANCHOR_IMG){
+                                imgList.add(w);
+                            }else if(w.getAnchorType()==ANCHOR_SOUND){
+                                soundList.add(w);
+                            }else if(w.getAnchorType()==ANCHOR_KEY){
+                                stateHaveKey = true;
+                            }else {
+                                stateHaveKey = false; //다른 경우 모두 키 없음으로 처리
+                            }
+                            if(stateHaveKey){ //키 획득 여부 반영
+                                haveKeyTv.setText(" Key: 획득함");
+                            }
+                            Log.d(TAG, "onCreateView wrappedAnchorArrayList: "+new Gson().toJson(w));
+                        }
+
+                        fireStorageManager = new FireStorageManager(selectedChannel);
+
+                        recycler_text = viewGroup.findViewById(R.id.recycler_text);
+                        recycler_text.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
+                        recycler_text.setAdapter(new UserListAdapter(textList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_TEXT));
+
+                        Log.d("드래그문제", "호출횟수");
+
+                        recycler_img = viewGroup.findViewById(R.id.recycler_img);
+//                        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+                        recycler_img.setLayoutManager(new GridLayoutManager(getContext(), 2, GridLayoutManager.HORIZONTAL, false));
+
+                        userListAdapter = new UserListAdapter(imgList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_IMG);
+                        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(userListAdapter));
+                        itemTouchHelper.attachToRecyclerView(recycler_img);
+                        recycler_img.setAdapter(userListAdapter);
+
+
+
+                        recycler_sound = viewGroup.findViewById(R.id.recycler_sound);
+                        recycler_sound.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
+                        recycler_sound.setAdapter(new UserListAdapter(soundList, fireStorageManager, firebaseManager, ANCHOR_SOUND));
+
+                    }
+                });
+            }
+        });
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        Log.d("참가자인벤", "onPause");
     }
 
     @Override
@@ -103,45 +167,7 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     @Override
     public void onResume() {
         super.onResume();
-
-        ArrayList<WrappedAnchor> textList = new ArrayList<>();
-        ArrayList<WrappedAnchor> imgList = new ArrayList<>();
-        ArrayList<WrappedAnchor> soundList = new ArrayList<>();
-
-
-        for (WrappedAnchor w: wrappedAnchorArrayList) {
-            if(w.getAnchorType()==ANCHOR_TEXT){
-                textList.add(w);
-            }else if(w.getAnchorType()==ANCHOR_IMG){
-                imgList.add(w);
-            }else if(w.getAnchorType()==ANCHOR_SOUND){
-                soundList.add(w);
-            }
-            Log.d(TAG, "onCreateView wrappedAnchorArrayList: "+new Gson().toJson(w));
-        }
-
-        fireStorageManager = new FireStorageManager(selectedChannel);
-
-
-        recycler_text = viewGroup.findViewById(R.id.recycler_text);
-        recycler_text.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
-        recycler_text.setAdapter(new UserListAdapter(textList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_TEXT));
-
-        recycler_img = viewGroup.findViewById(R.id.recycler_img);
-        recycler_img.setLayoutManager(new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
-//        recycler_img.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, true));
-
-        userListAdapter = new UserListAdapter(imgList, fireStorageManager, firebaseManager, WrappedAnchor.ANCHOR_IMG);
-        recycler_img.setAdapter(userListAdapter);
-        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(userListAdapter));
-        itemTouchHelper.attachToRecyclerView(recycler_img);
-
-
-        recycler_sound = viewGroup.findViewById(R.id.recycler_sound);
-        recycler_sound.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, true));
-        recycler_sound.setAdapter(new UserListAdapter(soundList, fireStorageManager, firebaseManager, ANCHOR_SOUND));
-
-
+        Log.d("참가자인벤", "onResume");
     }
 
     @Override
@@ -157,18 +183,14 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
     @Override
     public void onStop() {
         super.onStop();
-        recycler_text.setAdapter(null);
-        recycler_text.setLayoutManager(null);
-        recycler_img.setAdapter(null);
-        recycler_img.setLayoutManager(null);
-        recycler_sound.setAdapter(null);
-        recycler_sound.setLayoutManager(null);
+        Log.d("참가자인벤", "onStop");
+
+        //다른 화면 넘어가면 앵커 리스트 한번 비워서 중복으로 가져오는거 방지
+        //화면 새로 뜰때 새정보 로드하기 위해서
+        firebaseManager.clearWrappedAnchorList();
+        firebaseManager.clearUserScrapAnchorIdList();
+        firebaseManager.clearUserScrapAnchorList();
     }
 
-    //스크랩한 앵커 불러오기, 키 앵커 소유 여부 체크
-    public void loadScrapAnchor(){
-        wrappedAnchorArrayList = firebaseManager.getUserScrapAnchorList();
-        stateHaveKey = firebaseManager.checkHaveKey();
-    }
 
 }

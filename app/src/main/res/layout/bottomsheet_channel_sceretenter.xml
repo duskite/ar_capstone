@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_margin="10dp"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:hint="비공개 채널 입장"
+        app:helperTextEnabled="true"
+        app:helperText="채널명을 입력하세요"
+        app:counterEnabled="true"
+        app:counterMaxLength="28"
+        android:layout_gravity="center"
+        >
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/edtSecretChannelName"
+            />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btnSecretEnter"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center|bottom"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/btn_shape"
+        android:enabled="false"
+        android:text="입장하기" />
+
+</LinearLayout>

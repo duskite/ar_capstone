@@ -111,6 +111,8 @@ public class NotificationService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
     public void sendNotification(String user){
+
+
         //알림띄우기
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "winner");
 
@@ -143,6 +145,10 @@ public class NotificationService extends Service {
                     }catch (NullPointerException e){
 
                     }
+
+                    //알림 한 번 수신하고 동일 유저에 대해 추가 수신하는거 방지
+                    //우승자 한번 보내고 null값으로 비워줌
+                    mReference.setValue(null);
                 }
 
                 @Override

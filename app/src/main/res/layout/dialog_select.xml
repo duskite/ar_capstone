@@ -122,7 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:visibility="gone"
-            android:src="@drawable/ic_launcher"
+            android:src="@drawable/ic_gallery"
             android:id="@+id/dialog_img"
             android:gravity="center"
             android:padding="3dp"
