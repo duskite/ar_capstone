@@ -94,9 +94,6 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
     Bundle bundle;
     private boolean stateHaveKey = false;
 
-//    //알림
-//    NotificationService notificationService;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -65,7 +65,7 @@ public class HostListFragment extends Fragment {
 
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
-        hostTv.setText("주최자로 접속. 참가한 채널: " + selectedChannel);
+        hostTv.setText("채널: " + selectedChannel);
 
         btnWinNoti.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

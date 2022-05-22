@@ -19,6 +19,8 @@
             android:layout_height="wrap_content"
             android:text="접속"
             android:id="@+id/hostTv"
+            android:maxLines="1"
+            android:ellipsize="end"
             />
         <ToggleButton
             android:layout_weight="2"

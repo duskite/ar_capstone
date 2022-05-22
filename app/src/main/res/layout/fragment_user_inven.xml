@@ -18,6 +18,8 @@
             android:layout_height="wrap_content"
             android:text="접속"
             android:id="@+id/userTv"
+            android:maxLines="1"
+            android:ellipsize="end"
             />
         <TextView
             android:layout_width="0dp"

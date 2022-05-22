@@ -21,7 +21,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.mju.ar_capstone.InventoryActivity;
 import com.mju.ar_capstone.MainActivity;
+import com.mju.ar_capstone.ManageChannelActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.managefragments.WinnerListFragment;
@@ -31,14 +33,14 @@ public class NotificationService extends Service {
     private static String NOTI_GROUP = "neAR";
 
     private DatabaseReference mReference;
-    private ChildEventListener mChild;
 
     private static String selectedChannel;
 
     private FirebaseManager firebaseManager;
 
     private NotificationManager notificationManager;
-    private NotificationChannel notificationChannel;
+    private NotificationChannel notificationChannel, notificationChannel2;
+
 
     public NotificationService(){
 
@@ -53,26 +55,37 @@ public class NotificationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
 
             notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationChannel = new NotificationChannel("winner", "우승자 알림", NotificationManager.IMPORTANCE_HIGH);
+            notificationChannel = new NotificationChannel("foreground", "우승자 알림", NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("우승자 발생시 알림을 받음");
             notificationManager.createNotificationChannel(notificationChannel);
 
+            notificationChannel2 = new NotificationChannel("winner", "최근 우승자", NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(notificationChannel2);
+
+
+            //포어그라운드 알림 클릭시 앱 실행되도록 함
             Intent intent = new Intent(this, MainActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,0);
 
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "winner");
-            builder.setSmallIcon(R.drawable.play_icon);
+            //알림창에서 포어그라운드 알림 닫을 수 있도록 함
+            Intent closeIntent = new Intent(this, NotificationService.class);
+            closeIntent.putExtra("close", true);
+            //이게 호출되면 true 넘겨서 종료 시킴
+            PendingIntent closePendingIntent = PendingIntent.getService(this, 0, closeIntent, Intent.FILL_IN_DATA);
+            NotificationCompat.Action closeAction = new NotificationCompat.Action(0,"닫기", closePendingIntent);
+
+
+            //포어그라운드 알림
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "foreground");
+            builder.setSmallIcon(R.drawable.ic_arbutton);
             builder.setContentTitle("neAR");
             builder.setContentText("우승자 알림을 받을 수 있습니다.");
             builder.setContentIntent(pendingIntent);
-//            Notification notification = new NotificationCompat.Builder(this, "winner")
-//                    .setContentTitle("neAR")
-//                    .setContentText("게임을 클리어한 유저가 생길 경우 알림을 받게 됩니다.")
-//                    .build();
+            builder.setContentIntent(closePendingIntent);
+            builder.addAction(closeAction);
             startForeground(1, builder.build());
         }
-
     }
 
     @Override
@@ -98,6 +111,12 @@ public class NotificationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        Log.d("알림닫기", String.valueOf(intent.getBooleanExtra("close", false)));
+
+        if(intent.getBooleanExtra("close", false)){
+            this.stopService(intent);
+            Log.d("알림닫기", "종료 호출됨");
+        }
         Log.d("알림", "onStartCommand");
 
         try{
@@ -115,8 +134,7 @@ public class NotificationService extends Service {
 
         //알림띄우기
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "winner");
-
-        builder.setSmallIcon(R.drawable.play_icon);
+        builder.setSmallIcon(R.drawable.ic_stat_celebration);
         builder.setContentTitle("방금 게임을 클리어한 유저가 있습니다.");
         builder.setContentText("채널: " + selectedChannel + "         ID: " + user);
 

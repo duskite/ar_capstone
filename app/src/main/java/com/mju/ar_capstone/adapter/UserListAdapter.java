@@ -41,6 +41,7 @@ import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> implements ItemTouchHelperListner{
     private static String TAG = UserListAdapter.class.getSimpleName();
@@ -117,9 +118,9 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     @Override
     public boolean onItemMove(int from_position, int to_position) {
-        WrappedAnchor wrappedAnchor = userItemObjs.get(from_position);
-        userItemObjs.remove(from_position);
-        userItemObjs.add(to_position, wrappedAnchor);
+        //자리 스왑
+        Collections.swap(userItemObjs, from_position, to_position);
+
         notifyItemMoved(from_position, to_position);
         return true;
     }
