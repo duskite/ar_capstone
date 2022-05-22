@@ -182,10 +182,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                         public void onClick(DialogInterface dialogInterface, int i) {
                             //다이얼로그 확인시 삭제
                             int pos = getAdapterPosition();
-                            firebaseManager.deleteContent(userItemObjs.get(pos).getCloudAnchorId());
                             userItemObjs.remove(pos);
                             notifyItemRemoved(pos);
-                            notifyDataSetChanged();
                         }
                     });
                     dlg.setPositiveButton("닫기",null);
@@ -206,10 +204,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                         public void onClick(DialogInterface dialogInterface, int i) {
                             //다이얼로그 확인시 삭제
                             int pos = getAdapterPosition();
-                            firebaseManager.deleteContent(userItemObjs.get(pos).getCloudAnchorId());
                             userItemObjs.remove(pos);
                             notifyItemRemoved(pos);
-                            notifyDataSetChanged();
                         }
                     });
                     dlg.setPositiveButton("닫기",null);
