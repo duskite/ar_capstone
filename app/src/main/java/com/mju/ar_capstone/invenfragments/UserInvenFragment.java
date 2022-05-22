@@ -78,7 +78,7 @@ public class UserInvenFragment extends Fragment implements Adapter.AdapterCallba
         Bundle bundle = getArguments();
         selectedChannel = bundle.getString("selectedChannel");
 
-        userTv.setText("참가자로 접속. 참가한 채널: " + selectedChannel );
+        userTv.setText("채널: " + selectedChannel );
 
         return viewGroup;
     }
