@@ -209,7 +209,6 @@ public class ArSfActivity extends AppCompatActivity implements
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
-//        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
