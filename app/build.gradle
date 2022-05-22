@@ -78,7 +78,7 @@ dependencies {
 
     // SweetAlertDialog
     implementation 'com.github.f0ris.sweetalert:library:1.5.1'
-    
+
     // konfetti
     implementation 'nl.dionsegijn:konfetti-xml:2.0.2'
 
