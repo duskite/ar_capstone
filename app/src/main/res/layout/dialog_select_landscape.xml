@@ -4,7 +4,7 @@
     android:layout_width="500dp"
     android:layout_height="300dp"
     android:gravity="center"
-    android:background="@drawable/dialog_radius"
+    android:background="@drawable/radius_dialog"
     >
 
     <LinearLayout

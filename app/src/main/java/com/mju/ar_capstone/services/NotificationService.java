@@ -21,7 +21,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.mju.ar_capstone.InventoryActivity;
 import com.mju.ar_capstone.MainActivity;
+import com.mju.ar_capstone.ManageChannelActivity;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.managefragments.WinnerListFragment;
@@ -66,10 +68,6 @@ public class NotificationService extends Service {
             builder.setContentTitle("neAR");
             builder.setContentText("우승자 알림을 받을 수 있습니다.");
             builder.setContentIntent(pendingIntent);
-//            Notification notification = new NotificationCompat.Builder(this, "winner")
-//                    .setContentTitle("neAR")
-//                    .setContentText("게임을 클리어한 유저가 생길 경우 알림을 받게 됩니다.")
-//                    .build();
             startForeground(1, builder.build());
         }
 
