@@ -28,6 +28,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -118,9 +120,11 @@ public class ArSfActivity extends AppCompatActivity implements
 
     private Button btnAnchorLoad;
 
+    // 갤러리에서 이미지 불러오는거 관련
+    ActivityResultLauncher<Intent> activityResultLauncher;
     private final int GALLERY_CODE = 10;
-    private ImageView tmpImageView;
-    private Uri tmpImageUri;
+    private static ImageView tmpImageView;
+    private static Uri tmpImageUri;
     private FireStorageManager fireStorageManager;
 
 
@@ -184,6 +188,27 @@ public class ArSfActivity extends AppCompatActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arsf);
+        Log.d("갤러리", "onCreate");
+
+        //모델 로드, 미리 만들어놓는거임
+        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
+        //이 후에는 각각 필요한 모델들만 로드됨
+        // 불러올때 좀 미리할 좋은 방법을 고민해야함
+        preLoadModels();
+        // 갤러리 콜백되는 부분 - 이게 있어야 사용자가 사진을 선택안해도 안꺼짐
+        activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if(result.getResultCode() == RESULT_OK && result.getData().getData() != null){
+
+                tmpImageUri = result.getData().getData();
+                Glide.with(this).load(tmpImageUri).into(tmpImageView);
+                Log.d("갤러리", "사진 띄움");
+            }else{
+                //사진을 선택안하고 뒤로가기 할 때
+                //혹은 null
+                Log.d("갤러리", "null");
+            }
+        });
+
         getSupportFragmentManager().addFragmentOnAttachListener(this);
         if (savedInstanceState == null) {
             if (Sceneform.isSupported(this)) {
@@ -209,13 +234,12 @@ public class ArSfActivity extends AppCompatActivity implements
         //firebase 관련
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager(channel);
-//        firebaseManager.registerContentsValueListner();
         fireStorageManager = new FireStorageManager(channel);
         cloudManager.setFirebaseManager(firebaseManager);
         fireStorageManager.setFirebaseManager(firebaseManager);
 
         poseManager = new PoseManager();
-        //gps는 ar화면이 불러와지는 순간으로만 체크
+        //gps는 ar화면이 불러와지는 순간과 앵커 로드할때 체크
         checkGPS(true);
 
         btnAnchorLoad = (Button) findViewById(R.id.btnAnchorLoad);
@@ -225,21 +249,18 @@ public class ArSfActivity extends AppCompatActivity implements
                 firebaseManager.getContents(new FirebaseManager.GetContentsListener() {
                     @Override
                     public void onDataLoaded() {
+                        //데이터 로드하는 시점에 사용자의 위치와 남겨졌던 앵커간에 거리 판단하기 위해서
+                        checkGPS(true);
                         loadCloudAnchors();
                     }
                 });
             }
         });
-
-        //모델 로드, 미리 만들어놓는거임
-        // 불러오기 할때 일일히 만들면 느려서 처리가 안됨
-        //이 후에는 각각 필요한 모델들만 로드됨
-        // 불러올때 좀 미리할 좋은 방법을 고민해야함
-        preLoadModels();
     }
 
     @Override
     public void onSessionConfiguration(Session session, Config config) {
+        Log.d("갤러리", "onSessionConfiguration");
         if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
             config.setDepthMode(Config.DepthMode.AUTOMATIC);
         }
@@ -1082,6 +1103,7 @@ public class ArSfActivity extends AppCompatActivity implements
 
     @Override
     public void onViewCreated(ArSceneView arSceneView) {
+        Log.d("갤러리", "onViewCreated");
         arFragment.setOnViewCreatedListener(null);
         // Fine adjust the maximum frame rate
         arSceneView.setFrameRateFactor(SceneView.FrameRate.FULL);
@@ -1131,58 +1153,40 @@ public class ArSfActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        Log.d("최적화", "onDestroy");
         super.onDestroy();
-        arFragment.onDestroy();
-        fusedLocationProviderClient = null;
-        firebaseManager = null;
-        fireStorageManager = null;
-        firebaseAuthManager = null;
-        cntTextRenderable = 0;
-        cntImageRenderable = 0;
-        cntMp3Renderable = 0;
-        poseManager = null;
-        writeMode = false;
-        selectRenderable = null;
-        imageRenderableList = null;
-        textRenderableList = null;
-        mp3RenderableList = null;
-        mediaRecorder = null;
-        mediaPlayer = null;
+        Log.d("갤러리", "onDestroy");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("갤러리", "onResume");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d("갤러리", "onPause");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("갤러리", "onStop");
     }
+
 
     // 이미지 업로드 부분
     //사용자 갤러리 불러오기
     private void loadAlbum(){
+        Log.d("갤러리", "loadAlbum start");
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
-        startActivityForResult(intent, GALLERY_CODE);
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == GALLERY_CODE) {
-            Log.d("순서 갤러리", "이미지 불러와서 이미지 뷰에 넣는 부분");
-            tmpImageUri = data.getData();
-            Glide.with(this).load(tmpImageUri).into(tmpImageView);
-        }
+        activityResultLauncher.launch(intent);
+        Log.d("갤러리", "loadAlbum end");
     }
+
 
 }
 

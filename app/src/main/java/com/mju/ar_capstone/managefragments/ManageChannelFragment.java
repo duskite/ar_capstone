@@ -69,6 +69,7 @@ public class ManageChannelFragment extends Fragment {
                 firebaseManager.deleteChannel(selectedChannel);
 
                 HostListFragment hostListFragment = (HostListFragment) HostListFragment.hostListFragment;
+
                 hostListFragment.getActivity().finish();
                 getActivity().finish();
             }
