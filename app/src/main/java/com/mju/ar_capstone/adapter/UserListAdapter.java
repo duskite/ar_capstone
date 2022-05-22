@@ -4,12 +4,20 @@ import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_IMG;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_SOUND;
 import static com.mju.ar_capstone.WrappedAnchor.ANCHOR_TEXT;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -21,12 +29,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
+import com.mju.ar_capstone.InventoryActivity;
+import com.mju.ar_capstone.MainActivity;
 import com.mju.ar_capstone.MessageDialog;
 import com.mju.ar_capstone.R;
 import com.mju.ar_capstone.WrappedAnchor;
 import com.mju.ar_capstone.helpers.FireStorageManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
 import com.mju.ar_capstone.helpers.ItemTouchHelperListner;
+import com.mju.ar_capstone.invenfragments.UserInvenFragment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +49,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     ArrayList<WrappedAnchor> userItemObjs;
     FireStorageManager fireStorageManager;
     Context context;
+    Activity activity;
     int adapterType;
     /**
      * 주최자에 리스트를 보여주는 아이템 Adapter
@@ -59,6 +71,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         context = parent.getContext();
+        this.activity=activity;
         View view = LayoutInflater.from(context).inflate(R.layout.host_grid_item, parent, false);
         UserListAdapter.ViewHolder vh = new UserListAdapter.ViewHolder(view) ;
         return vh;
@@ -153,8 +166,60 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                     }
                 }
             });
+
+            item_img.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
+                    AlertDialog.Builder dlg = new AlertDialog.Builder(context);
+                    ImageView userimg = (ImageView) dialogView.findViewById(R.id.userImg);
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) item_img.getDrawable();
+                    Bitmap tmpBitmap = bitmapDrawable.getBitmap();
+                    userimg.setImageBitmap(tmpBitmap);
+
+                    dlg.setView(dialogView);
+                    dlg.setNegativeButton("삭제", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //다이얼로그 확인시 삭제
+                            int pos = getAdapterPosition();
+                            firebaseManager.deleteContent(userItemObjs.get(pos).getCloudAnchorId());
+                            userItemObjs.remove(pos);
+                            notifyItemRemoved(pos);
+                            notifyDataSetChanged();
+                        }
+                    });
+                    dlg.setPositiveButton("닫기",null);
+                    dlg.show();
+                }
+            });
+
+            item_txt.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
+                    AlertDialog.Builder dlg = new AlertDialog.Builder(context);
+                    TextView usertxt = (TextView) dialogView.findViewById(R.id.userTxT);
+                    String a1 = item_txt.getText().toString();
+                    usertxt.setText(a1);
+                    dlg.setView(dialogView);
+                    dlg.setNegativeButton("삭제", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            //다이얼로그 확인시 삭제
+                            int pos = getAdapterPosition();
+                            firebaseManager.deleteContent(userItemObjs.get(pos).getCloudAnchorId());
+                            userItemObjs.remove(pos);
+                            notifyItemRemoved(pos);
+                            notifyDataSetChanged();
+                        }
+                    });
+                    dlg.setPositiveButton("닫기",null);
+                    dlg.show();
+                }
+            });
+
         }
     }
+
     //사운드 종료하는 함수.
     private void stopAudio() {
         if(mediaPlayer!=null) {
