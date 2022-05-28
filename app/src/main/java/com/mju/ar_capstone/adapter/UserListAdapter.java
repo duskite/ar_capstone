@@ -9,8 +9,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -169,13 +171,18 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
             });
             item_img.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    int pos = getAdapterPosition();
+                    WrappedAnchor hostItem= userItemObjs.get(pos);
                     View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
                     AlertDialog.Builder dlg = new AlertDialog.Builder(context);
                     ImageView userimg = (ImageView) dialogView.findViewById(R.id.userImg);
-                    BitmapDrawable bitmapDrawable = (BitmapDrawable) item_img.getDrawable();
-                    Bitmap tmpBitmap = bitmapDrawable.getBitmap();
-                    userimg.setImageBitmap(tmpBitmap);
+                    fireStorageManager.imgReferece.child(hostItem.getTextOrPath()).getDownloadUrl().addOnSuccessListener(uri ->{
+                        try{
+                            Glide.with(context).load(uri).into(userimg);
+                        }catch (IllegalArgumentException e){
 
+                        }
+                    });
                     dlg.setView(dialogView);
                     dlg.setNegativeButton("삭제", new DialogInterface.OnClickListener() {
                         @Override
@@ -228,6 +235,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
                     });
                     dlg.setPositiveButton("닫기",null);
                     dlg.show();
+
+
                 }
             });
 
