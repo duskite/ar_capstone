@@ -65,14 +65,14 @@ public class NotificationService extends Service {
 
             //포어그라운드 알림 클릭시 앱 실행되도록 함
             Intent intent = new Intent(this, MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,0);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
 
             //알림창에서 포어그라운드 알림 닫을 수 있도록 함
             Intent closeIntent = new Intent(this, NotificationService.class);
             closeIntent.putExtra("close", true);
             //이게 호출되면 true 넘겨서 종료 시킴
-            PendingIntent closePendingIntent = PendingIntent.getService(this, 0, closeIntent, Intent.FILL_IN_DATA);
+            PendingIntent closePendingIntent = PendingIntent.getService(this, 0, closeIntent, PendingIntent.FLAG_MUTABLE);
             NotificationCompat.Action closeAction = new NotificationCompat.Action(0,"닫기", closePendingIntent);
 
 
