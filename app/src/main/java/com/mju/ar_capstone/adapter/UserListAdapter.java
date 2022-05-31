@@ -199,7 +199,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
             });
             item_txt.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    View dialogView = (View) View.inflate(context, R.layout.dialog_user, null);
+                    View dialogView = (View) View.inflate(context, R.layout.dialog_user_text, null);
                     AlertDialog.Builder dlg = new AlertDialog.Builder(context);
                     TextView usertxt = (TextView) dialogView.findViewById(R.id.userTxT);
                     String a1 = item_txt.getText().toString();
