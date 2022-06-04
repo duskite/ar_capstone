@@ -1,41 +1,27 @@
 package com.mju.ar_capstone;
 
+import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.Manifest;
-import android.app.AlertDialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.mju.ar_capstone.bottomsheets.BottomSheetChannelCreate;
 import com.mju.ar_capstone.bottomsheets.BottomSheetChannelEnter;
 import com.mju.ar_capstone.bottomsheets.BottomSheetChannelSecretEnter;
 import com.mju.ar_capstone.helpers.FirebaseAuthManager;
 import com.mju.ar_capstone.helpers.FirebaseManager;
-import java.util.ArrayList;
-
-import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private long backKeyPressedTime = 0;
     private Toast toast;
 
-    private void viewInit(){
+    private void viewInit() {
         //firebase 설정
         firebaseAuthManager = new FirebaseAuthManager();
         firebaseManager = new FirebaseManager();
@@ -85,14 +71,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //초기화
         viewInit();
+
+        //권한 체크
+        permisionCheck();
 
         //유저 타입 고름
         rdUserType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-                switch (checkedId){
+                switch (checkedId) {
                     case R.id.host:
                         userType = 1;
                         layoutUser.setVisibility(View.GONE);
@@ -107,61 +97,24 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("유저타입", String.valueOf(userType));
             }
         });
+
         tvUserId.setText("익명ID 발급완료. 터치하여 복사하기.\n" + "익명ID: " + firebaseAuthManager.getUID());
         //클립보드에 id저장할 수 있도록 지원
-        tvUserId.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                if(event.getAction()==MotionEvent.ACTION_DOWN){
-                    //눌렀을 때 동작
-                    ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                    ClipData clipData = ClipData.newPlainText("ID", firebaseAuthManager.getUID());
-                    //클립보드에 ID라는 이름표로 id 값을 복사하여 저장
-                    clipboardManager.setPrimaryClip(clipData);
-                }
-                return true;
-            }
-        });
-
+        tvUserId.setOnClickListener(setOnClickListener);
         //채널 생성 바텀시트 호스트
-        btnHostCreate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BottomSheetChannelCreate bottomSheetChannelCreate = new BottomSheetChannelCreate();
-                bottomSheetChannelCreate.show(getSupportFragmentManager(), "create");
-            }
-        });
+        btnHostCreate.setOnClickListener(setOnClickListener);
         //채널 참여 바텀시트 호스트
-        btnHostEnter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
-                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
-            }
-        });
-
+        btnHostEnter.setOnClickListener(setOnClickListener);
         //채널 입장 바텀시트 유저
-        btnUserEnter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
-                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
-            }
-        });
+        btnUserEnter.setOnClickListener(setOnClickListener);
         //비공개 채널 입장 바텀시트 유저
-        btnUserSecretEnter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BottomSheetChannelSecretEnter bottomSheetChannelSecretEnter = new BottomSheetChannelSecretEnter(firebaseManager, userType);
-                bottomSheetChannelSecretEnter.show(getSupportFragmentManager(), "enter");
-            }
-        });
-
-        permisionCheck();
+        btnUserSecretEnter.setOnClickListener(setOnClickListener);
     }
 
-    private void permisionCheck(){
+    /**
+     * 권한체크
+     */
+    private void permisionCheck() {
         //권한 관련 얻기
         ActivityResultLauncher<String[]> locationPermissionRequest =
                 registerForActivityResult(new ActivityResultContracts
@@ -169,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                             Boolean fineLocationGranted = result.getOrDefault(
                                     Manifest.permission.ACCESS_FINE_LOCATION, false);
                             Boolean coarseLocationGranted = result.getOrDefault(
-                                    Manifest.permission.ACCESS_COARSE_LOCATION,false);
+                                    Manifest.permission.ACCESS_COARSE_LOCATION, false);
                             if (fineLocationGranted != null && fineLocationGranted) {
                                 // Precise location access granted.
                             } else if (coarseLocationGranted != null && coarseLocationGranted) {
@@ -185,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         // Before you perform the actual permission request, check whether your app
         // already has the permissions, and whether your app needs to show a permission
         // rationale dialog. For more details, see Request permissions.
-        locationPermissionRequest.launch(new String[] {
+        locationPermissionRequest.launch(new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
         });
@@ -237,4 +190,42 @@ public class MainActivity extends AppCompatActivity {
         firebaseManager = null;
         firebaseAuthManager = null;
     }
+
+    /**
+     * 클릭 이벤트
+     */
+    private View.OnClickListener setOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v == tvUserId) {
+                //클립보드에 id저장할 수 있도록 지원
+                //눌렀을 때 동작
+                ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("ID", firebaseAuthManager.getUID());
+                //클립보드에 ID라는 이름표로 id 값을 복사하여 저장
+                clipboardManager.setPrimaryClip(clipData);
+
+            } else if (v == btnHostCreate) {
+                //채널 생성 바텀시트 호스트
+                BottomSheetChannelCreate bottomSheetChannelCreate = new BottomSheetChannelCreate();
+                bottomSheetChannelCreate.show(getSupportFragmentManager(), "create");
+
+            } else if (v == btnHostEnter) {
+                //채널 참여 바텀시트 호스트
+                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
+                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
+
+            } else if (v == btnUserEnter) {
+                //채널 입장 바텀시트 유저
+                BottomSheetChannelEnter bottomSheetChannelEnter = new BottomSheetChannelEnter(firebaseManager, userType);
+                bottomSheetChannelEnter.show(getSupportFragmentManager(), "enter");
+
+            } else if (v == btnUserSecretEnter) {
+                //비공개 채널 입장 바텀시트 유저
+                BottomSheetChannelSecretEnter bottomSheetChannelSecretEnter = new BottomSheetChannelSecretEnter(firebaseManager, userType);
+                bottomSheetChannelSecretEnter.show(getSupportFragmentManager(), "enter");
+            }
+
+        }
+    };
 }

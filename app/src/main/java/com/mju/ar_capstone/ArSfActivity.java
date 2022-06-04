@@ -633,6 +633,26 @@ public class ArSfActivity extends AppCompatActivity implements
             String text_or_path = wrappedAnchor.getTextOrPath();
             int intAnchorType = wrappedAnchor.getAnchorType();
 
+            // 키 또는 상자는 distanceArray가 10m여야 함
+            // 참가자일때만 체크
+            if(userType == 2){
+                if(intAnchorType == 3 || intAnchorType == 4){
+
+                    //거리 10이상은 로드 안함
+                    if(distanceArray[0] > 10){
+                        continue;
+                    }
+
+//                    //상자는 열쇠를 얻은 유저만 로드 가능함
+//                    if(intAnchorType == 4){
+//                        // 키 소유여부 false면 패스함
+//                        if(!stateHaveKey){
+//                            continue;
+//                        }
+//                    }
+                }
+            }
+
             Log.e("HAN","cloudAnchorID: "+cloudAnchorID);
             Log.e("HAN","text_or_path: "+text_or_path);
             Log.e("HAN","intAnchorType: "+intAnchorType);
