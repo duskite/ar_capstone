@@ -355,6 +355,11 @@ public class InventoryActivity extends AppCompatActivity implements SensorEventL
                 if(latLng.distanceTo(tmpLatLng) < 10){
                     continue;
                 }
+                // 참가자 입장에서 열쇠앵커와 상자 앵커 위치는 숨김
+                // 직접 찾아야함
+                if(wrappedAnchor.getAnchorType() == 3 || wrappedAnchor.getAnchorType() == 4){
+                    continue;
+                }
                 Log.d("지도 오버레이", "몇개찍혔나");
                 // 마커를 보여주지 않고 부근만 찍음
                 CircleOverlay circleOverlay = new CircleOverlay(latLng, 10);
